@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hashop | Profile Login</title>
+  <meta name="description" content="Log in to your Hashop profile or create it in one step.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site/styles.css?v=site-20260405b">
+  <link rel="stylesheet" href="/site/cloud.css?v=cloud-20260405b">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body class="cloud-auth-page">
+  <div class="cloud-map-frame" aria-hidden="true">
+    <div id="cloudMap" class="cloud-map"></div>
+    <div class="cloud-map-overlay"></div>
+  </div>
+
+  <main class="cloud-auth-shell">
+    <div class="cloud-auth-stack">
+      <a class="cloud-brand" href="/" aria-label="Hashop home">
+        <span class="cloud-brand-spinner" aria-hidden="true">
+          <span class="cloud-brand-hash"></span>
+        </span>
+        <span class="cloud-brand-text">
+          <span class="cloud-brand-name">Hashop</span>
+        </span>
+      </a>
+
+      <section class="cloud-auth-card" aria-label="Login">
+        <p class="cloud-auth-kicker">Login</p>
+        <h1 class="cloud-auth-title">Enter your username and password.</h1>
+        <p class="cloud-auth-copy">If your profile already exists, it opens. If not, it gets created and opens here.</p>
+
+        <div class="cloud-auth-fields">
+          <label class="cloud-field">
+            <span>Username</span>
+            <input id="cloudShopNameInput" class="cloud-input" type="text" placeholder="hash" autocomplete="username" spellcheck="false">
+          </label>
+
+          <label class="cloud-field">
+            <span>Password</span>
+            <input id="cloudPasswordInput" class="cloud-input" type="password" placeholder="Password" autocomplete="current-password">
+          </label>
+        </div>
+
+        <div class="cloud-auth-actions">
+          <button id="cloudSubmitBtn" class="cloud-submit" type="button">Continue</button>
+          <p id="cloudStatus" class="cloud-status" aria-live="polite"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="/site/cloud.js?v=cloud-20260405b" defer></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Hashop Hub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user
+ExecStart=/home/ec2-user/.venvs/hashop/bin/python /home/ec2-user/hashop_hub.py --host 127.0.0.1 --port 8080 --public-base-url https://hashop.in --site-dir /home/ec2-user/hashop_site --shop-db /home/ec2-user/hashop.sqlite3 --uploads-dir /home/ec2-user/hashop_uploads
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

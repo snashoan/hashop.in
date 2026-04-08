@@ -1,0 +1,33 @@
+Resume Hashop from /data/data/com.termux/files/home/Projects/pbox.
+
+Current live state:
+- one-pane flow on /
+- Login opens in pane
+- My shop opens in same pane
+- owner uses Manage state with dropdown sections
+- guest buying stays allowed
+- cart now supports:
+  - Pay on receive (default)
+  - Pay before (optional)
+- orders are created first
+- owner Manage -> Orders has inline status actions
+
+Important files:
+- tools/hashop_site/home.js
+- tools/hashop_site/home.css
+- tools/hashop_site/index.html
+- tools/hashop_hub.py
+- docs/hashop-task-tracker.md
+
+Current implemented payment/order model:
+- buyer can buy without login
+- new orders get buyer_key
+- Pay on receive creates order with paymentMode=on_receive
+- Pay before creates order with paymentMode=before_delivery
+- owner handles order progress in Manage -> Orders
+
+Next task:
+- add real buyer account auth / account ids without breaking guest buying
+- extend buyer history lookup so it can use `account_id` as well as `buyer_key`
+
+Use the tracker file as source of truth and keep changes incremental.

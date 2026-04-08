@@ -1,0 +1,11 @@
+{
+    admin off
+}
+
+hashop.in, www.hashop.in, 51-20-193-217.sslip.io, 51.20.193.217.sslip.io {
+    reverse_proxy 127.0.0.1:8080
+}
+
+http://51.20.193.217 {
+    reverse_proxy 127.0.0.1:8080
+}

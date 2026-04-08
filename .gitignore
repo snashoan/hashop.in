@@ -1,0 +1,8 @@
+.DS_Store
+/.idea/
+*.iml
+/jants/
+__pycache__/
+*.pyc
+*.sqlite3
+tools/hashop_uploads/

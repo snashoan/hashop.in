@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Hashop Cloud | Shop Console</title>
+  <meta name="description" content="Hosted Hashop merchant console.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site/styles.css?v=site-20260405b">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/site/hashop.css?v=hashop-20260325g">
+</head>
+<body>
+  <div class="shell shell-console">
+    <header class="chrome">
+      <a class="brand" href="/" aria-label="Hashop home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Hashop</span>
+      </a>
+
+      <div class="top-status">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="consoleStatus">Hashop Cloud</span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="step-nav" aria-label="Hashop console sections">
+      <div class="step-track">
+        <button class="step-item is-active" type="button" data-tab-button="profile">Profile</button>
+        <button class="step-item" type="button" data-tab-button="listings">Listings</button>
+        <button class="step-item" type="button" data-tab-button="payments">Payments</button>
+        <button class="step-item" type="button" data-tab-button="orders">Orders</button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="consoleProgress"></div></div>
+    </nav>
+
+    <main class="viewport console-viewport">
+      <section class="console-page is-active" data-tab-panel="profile">
+        <div class="page-content console-content console-content-profile">
+          <p class="eyebrow">Shop Profile</p>
+          <h1 id="profileHeading">Set up your shop.</h1>
+          <p class="lead" id="profileLead">Add the same shop details the Hashop storefront uses.</p>
+
+          <nav class="profile-step-nav" aria-label="Shop profile setup">
+            <div class="profile-step-track">
+              <button class="profile-step-item is-active" type="button" data-profile-step-jump="0">Name</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="1">Type</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="2">Picture</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="3">Address</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="4">Contact</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="5">Hours</button>
+              <button class="profile-step-item" type="button" data-profile-step-jump="6">Notes</button>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="profileProgress"></div></div>
+          </nav>
+
+          <div class="profile-stage">
+            <div class="profile-stage-track">
+              <section class="profile-setup-step is-active" data-profile-step-panel="0">
+                <p class="eyebrow">Step 1</p>
+                <h2>What is your shop name?</h2>
+                <p class="lead">Set the public name customers should see first.</p>
+                <label class="console-field console-field-single">
+                  <span>Shop Name</span>
+                  <input id="profileName" class="main-input" type="text" placeholder="Your shop name" autocomplete="off">
+                </label>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="1">
+                <p class="eyebrow">Step 2</p>
+                <h2>What kind of shop is it?</h2>
+                <p class="lead">Keep this short and clear so the shop surface reads well.</p>
+                <label class="console-field console-field-single">
+                  <span>Type</span>
+                  <input id="profileType" class="main-input" type="text" placeholder="Store, Bakery, Studio..." autocomplete="off">
+                </label>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="2">
+                <p class="eyebrow">Step 3</p>
+                <h2>Add a shop picture.</h2>
+                <p class="lead">Use the same profile picture or logo the app should show for this shop.</p>
+                <div class="profile-media">
+                  <div class="profile-logo-shell">
+                    <img id="profileLogoPreview" class="profile-logo" alt="Shop profile picture" hidden>
+                    <div id="profileLogoFallback" class="profile-logo-fallback" aria-hidden="true">
+                      <span>s</span>
+                    </div>
+                  </div>
+                  <div class="profile-media-copy">
+                    <strong>Shop picture</strong>
+                    <p>This picture appears as the primary brand image for the shop.</p>
+                    <div class="console-inline-actions">
+                      <input id="profileLogoInput" class="profile-file-input" type="file" accept="image/*" hidden>
+                      <button class="btn" type="button" id="uploadLogoBtn">Choose Picture</button>
+                    </div>
+                    <p class="field-helper" id="logoStatus">PNG, JPG, WEBP, or GIF up to 5 MB.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="3">
+                <p class="eyebrow">Step 4</p>
+                <h2>Where should people find you?</h2>
+                <p class="lead">We pull the current phone location first. You can then tap the map or drag the pin to refine it.</p>
+                <label class="console-field console-field-single">
+                  <span>Address</span>
+                  <input id="profileLocation" class="main-input" type="text" placeholder="Fetching current address...">
+                  <p class="field-helper" id="gpsStatus">Fetching current phone location...</p>
+                </label>
+                <div class="location-inline-actions">
+                  <button class="btn location-action-btn" type="button" id="locateProfileBtn">Locate me</button>
+                </div>
+                <div class="location-map-card" id="gpsMapCard">
+                  <div id="gpsMap" class="location-map" aria-label="Shop location picker"></div>
+                </div>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="4">
+                <p class="eyebrow">Step 5</p>
+                <h2>How should customers contact you?</h2>
+                <p class="lead">Use one public contact point that is easy to share.</p>
+                <label class="console-field console-field-single">
+                  <span>Contact</span>
+                  <input id="profileContact" class="main-input" type="text" placeholder="Phone, email, or public contact">
+                </label>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="5">
+                <p class="eyebrow">Step 6</p>
+                <h2>When is the shop open?</h2>
+                <p class="lead">Set the hours customers should see on the shop page.</p>
+                <label class="console-field console-field-single">
+                  <span>Hours</span>
+                  <input id="profileHours" class="main-input" type="text" placeholder="Mon-Fri 9am-6pm">
+                </label>
+              </section>
+
+              <section class="profile-setup-step" data-profile-step-panel="6">
+                <p class="eyebrow">Step 7</p>
+                <h2>Anything else customers should know?</h2>
+                <p class="lead">Add a short note that gives context without becoming a long description.</p>
+                <label class="console-field console-field-single">
+                  <span>Notes</span>
+                  <textarea id="profileNotes" class="console-textarea" placeholder="Anything customers should know about the shop"></textarea>
+                </label>
+              </section>
+            </div>
+          </div>
+
+          <div class="actions console-actions profile-setup-actions">
+            <button class="btn" type="button" id="profilePrevBtn">Back</button>
+            <button class="btn btn-primary" type="button" id="saveProfileBtn">Save &amp; Next</button>
+          </div>
+
+          <p class="console-helper" id="profileStatus">Loading shop profile...</p>
+        </div>
+      </section>
+
+      <section class="console-page" data-tab-panel="listings">
+        <div class="page-content console-content">
+          <p class="eyebrow">Listings</p>
+          <h2>Add what you sell.</h2>
+          <p class="lead">These are the same listing fields the app web surface uses: title, description, price, quantity, and image file references.</p>
+
+          <div class="console-form">
+            <label class="console-field">
+              <span>Title</span>
+              <input id="listingTitle" class="main-input" type="text" placeholder="Product title">
+            </label>
+            <label class="console-field">
+              <span>Price</span>
+              <input id="listingPrice" class="main-input" type="text" placeholder="120.00">
+            </label>
+            <label class="console-field">
+              <span>Quantity</span>
+              <input id="listingQty" class="main-input" type="number" min="0" step="1" placeholder="10">
+            </label>
+            <label class="console-field console-field-wide">
+              <span>Description</span>
+              <textarea id="listingDescription" class="console-textarea" placeholder="Short description"></textarea>
+            </label>
+          </div>
+
+          <div class="actions console-actions">
+            <button class="btn btn-primary" type="button" id="addListingBtn">Add Listing</button>
+          </div>
+
+          <p class="console-helper" id="listingStatus">No listings yet.</p>
+          <div class="console-list" id="listingsList"></div>
+        </div>
+      </section>
+
+      <section class="console-page" data-tab-panel="payments">
+        <div class="page-content console-content">
+          <p class="eyebrow">Payments</p>
+          <h2>Add how people pay.</h2>
+          <p class="lead">The app already stores payment methods by label, details, UPI, BTC, and ETH. The cloud console should edit the same fields.</p>
+
+          <div class="feature-unlock-card">
+            <p class="eyebrow">Hashop Map</p>
+            <h3 id="mapUnlockTitle">Shop link only is active.</h3>
+            <p class="console-helper feature-unlock-copy" id="mapUnlockCopy">Map placement stays locked until you send an unlock request.</p>
+
+            <div class="summary-box feature-unlock-summary">
+              <div class="sum-row"><span>Requested</span><strong id="mapUnlockRequested">Shop link only</strong></div>
+              <div class="sum-row"><span>Status</span><strong id="mapUnlockState">Not required</strong></div>
+              <div class="sum-row"><span>Method</span><strong id="mapUnlockMethodPreview">-</strong></div>
+            </div>
+
+            <div class="url-preview feature-unlock-destination" id="mapUnlockDestinationCard" hidden>
+              <span id="mapUnlockDestinationLabel">Discovery payment destination</span>
+              <code id="mapUnlockDestinationValue">-</code>
+              <p class="feature-unlock-note" id="mapUnlockDestinationNote">Choose a payment path to see the active address.</p>
+            </div>
+
+            <div class="console-form unlock-request-form">
+              <label class="console-field">
+                <span>Payment path</span>
+                <select id="mapUnlockMethod" class="main-input">
+                  <option value="">Loading payment paths</option>
+                </select>
+              </label>
+              <label class="console-field">
+                <span id="mapUnlockReferenceLabel">Reference</span>
+                <input id="mapUnlockReference" class="main-input" type="text" placeholder="Transaction reference or note">
+              </label>
+            </div>
+
+            <div class="actions console-actions feature-unlock-actions">
+              <button class="btn btn-primary" type="button" id="requestMapUnlockBtn">Request Map Unlock</button>
+              <button class="btn" type="button" id="keepFreePlanBtn">Keep Shop Link Only</button>
+            </div>
+
+            <p class="console-helper" id="mapUnlockStatus">Map placement is a one-time paid feature.</p>
+          </div>
+
+          <div class="console-form">
+            <label class="console-field">
+              <span>Label</span>
+              <input id="paymentLabel" class="main-input" type="text" placeholder="Cash, UPI, Wallet">
+            </label>
+            <label class="console-field">
+              <span>Details</span>
+              <input id="paymentDetails" class="main-input" type="text" placeholder="Public payment note">
+            </label>
+            <label class="console-field">
+              <span>UPI ID</span>
+              <input id="paymentUpi" class="main-input" type="text" placeholder="name@bank">
+            </label>
+            <label class="console-field">
+              <span>BTC Address</span>
+              <input id="paymentBtc" class="main-input" type="text" placeholder="Bitcoin address">
+            </label>
+            <label class="console-field console-field-wide">
+              <span>ETH Address</span>
+              <input id="paymentEth" class="main-input" type="text" placeholder="Ethereum address">
+            </label>
+          </div>
+
+          <div class="actions console-actions">
+            <button class="btn btn-primary" type="button" id="addPaymentBtn">Add Payment Method</button>
+          </div>
+
+          <p class="console-helper" id="paymentStatus">No payment methods yet.</p>
+          <div class="console-list" id="paymentsList"></div>
+        </div>
+      </section>
+
+      <section class="console-page" data-tab-panel="orders">
+        <div class="page-content console-content">
+          <p class="eyebrow">Orders</p>
+          <h2>Orders stay with this shop.</h2>
+          <p class="lead">The app already persists order records. This hosted console should expose the same order bucket tied to the same shop link.</p>
+
+          <div class="summary-box">
+            <div class="sum-row"><span>Saved Orders</span><strong id="ordersCount">0</strong></div>
+            <div class="sum-row"><span>Last Update</span><strong id="ordersUpdated">Waiting for saved data</strong></div>
+          </div>
+
+          <p class="console-helper" id="ordersStatus">No orders yet.</p>
+          <div class="console-list" id="ordersList"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="controls">
+      <a class="btn btn-nav" id="editSetupLink" href="/login?mode=register&step=1">Edit Setup</a>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var requestedShop = (params.get("shop") || "").trim();
+      var tabButtons = Array.from(document.querySelectorAll("[data-tab-button]"));
+      var tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+      var profileStepButtons = Array.from(document.querySelectorAll("[data-profile-step-jump]"));
+      var profileStepPanels = Array.from(document.querySelectorAll("[data-profile-step-panel]"));
+      var consoleProgress = document.getElementById("consoleProgress");
+      var profileProgress = document.getElementById("profileProgress");
+      var consoleStatus = document.getElementById("consoleStatus");
+      var profileHeading = document.getElementById("profileHeading");
+      var profileLead = document.getElementById("profileLead");
+      var profileStatus = document.getElementById("profileStatus");
+      var listingStatus = document.getElementById("listingStatus");
+      var paymentStatus = document.getElementById("paymentStatus");
+      var ordersStatus = document.getElementById("ordersStatus");
+      var ordersCount = document.getElementById("ordersCount");
+      var ordersUpdated = document.getElementById("ordersUpdated");
+      var listingsList = document.getElementById("listingsList");
+      var paymentsList = document.getElementById("paymentsList");
+      var ordersList = document.getElementById("ordersList");
+      var editSetupLink = document.getElementById("editSetupLink");
+
+      var profileLogoPreview = document.getElementById("profileLogoPreview");
+      var profileLogoFallback = document.getElementById("profileLogoFallback");
+      var profileLogoInput = document.getElementById("profileLogoInput");
+      var uploadLogoBtn = document.getElementById("uploadLogoBtn");
+      var logoStatus = document.getElementById("logoStatus");
+      var profileName = document.getElementById("profileName");
+      var profileType = document.getElementById("profileType");
+      var profileContact = document.getElementById("profileContact");
+      var profileLocation = document.getElementById("profileLocation");
+      var profileHours = document.getElementById("profileHours");
+      var profileNotes = document.getElementById("profileNotes");
+      var gpsStatus = document.getElementById("gpsStatus");
+      var gpsMapCard = document.getElementById("gpsMapCard");
+      var gpsMapNode = document.getElementById("gpsMap");
+      var locateProfileBtn = document.getElementById("locateProfileBtn");
+
+      var listingTitle = document.getElementById("listingTitle");
+      var listingPrice = document.getElementById("listingPrice");
+      var listingQty = document.getElementById("listingQty");
+      var listingDescription = document.getElementById("listingDescription");
+
+      var paymentLabel = document.getElementById("paymentLabel");
+      var paymentDetails = document.getElementById("paymentDetails");
+      var paymentUpi = document.getElementById("paymentUpi");
+      var paymentBtc = document.getElementById("paymentBtc");
+      var paymentEth = document.getElementById("paymentEth");
+      var mapUnlockTitle = document.getElementById("mapUnlockTitle");
+      var mapUnlockCopy = document.getElementById("mapUnlockCopy");
+      var mapUnlockRequested = document.getElementById("mapUnlockRequested");
+      var mapUnlockState = document.getElementById("mapUnlockState");
+      var mapUnlockMethodPreview = document.getElementById("mapUnlockMethodPreview");
+      var mapUnlockDestinationCard = document.getElementById("mapUnlockDestinationCard");
+      var mapUnlockDestinationLabel = document.getElementById("mapUnlockDestinationLabel");
+      var mapUnlockDestinationValue = document.getElementById("mapUnlockDestinationValue");
+      var mapUnlockDestinationNote = document.getElementById("mapUnlockDestinationNote");
+      var mapUnlockMethod = document.getElementById("mapUnlockMethod");
+      var mapUnlockReferenceLabel = document.getElementById("mapUnlockReferenceLabel");
+      var mapUnlockReference = document.getElementById("mapUnlockReference");
+      var mapUnlockStatus = document.getElementById("mapUnlockStatus");
+      var requestMapUnlockBtn = document.getElementById("requestMapUnlockBtn");
+      var keepFreePlanBtn = document.getElementById("keepFreePlanBtn");
+
+      var saveProfileBtn = document.getElementById("saveProfileBtn");
+      var profilePrevBtn = document.getElementById("profilePrevBtn");
+      var addListingBtn = document.getElementById("addListingBtn");
+      var addPaymentBtn = document.getElementById("addPaymentBtn");
+
+      var state = {
+        shopId: requestedShop,
+        record: null,
+        console: null,
+        saving: false,
+        uploadingLogo: false,
+        profileStep: 0,
+        locationFetchAttempted: false,
+        locationLookupPending: false,
+        localLogoPreviewUrl: "",
+        gpsMap: null,
+        gpsMarker: null,
+        paymentOptions: {
+          available: false,
+          methods: []
+        }
+      };
+
+      var PROFILE_STEP_META = [
+        { heading: "Name the shop.", lead: "Use the public name customers should see first." },
+        { heading: "Define the type.", lead: "Keep the category short and easy to scan." },
+        { heading: "Add a picture.", lead: "Use one clear logo or profile image." },
+        { heading: "Pin the address.", lead: "Pull the current location, then fine-tune the pin." },
+        { heading: "Set the contact.", lead: "Add one public way for customers to reach you." },
+        { heading: "Set the hours.", lead: "Show when customers should expect the shop to be open." },
+        { heading: "Add a note.", lead: "Keep it brief and useful for first-time visitors." }
+      ];
+
+      function tabIndex(name) {
+        for (var i = 0; i < tabButtons.length; i += 1) {
+          if (tabButtons[i].getAttribute("data-tab-button") === name) return i;
+        }
+        return 0;
+      }
+
+      function installReliableBaseLayer(map) {
+        if (!map || !window.L) return null;
+
+        var providers = [
+          {
+            layers: [
+              {
+                url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                options: {
+                  maxZoom: 20,
+                  subdomains: "abcd",
+                  attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+                }
+              }
+            ]
+          },
+          {
+            layers: [
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Tiles &copy; Esri"
+                }
+              },
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Labels &copy; Esri"
+                }
+              }
+            ]
+          }
+        ];
+
+        var activeIndex = -1;
+        var activeLayers = [];
+        var loadedAnyTile = false;
+        var fallbackTimer = null;
+
+        function clearFallbackTimer() {
+          if (fallbackTimer) {
+            window.clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+          }
+        }
+
+        function attach(index) {
+          var provider = providers[index];
+          if (!provider) return;
+
+          clearFallbackTimer();
+          loadedAnyTile = false;
+
+          activeLayers.forEach(function (layer) {
+            if (layer && map.hasLayer(layer)) {
+              map.removeLayer(layer);
+            }
+          });
+          activeLayers = [];
+
+          activeIndex = index;
+          provider.layers.forEach(function (config) {
+            var layer = window.L.tileLayer(config.url, config.options);
+            layer.on("tileload", function () {
+              loadedAnyTile = true;
+              clearFallbackTimer();
+            });
+            layer.on("tileerror", function () {
+              if (!loadedAnyTile && activeIndex < providers.length - 1) {
+                attach(activeIndex + 1);
+              }
+            });
+            layer.addTo(map);
+            activeLayers.push(layer);
+          });
+
+          fallbackTimer = window.setTimeout(function () {
+            if (!loadedAnyTile && activeIndex < providers.length - 1) {
+              attach(activeIndex + 1);
+            }
+          }, 4500);
+        }
+
+        attach(0);
+        return activeLayers;
+      }
+
+      function setActiveTab(name) {
+        var index = tabIndex(name);
+        tabButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.getAttribute("data-tab-button") === name);
+        });
+        tabPanels.forEach(function (panel) {
+          panel.classList.toggle("is-active", panel.getAttribute("data-tab-panel") === name);
+        });
+        if (consoleProgress) {
+          consoleProgress.style.width = (((index + 1) / tabButtons.length) * 100) + "%";
+        }
+      }
+
+      function updateProfileIntro() {
+        var meta = PROFILE_STEP_META[state.profileStep] || PROFILE_STEP_META[0];
+        if (profileHeading) profileHeading.textContent = meta.heading;
+        if (profileLead) profileLead.textContent = meta.lead;
+      }
+
+      function setProfileStep(index) {
+        var previousIndex = state.profileStep;
+        var safeIndex = Math.max(0, Math.min(profileStepButtons.length - 1, index));
+        state.profileStep = safeIndex;
+        profileStepButtons.forEach(function (button, buttonIndex) {
+          button.classList.toggle("is-active", buttonIndex === safeIndex);
+        });
+        profileStepPanels.forEach(function (panel, panelIndex) {
+          panel.classList.toggle("is-active", panelIndex === safeIndex);
+        });
+        if (profileProgress) {
+          profileProgress.style.width = (((safeIndex + 1) / Math.max(1, profileStepButtons.length)) * 100) + "%";
+        }
+        if (profilePrevBtn) {
+          profilePrevBtn.disabled = safeIndex === 0;
+        }
+        if (saveProfileBtn) {
+          saveProfileBtn.textContent = safeIndex === profileStepButtons.length - 1 ? "Save Profile" : "Save & Next";
+        }
+        updateProfileIntro();
+        if (safeIndex === 3 && previousIndex !== 3) {
+          state.locationFetchAttempted = false;
+          ensureGpsMap();
+          window.requestAnimationFrame(function () {
+            if (state.gpsMap) state.gpsMap.invalidateSize();
+          });
+          requestCurrentLocation(false);
+        }
+      }
+
+      function setStatus(target, message) {
+        if (target) target.textContent = message;
+      }
+
+      function ensureProfileDraft() {
+        if (!state.console) return null;
+        if (!state.console.profile || typeof state.console.profile !== "object") {
+          state.console.profile = {};
+        }
+        return state.console.profile;
+      }
+
+      function formatGpsToken(lat, lng) {
+        return Number(lat).toFixed(6) + "," + Number(lng).toFixed(6);
+      }
+
+      function formatGpsCoords(lat, lng) {
+        return Number(lat).toFixed(6) + ", " + Number(lng).toFixed(6);
+      }
+
+      function syncProfileDraft() {
+        var profile = ensureProfileDraft();
+        if (!profile) return;
+        profile.name = profileName.value.trim();
+        profile.type = profileType.value.trim();
+        profile.contact = profileContact.value.trim();
+        profile.location = profileLocation.value.trim();
+        profile.hours = profileHours.value.trim();
+        profile.notes = profileNotes.value.trim();
+        profile.gps = String(profile.gps || "").trim();
+        profile.logoFile = profile.logoFile || "";
+      }
+
+      function stripGpsTag(value) {
+        return String(value || "")
+          .replace(/(?:\s*\|\s*)?GPS:\s*-?\d+\.?\d*\s*,\s*-?\d+\.?\d*/ig, "")
+          .replace(/\s+\|\s+\|/g, " | ")
+          .replace(/\s{2,}/g, " ")
+          .trim()
+          .replace(/\|\s*$/g, "")
+          .trim();
+      }
+
+      function parseGpsCoords(value) {
+        var raw = String(value || "").trim();
+        var match = raw.match(/GPS:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i) ||
+          raw.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+        if (!match) return null;
+        var lat = Number(match[1]);
+        var lng = Number(match[2]);
+        if (!isFinite(lat) || !isFinite(lng)) return null;
+        return { lat: lat, lng: lng };
+      }
+
+      function withGpsTag(value, lat, lng) {
+        var cleaned = stripGpsTag(value);
+        var tag = "GPS:" + formatGpsToken(lat, lng);
+        return cleaned ? (cleaned + " | " + tag) : tag;
+      }
+
+      function getStoredGpsCoords() {
+        var profile = ensureProfileDraft();
+        if (!profile) return null;
+        var gps = String(profile.gps || "").trim();
+        if (gps) return parseGpsCoords(gps);
+        var legacy = parseGpsCoords(profile.location || "");
+        if (legacy) {
+          profile.gps = formatGpsToken(legacy.lat, legacy.lng);
+          profile.location = stripGpsTag(profile.location || "");
+          if (profileLocation) profileLocation.value = profile.location;
+          return legacy;
+        }
+        return null;
+      }
+
+      function setStoredGpsCoords(lat, lng) {
+        var profile = ensureProfileDraft();
+        if (!profile) return;
+        profile.gps = formatGpsToken(lat, lng);
+      }
+
+      function ensureGpsMap() {
+        if (!gpsMapNode || !window.L) return null;
+        if (state.gpsMap) return state.gpsMap;
+
+        state.gpsMap = window.L.map(gpsMapNode, {
+          zoomControl: true,
+          attributionControl: true,
+          fadeAnimation: false,
+          zoomAnimation: false,
+          markerZoomAnimation: false
+        });
+
+        state.gpsBaseLayer = installReliableBaseLayer(state.gpsMap);
+
+        state.gpsMap.setView([22.9734, 78.6569], 4);
+        state.gpsMap.on("click", function (event) {
+          if (!event || !event.latlng) return;
+          applyResolvedLocation(event.latlng.lat, event.latlng.lng, "Resolving selected location...");
+        });
+        return state.gpsMap;
+      }
+
+      function upsertGpsMarker(lat, lng, options) {
+        var map = ensureGpsMap();
+        if (!map) return;
+        var point = [Number(lat), Number(lng)];
+        if (!state.gpsMarker) {
+          state.gpsMarker = window.L.marker(point, {
+            draggable: true,
+            icon: window.L.divIcon({
+              className: "",
+              html: '<div class="location-pin-marker"></div>',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).addTo(map);
+          state.gpsMarker.on("dragend", function (event) {
+            var marker = event && event.target ? event.target : null;
+            var markerPoint = marker ? marker.getLatLng() : null;
+            if (!markerPoint) return;
+            applyResolvedLocation(markerPoint.lat, markerPoint.lng, "Resolving moved pin...");
+          });
+        } else {
+          state.gpsMarker.setLatLng(point);
+        }
+        if (!options || options.center !== false) {
+          map.setView(point, options && options.zoom ? options.zoom : 16);
+        }
+      }
+
+      function updateGpsUi(message) {
+        var coords = getStoredGpsCoords() || parseGpsCoords(profileLocation.value);
+        var map = ensureGpsMap();
+        if (gpsMapCard) {
+          gpsMapCard.hidden = false;
+        }
+        if (map) {
+          window.requestAnimationFrame(function () {
+            map.invalidateSize();
+          });
+        }
+        if (coords) {
+          upsertGpsMarker(coords.lat, coords.lng, { center: false, zoom: 16 });
+        }
+        if (message) setStatus(gpsStatus, message);
+      }
+
+      function reverseGeocodeCoords(lat, lng) {
+        return fetch("/api/geocode/reverse?lat=" + encodeURIComponent(String(lat)) + "&lng=" + encodeURIComponent(String(lng)))
+          .then(function (response) {
+            if (!response.ok) throw new Error("reverse_geocode_failed");
+            return response.json();
+          })
+          .then(function (payload) {
+            if (!payload || !payload.resolved || !payload.address) return "";
+            return String(payload.address).trim();
+          })
+          .catch(function () {
+            return "";
+          });
+      }
+
+      function applyResolvedLocation(lat, lng, resolvingMessage) {
+        var profile = ensureProfileDraft();
+        if (!profile) return Promise.resolve("");
+        var fallback = formatGpsCoords(lat, lng);
+        setStoredGpsCoords(lat, lng);
+        upsertGpsMarker(lat, lng, { zoom: 16 });
+        state.locationLookupPending = true;
+        if (!profileLocation.value.trim()) {
+          profileLocation.value = fallback;
+        }
+        profile.location = profileLocation.value.trim() || fallback;
+        updateGpsUi(resolvingMessage || "Resolving address...");
+        return reverseGeocodeCoords(lat, lng)
+          .then(function (address) {
+            state.locationLookupPending = false;
+            if (address) {
+              profile.location = address;
+              profileLocation.value = address;
+              syncProfileDraft();
+              updateGpsUi("Current location attached.");
+              return address;
+            }
+            if (!profileLocation.value.trim()) {
+              profile.location = fallback;
+              profileLocation.value = fallback;
+            } else {
+              profile.location = profileLocation.value.trim();
+            }
+            syncProfileDraft();
+            updateGpsUi("Coordinates attached.");
+            return "";
+          })
+          .catch(function () {
+            state.locationLookupPending = false;
+            if (!profileLocation.value.trim()) {
+              profile.location = fallback;
+              profileLocation.value = fallback;
+            }
+            syncProfileDraft();
+            updateGpsUi("Coordinates attached.");
+            return "";
+          });
+      }
+
+      function requestCurrentLocation(force) {
+        if (state.profileStep !== 3) return;
+        if (!profileLocation) return;
+        if (force) {
+          state.locationFetchAttempted = false;
+        }
+        var existingCoords = getStoredGpsCoords();
+        if (existingCoords && !force) {
+          if (!profileLocation.value.trim() || parseGpsCoords(profileLocation.value)) {
+            applyResolvedLocation(existingCoords.lat, existingCoords.lng);
+          } else {
+            updateGpsUi("Current location attached.");
+          }
+          return;
+        }
+        if (state.locationFetchAttempted) return;
+        state.locationFetchAttempted = true;
+        if (!window.isSecureContext) {
+          setStatus(gpsStatus, "Current cloud address needs HTTPS before the browser can use phone GPS.");
+          updateGpsUi();
+          return;
+        }
+        if (!navigator.geolocation) {
+          setStatus(gpsStatus, "This browser does not expose phone GPS here.");
+          updateGpsUi();
+          return;
+        }
+        setStatus(gpsStatus, "Fetching current phone location...");
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            var coords = position && position.coords ? position.coords : null;
+            if (!coords) {
+              setStatus(gpsStatus, "Could not read this device location.");
+              return;
+            }
+            applyResolvedLocation(coords.latitude, coords.longitude);
+          },
+          function (error) {
+            var message = "Could not retrieve current phone location.";
+            if (error && error.code === error.PERMISSION_DENIED) {
+              message = "Location access was denied on this device.";
+            } else if (error && error.code === error.POSITION_UNAVAILABLE) {
+              message = "Phone GPS is currently unavailable.";
+            } else if (error && error.code === error.TIMEOUT) {
+              message = "Location request timed out.";
+            }
+            setStatus(gpsStatus, message);
+            updateGpsUi();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 60000
+          }
+        );
+      }
+
+      function renderList(container, items, emptyTitle, emptyText, renderer) {
+        if (!container) return;
+        if (!items || !items.length) {
+          container.innerHTML = '<div class="feat-item console-empty"><strong>' + escapeHtml(emptyTitle) + '</strong> ' + escapeHtml(emptyText) + '</div>';
+          return;
+        }
+        container.innerHTML = items.map(renderer).join("");
+      }
+
+      function render() {
+        var record = state.record;
+        var consoleData = state.console;
+        if (!record || !consoleData) return;
+
+        var profile = consoleData.profile || {};
+        var listings = Array.isArray(consoleData.listings) ? consoleData.listings : [];
+        var payments = Array.isArray(consoleData.payments) ? consoleData.payments : [];
+        var orders = Array.isArray(consoleData.orders) ? consoleData.orders : [];
+        var mapUnlock = ensureBillingDraft() || {
+          requestedPlan: "free",
+          status: "not_required",
+          method: "",
+          reference: "",
+          note: "",
+          updatedAt: 0
+        };
+        var requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
+        var selectedUnlockOption = selectedPaymentOption(mapUnlock.method);
+        if (requestedPlan === "map" && mapUnlock.method && !selectedUnlockOption) {
+          mapUnlock.method = "";
+        }
+        selectedUnlockOption = selectedPaymentOption(mapUnlock.method);
+        var logoFile = String(profile.logoFile || "").trim();
+
+        document.title = (profile.name || record.display_name || record.shop_id) + " | Hashop Cloud";
+        consoleStatus.textContent = state.uploadingLogo ? "Uploading..." : (state.saving ? "Saving..." : "Hashop Cloud");
+        if (!profile.gps) {
+          var legacyCoords = parseGpsCoords(profile.location || "");
+          if (legacyCoords) {
+            profile.gps = formatGpsToken(legacyCoords.lat, legacyCoords.lng);
+            profile.location = stripGpsTag(profile.location || "");
+          }
+        }
+        profileName.value = profile.name || "";
+        profileType.value = profile.type || "";
+        profileContact.value = profile.contact || "";
+        profileLocation.value = stripGpsTag(profile.location || "");
+        profileHours.value = profile.hours || "";
+        profileNotes.value = profile.notes || "";
+        setProfileStep(state.profileStep);
+        updateGpsUi();
+        if (state.localLogoPreviewUrl) {
+          profileLogoPreview.hidden = false;
+          profileLogoFallback.hidden = true;
+          profileLogoPreview.src = state.localLogoPreviewUrl;
+        } else if (logoFile) {
+          profileLogoPreview.hidden = false;
+          profileLogoFallback.hidden = true;
+          profileLogoPreview.src = "/api/shops/" + encodeURIComponent(state.shopId) + "/logo?v=" + encodeURIComponent(logoFile + "-" + (record.updated_at || Date.now()));
+        } else {
+          profileLogoPreview.hidden = true;
+          profileLogoPreview.removeAttribute("src");
+          profileLogoFallback.hidden = false;
+        }
+
+        editSetupLink.href = "/login?mode=register&step=1";
+
+        if (mapUnlockTitle) {
+          var unlockCopy = mapUnlockUiCopy(mapUnlock);
+          mapUnlockTitle.textContent = unlockCopy.title;
+          mapUnlockCopy.textContent = unlockCopy.copy;
+          setStatus(mapUnlockStatus, unlockCopy.helper);
+        }
+        if (mapUnlockRequested) {
+          mapUnlockRequested.textContent = String(mapUnlock.requestedPlan || "free").trim().toLowerCase() === "map"
+            ? "Map placement"
+            : "Shop link only";
+        }
+        if (mapUnlockState) {
+          mapUnlockState.textContent = mapUnlockStatusLabel(mapUnlock.status);
+        }
+        if (mapUnlockMethodPreview) {
+          mapUnlockMethodPreview.textContent = mapUnlockMethodLabel(mapUnlock.method);
+        }
+        renderMapUnlockMethodOptions(String(mapUnlock.method || ""));
+        if (mapUnlockDestinationCard) {
+          mapUnlockDestinationCard.hidden = requestedPlan !== "map" || !selectedUnlockOption;
+        }
+        if (mapUnlockDestinationLabel) {
+          mapUnlockDestinationLabel.textContent = selectedUnlockOption
+            ? (String(selectedUnlockOption.label || "Payment") + " destination" + (selectedUnlockOption.feeDisplay ? " - " + selectedUnlockOption.feeDisplay : ""))
+            : "Discovery payment destination";
+        }
+        if (mapUnlockDestinationValue) {
+          mapUnlockDestinationValue.textContent = selectedUnlockOption
+            ? String(selectedUnlockOption.address || "")
+            : "-";
+        }
+        if (mapUnlockDestinationNote) {
+          mapUnlockDestinationNote.textContent = selectedUnlockOption
+            ? String(selectedUnlockOption.instruction || "")
+            : "Choose a payment path to see the active destination.";
+        }
+        if (mapUnlockReferenceLabel) {
+          mapUnlockReferenceLabel.textContent = selectedUnlockOption && selectedUnlockOption.referenceLabel
+            ? String(selectedUnlockOption.referenceLabel)
+            : "Reference";
+        }
+        if (mapUnlockReference && mapUnlockReference.value !== String(mapUnlock.reference || "")) {
+          mapUnlockReference.value = String(mapUnlock.reference || "");
+        }
+        if (mapUnlockReference) {
+          mapUnlockReference.placeholder = selectedUnlockOption && selectedUnlockOption.referencePlaceholder
+            ? String(selectedUnlockOption.referencePlaceholder)
+            : "Transaction reference or note";
+          mapUnlockReference.disabled = requestedPlan !== "map" || !selectedUnlockOption || state.saving;
+        }
+        if (requestMapUnlockBtn) {
+          requestMapUnlockBtn.textContent = String(mapUnlock.status || "").toLowerCase() === "pending"
+            ? "Update Unlock Request"
+            : "Request Map Unlock";
+          requestMapUnlockBtn.disabled = state.saving || (requestedPlan === "map" && !paymentMethods().length);
+        }
+        if (keepFreePlanBtn) {
+          keepFreePlanBtn.disabled = requestedPlan !== "map" || state.saving;
+        }
+
+        setStatus(profileStatus, "Cloud profile ready.");
+        setStatus(listingStatus, listings.length ? (listings.length + " listing" + (listings.length === 1 ? "" : "s") + " saved.") : "No listings yet.");
+        setStatus(paymentStatus, payments.length ? (payments.length + " payment method" + (payments.length === 1 ? "" : "s") + " saved.") : "No payment methods yet.");
+        setStatus(ordersStatus, orders.length ? (orders.length + " order" + (orders.length === 1 ? "" : "s") + " recorded.") : "No orders yet.");
+        ordersCount.textContent = String(orders.length);
+        ordersUpdated.textContent = record.updated_at ? new Date(record.updated_at).toLocaleString() : "Saved";
+
+        renderList(
+          listingsList,
+          listings,
+          "No listings yet.",
+          "Add your first product from this hosted console.",
+          function (item) {
+            return '<div class="console-card" data-remove-type="listing" data-remove-id="' + escapeAttr(item.id || '') + '">' +
+              '<div class="console-card-head"><strong>' + escapeHtml(item.title || 'Untitled') + '</strong><button class="console-remove" type="button">Remove</button></div>' +
+              '<div class="console-card-meta">' +
+                '<span>Price: ' + escapeHtml(item.price || '-') + '</span>' +
+                '<span>Qty: ' + escapeHtml(String(item.quantity || 0)) + '</span>' +
+              '</div>' +
+              '<p>' + escapeHtml(item.description || 'No description.') + '</p>' +
+            '</div>';
+          }
+        );
+
+        renderList(
+          paymentsList,
+          payments,
+          "No payment methods yet.",
+          "Add at least one way for customers to pay.",
+          function (item) {
+            var lines = [];
+            if (item.details) lines.push('Details: ' + item.details);
+            if (item.upiId) lines.push('UPI: ' + item.upiId);
+            if (item.btcAddress) lines.push('BTC: ' + item.btcAddress);
+            if (item.ethAddress) lines.push('ETH: ' + item.ethAddress);
+            if (!lines.length) lines.push('No public payment value set.');
+            return '<div class="console-card" data-remove-type="payment" data-remove-id="' + escapeAttr(item.id || '') + '">' +
+              '<div class="console-card-head"><strong>' + escapeHtml(item.label || 'Payment Method') + '</strong><button class="console-remove" type="button">Remove</button></div>' +
+              '<div class="console-card-stack">' + lines.map(function (line) { return '<span>' + escapeHtml(line) + '</span>'; }).join("") + '</div>' +
+            '</div>';
+          }
+        );
+
+        renderList(
+          ordersList,
+          orders,
+          "No orders yet.",
+          "Orders created through the hosted shop will appear here.",
+          function (item) {
+            return '<div class="console-card">' +
+              '<div class="console-card-head"><strong>' + escapeHtml(item.title || 'Order') + '</strong></div>' +
+              '<div class="console-card-meta">' +
+                '<span>Status: ' + escapeHtml(item.status || 'pending') + '</span>' +
+                '<span>Total: ' + escapeHtml(item.total || item.price || '-') + '</span>' +
+              '</div>' +
+              '<p>' + escapeHtml(item.address || item.notes || 'No delivery notes yet.') + '</p>' +
+            '</div>';
+          }
+        );
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value);
+      }
+
+      function makeListing() {
+        return {
+          id: "item-" + Date.now().toString(36),
+          title: listingTitle.value.trim(),
+          description: listingDescription.value.trim(),
+          price: listingPrice.value.trim(),
+          quantity: parseInt(listingQty.value, 10) || 0,
+          imageFiles: [],
+          createdAt: Date.now()
+        };
+      }
+
+      function makePayment() {
+        return {
+          id: "pay-" + Date.now().toString(36),
+          label: paymentLabel.value.trim(),
+          details: paymentDetails.value.trim(),
+          upiId: paymentUpi.value.trim(),
+          btcAddress: paymentBtc.value.trim(),
+          ethAddress: paymentEth.value.trim(),
+          createdAt: Date.now()
+        };
+      }
+
+      function ensureBillingDraft() {
+        if (!state.console) return null;
+        if (!state.console.billing || typeof state.console.billing !== "object") {
+          state.console.billing = {};
+        }
+        if (!state.console.billing.mapUnlock || typeof state.console.billing.mapUnlock !== "object") {
+          state.console.billing.mapUnlock = {
+            requestedPlan: "free",
+            status: "not_required",
+            method: "",
+            reference: "",
+            note: "",
+            updatedAt: 0
+          };
+        }
+        return state.console.billing.mapUnlock;
+      }
+
+      function paymentMethods() {
+        return state.paymentOptions && Array.isArray(state.paymentOptions.methods)
+          ? state.paymentOptions.methods
+          : [];
+      }
+
+      function selectedPaymentOption(method) {
+        var selectedKey = String(method || "").trim().toLowerCase();
+        if (!selectedKey) return null;
+        for (var index = 0; index < paymentMethods().length; index += 1) {
+          if (String(paymentMethods()[index].key || "").trim().toLowerCase() === selectedKey) {
+            return paymentMethods()[index];
+          }
+        }
+        return null;
+      }
+
+      function renderMapUnlockMethodOptions(selectedMethod) {
+        if (!mapUnlockMethod) return;
+        var methods = paymentMethods();
+        var options = ['<option value="">' + escapeHtml(methods.length ? "Choose one" : "Payment paths unavailable") + '</option>'];
+        methods.forEach(function (method) {
+          options.push(
+            '<option value="' + escapeAttr(method.key || "") + '">' + escapeHtml((method.label || method.key || "") + (method.feeDisplay ? " - " + method.feeDisplay : "")) + '</option>'
+          );
+        });
+        mapUnlockMethod.innerHTML = options.join("");
+        mapUnlockMethod.value = selectedMethod && selectedPaymentOption(selectedMethod)
+          ? String(selectedMethod)
+          : "";
+        mapUnlockMethod.disabled = !methods.length || state.saving;
+      }
+
+      function mapUnlockMethodLabel(method) {
+        var option = selectedPaymentOption(method);
+        if (option && option.label) return String(option.label);
+        var normalized = String(method || "").trim().toLowerCase();
+        if (normalized === "upi") return "UPI";
+        if (normalized === "btc") return "Bitcoin transfer";
+        if (normalized === "eth") return "Ethereum transfer";
+        if (normalized === "manual") return "Manual review";
+        return "-";
+      }
+
+      function mapUnlockStatusLabel(status) {
+        var normalized = String(status || "").trim().toLowerCase();
+        if (normalized === "unlocked") return "Unlocked";
+        if (normalized === "pending") return "Pending review";
+        if (normalized === "locked") return "Locked";
+        return "Not required";
+      }
+
+      function mapUnlockUiCopy(mapUnlock) {
+        var requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
+        var status = String(mapUnlock.status || "not_required").trim().toLowerCase();
+        var methodsReady = paymentMethods().length > 0;
+        if (requestedPlan !== "map") {
+          return {
+            title: "Shop link only is active.",
+            copy: "Map placement is off for this shop. You can request it here later.",
+            helper: "Map placement is a one-time paid feature."
+          };
+        }
+        if (status === "unlocked") {
+          return {
+            title: "Map placement is live.",
+            copy: "This shop is unlocked for Hashop Map and can appear on discovery.",
+            helper: "Map placement is active."
+          };
+        }
+        if (status === "pending") {
+          return {
+            title: "Map unlock is pending.",
+            copy: "The request is saved and waiting for approval before discovery goes live.",
+            helper: "Unlock request saved."
+          };
+        }
+        if (!methodsReady) {
+          return {
+            title: "Payment paths are not ready.",
+            copy: "Discovery payment destinations are not configured right now, so map placement cannot be requested yet.",
+            helper: "No discovery payment paths are configured."
+          };
+        }
+        return {
+          title: "Map placement is locked.",
+          copy: "Choose UPI for Rs 1000 or BTC/ETH for $10 worth, then paste the transaction reference here.",
+          helper: "Map placement is a one-time paid feature."
+        };
+      }
+
+      function resetListingForm() {
+        listingTitle.value = "";
+        listingDescription.value = "";
+        listingPrice.value = "";
+        listingQty.value = "";
+      }
+
+      function resetPaymentForm() {
+        paymentLabel.value = "";
+        paymentDetails.value = "";
+        paymentUpi.value = "";
+        paymentBtc.value = "";
+        paymentEth.value = "";
+      }
+
+      function saveConsole(messageTarget, successMessage) {
+        if (!state.shopId || !state.console || state.saving) return Promise.resolve();
+        state.saving = true;
+        render();
+        if (messageTarget) setStatus(messageTarget, "Saving...");
+        return fetch("/api/shops/" + encodeURIComponent(state.shopId) + "/console", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ console: state.console })
+        })
+          .then(function (response) {
+            if (!response.ok) throw new Error("save_failed");
+            return response.json();
+          })
+          .then(function (payload) {
+            state.record = payload;
+            state.console = payload.console || state.console;
+            state.saving = false;
+            render();
+            if (messageTarget) setStatus(messageTarget, successMessage);
+            return true;
+          })
+          .catch(function () {
+            state.saving = false;
+            render();
+            if (messageTarget) setStatus(messageTarget, "Could not save right now.");
+            return false;
+          });
+      }
+
+      function saveMapUnlock(requestedPlan, successMessage) {
+        if (!state.shopId || state.saving) return Promise.resolve(false);
+        if (requestedPlan === "map" && !paymentMethods().length) {
+          setStatus(mapUnlockStatus, "Discovery payment paths are not configured yet.");
+          return Promise.resolve(false);
+        }
+        if (requestedPlan === "map" && mapUnlockMethod && !String(mapUnlockMethod.value || "").trim()) {
+          setStatus(mapUnlockStatus, "Choose a payment path first.");
+          return Promise.resolve(false);
+        }
+        state.saving = true;
+        render();
+        setStatus(mapUnlockStatus, requestedPlan === "map" ? "Saving unlock request..." : "Switching back to shop link only...");
+        return fetch("/api/shops/" + encodeURIComponent(state.shopId) + "/billing/map", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requested_plan: requestedPlan,
+            method: requestedPlan === "map" && mapUnlockMethod ? String(mapUnlockMethod.value || "") : "",
+            reference: requestedPlan === "map" && mapUnlockReference ? String(mapUnlockReference.value || "") : ""
+          })
+        })
+          .then(function (response) {
+            if (!response.ok) throw new Error("unlock_failed");
+            return response.json();
+          })
+          .then(function (payload) {
+            state.record = payload;
+            state.console = payload.console || state.console;
+            state.saving = false;
+            render();
+            setStatus(mapUnlockStatus, successMessage);
+            return true;
+          })
+          .catch(function () {
+            state.saving = false;
+            render();
+            setStatus(mapUnlockStatus, "Could not update the map unlock right now.");
+            return false;
+          });
+      }
+
+      function uploadLogo() {
+        if (!state.shopId || !profileLogoInput || !profileLogoInput.files || !profileLogoInput.files.length) {
+          setStatus(profileStatus, "Choose a picture first.");
+          return;
+        }
+        var file = profileLogoInput.files[0];
+        var validationMessage = validateLogoFile(file);
+        if (validationMessage) {
+          setStatus(profileStatus, validationMessage);
+          setStatus(logoStatus, validationMessage);
+          profileLogoInput.value = "";
+          return;
+        }
+        if (state.uploadingLogo) return;
+        state.uploadingLogo = true;
+        render();
+        setStatus(profileStatus, "Uploading picture...");
+        var body = new FormData();
+        body.append("file", file);
+        fetch("/api/shops/" + encodeURIComponent(state.shopId) + "/logo", {
+          method: "POST",
+          body: body
+        })
+          .then(function (response) {
+            return response.json().catch(function () {
+              return {};
+            }).then(function (payload) {
+              if (!response.ok) {
+                throw new Error(String(payload && payload.error || "upload_failed"));
+              }
+              return payload;
+            });
+          })
+          .then(function (payload) {
+            state.record = payload;
+            state.console = payload.console || state.console;
+            if (state.localLogoPreviewUrl) {
+              URL.revokeObjectURL(state.localLogoPreviewUrl);
+              state.localLogoPreviewUrl = "";
+            }
+            profileLogoInput.value = "";
+            state.uploadingLogo = false;
+            render();
+            setStatus(profileStatus, "Picture uploaded.");
+            setStatus(logoStatus, "Picture uploaded.");
+          })
+          .catch(function (error) {
+            state.uploadingLogo = false;
+            render();
+            var message = logoErrorMessage(error);
+            setStatus(profileStatus, message);
+            setStatus(logoStatus, message);
+          });
+      }
+
+      function fileExtension(name) {
+        var match = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+        return match ? match[1] : "";
+      }
+
+      function validateLogoFile(file) {
+        if (!file) return "Choose a picture first.";
+        if (file.size > 5 * 1024 * 1024) {
+          return "Picture is too large. Keep it under 5 MB.";
+        }
+        var type = String(file.type || "").toLowerCase();
+        var extension = fileExtension(file.name);
+        var supportedTypes = {
+          "image/png": true,
+          "image/jpeg": true,
+          "image/webp": true,
+          "image/gif": true
+        };
+        var supportedExtensions = {
+          png: true,
+          jpg: true,
+          jpeg: true,
+          webp: true,
+          gif: true
+        };
+        if (supportedTypes[type] || supportedExtensions[extension]) {
+          return "";
+        }
+        if (type === "image/heic" || type === "image/heif" || extension === "heic" || extension === "heif") {
+          return "HEIC pictures are not supported yet. Use JPG, PNG, WEBP, or GIF.";
+        }
+        if (type === "image/avif" || extension === "avif") {
+          return "AVIF pictures are not supported yet. Use JPG, PNG, WEBP, or GIF.";
+        }
+        return "Use JPG, PNG, WEBP, or GIF.";
+      }
+
+      function logoErrorMessage(error) {
+        var code = String(error && error.message || "");
+        if (code === "invalid_image_type") {
+          return "Use JPG, PNG, WEBP, or GIF.";
+        }
+        if (code === "file_too_large") {
+          return "Picture is too large. Keep it under 5 MB.";
+        }
+        if (code === "empty_file") {
+          return "That picture file is empty.";
+        }
+        if (code === "shop_not_found") {
+          return "Create the shop first, then add a picture.";
+        }
+        return "Could not upload picture right now.";
+      }
+
+      function loadPaymentOptions() {
+        return fetch("/api/payment-options", { cache: "no-store" })
+          .then(function (response) {
+            if (!response.ok) throw new Error("payment_options_failed");
+            return response.json();
+          })
+          .then(function (payload) {
+            state.paymentOptions = {
+              available: !!(payload && payload.available),
+              methods: Array.isArray(payload && payload.methods) ? payload.methods : []
+            };
+            if (state.console && state.console.billing && state.console.billing.mapUnlock) {
+              var currentMethod = String(state.console.billing.mapUnlock.method || "").trim().toLowerCase();
+              if (currentMethod && !selectedPaymentOption(currentMethod)) {
+                state.console.billing.mapUnlock.method = "";
+              }
+            }
+            render();
+          })
+          .catch(function () {
+            state.paymentOptions = {
+              available: false,
+              methods: []
+            };
+            render();
+          });
+      }
+
+      function loadConsole() {
+        if (!state.shopId) {
+          consoleStatus.textContent = "Cloud Setup";
+          profileHeading.textContent = "Create a shop first.";
+          profileLead.textContent = "The hosted console opens after the shop exists in Hashop.";
+          editSetupLink.href = "/login?mode=register&step=0";
+          setStatus(profileStatus, "No shop selected yet.");
+          setStatus(listingStatus, "Create a shop before adding listings.");
+          setStatus(paymentStatus, "Create a shop before adding payments.");
+          setStatus(ordersStatus, "Create a shop before viewing orders.");
+          return;
+        }
+
+        fetch("/api/shops/" + encodeURIComponent(state.shopId) + "/console")
+          .then(function (response) {
+            if (!response.ok) throw new Error("not_found");
+            return response.json();
+          })
+          .then(function (payload) {
+            state.record = payload;
+            state.console = payload.console || {};
+            render();
+          })
+          .catch(function () {
+            consoleStatus.textContent = "Shop Missing";
+            profileHeading.textContent = "Finish creating " + state.shopId + ".";
+            profileLead.textContent = "This shop does not exist in cloud storage yet. Go back to setup and create it first.";
+            editSetupLink.href = "/login?mode=register&step=0";
+            setStatus(profileStatus, "This shop is not saved yet.");
+            setStatus(listingStatus, "This shop is not saved yet.");
+            setStatus(paymentStatus, "This shop is not saved yet.");
+            setStatus(ordersStatus, "This shop is not saved yet.");
+          });
+      }
+
+      tabButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          setActiveTab(button.getAttribute("data-tab-button"));
+        });
+      });
+
+      profileStepButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          syncProfileDraft();
+          setProfileStep(Number(button.getAttribute("data-profile-step-jump") || "0"));
+        });
+      });
+
+      if (profileLocation) {
+        profileLocation.addEventListener("input", function () {
+          syncProfileDraft();
+          updateGpsUi();
+        });
+      }
+
+      if (locateProfileBtn) {
+        locateProfileBtn.addEventListener("click", function () {
+          requestCurrentLocation(true);
+        });
+      }
+
+      if (profileName) {
+        profileName.addEventListener("input", syncProfileDraft);
+      }
+
+      if (profileType) {
+        profileType.addEventListener("input", syncProfileDraft);
+      }
+
+      if (profileContact) {
+        profileContact.addEventListener("input", syncProfileDraft);
+      }
+
+      if (profileHours) {
+        profileHours.addEventListener("input", syncProfileDraft);
+      }
+
+      if (profileNotes) {
+        profileNotes.addEventListener("input", syncProfileDraft);
+      }
+
+      if (mapUnlockMethod) {
+        mapUnlockMethod.addEventListener("change", function () {
+          var mapUnlock = ensureBillingDraft();
+          if (!mapUnlock) return;
+          mapUnlock.method = String(mapUnlockMethod.value || "").trim().toLowerCase();
+          render();
+        });
+      }
+
+      if (mapUnlockReference) {
+        mapUnlockReference.addEventListener("input", function () {
+          var mapUnlock = ensureBillingDraft();
+          if (!mapUnlock) return;
+          mapUnlock.reference = String(mapUnlockReference.value || "");
+        });
+      }
+
+      if (profileLogoPreview) {
+        profileLogoPreview.addEventListener("error", function () {
+          profileLogoPreview.hidden = true;
+          profileLogoPreview.removeAttribute("src");
+          profileLogoFallback.hidden = false;
+        });
+      }
+
+      if (uploadLogoBtn) {
+        uploadLogoBtn.addEventListener("click", function () {
+          if (profileLogoInput) {
+            profileLogoInput.click();
+          }
+        });
+      }
+
+      if (profileLogoInput) {
+        profileLogoInput.addEventListener("change", function () {
+          var file = profileLogoInput.files && profileLogoInput.files[0];
+          if (!file) return;
+          var validationMessage = validateLogoFile(file);
+          if (validationMessage) {
+            if (state.localLogoPreviewUrl) {
+              URL.revokeObjectURL(state.localLogoPreviewUrl);
+              state.localLogoPreviewUrl = "";
+            }
+            render();
+            setStatus(profileStatus, validationMessage);
+            setStatus(logoStatus, validationMessage);
+            profileLogoInput.value = "";
+            return;
+          }
+          if (state.localLogoPreviewUrl) {
+            URL.revokeObjectURL(state.localLogoPreviewUrl);
+          }
+          state.localLogoPreviewUrl = URL.createObjectURL(file);
+          render();
+          setStatus(logoStatus, "Uploading picture...");
+          uploadLogo();
+        });
+      }
+
+      if (profilePrevBtn) {
+        profilePrevBtn.addEventListener("click", function () {
+          syncProfileDraft();
+          setProfileStep(state.profileStep - 1);
+        });
+      }
+
+      saveProfileBtn.addEventListener("click", function () {
+        if (!state.console) return;
+        syncProfileDraft();
+        var isLastProfileStep = state.profileStep === profileStepButtons.length - 1;
+        saveConsole(profileStatus, isLastProfileStep ? "Profile saved." : "Saved. Continue setup.")
+          .then(function (saved) {
+            if (saved && !isLastProfileStep) {
+              setProfileStep(state.profileStep + 1);
+            }
+          });
+      });
+
+      addListingBtn.addEventListener("click", function () {
+        if (!state.console) return;
+        var listing = makeListing();
+        if (!listing.title) {
+          setStatus(listingStatus, "Add a listing title first.");
+          return;
+        }
+        state.console.listings = Array.isArray(state.console.listings) ? state.console.listings : [];
+        state.console.listings.push(listing);
+        resetListingForm();
+        saveConsole(listingStatus, "Listing saved.");
+      });
+
+      addPaymentBtn.addEventListener("click", function () {
+        if (!state.console) return;
+        var payment = makePayment();
+        if (!payment.label || (!payment.details && !payment.upiId && !payment.btcAddress && !payment.ethAddress)) {
+          setStatus(paymentStatus, "Add a label and at least one payment value.");
+          return;
+        }
+        state.console.payments = Array.isArray(state.console.payments) ? state.console.payments : [];
+        state.console.payments.push(payment);
+        resetPaymentForm();
+        saveConsole(paymentStatus, "Payment method saved.");
+      });
+
+      if (requestMapUnlockBtn) {
+        requestMapUnlockBtn.addEventListener("click", function () {
+          saveMapUnlock("map", "Unlock request saved.");
+        });
+      }
+
+      if (keepFreePlanBtn) {
+        keepFreePlanBtn.addEventListener("click", function () {
+          saveMapUnlock("free", "This shop now stays on the free link-only plan.");
+        });
+      }
+
+      document.addEventListener("click", function (event) {
+        var removeButton = event.target.closest(".console-remove");
+        if (!removeButton || !state.console) return;
+        var card = removeButton.closest("[data-remove-type]");
+        if (!card) return;
+        var removeType = card.getAttribute("data-remove-type");
+        var removeId = card.getAttribute("data-remove-id");
+        if (removeType === "listing") {
+          state.console.listings = (state.console.listings || []).filter(function (item) {
+            return String(item.id) !== String(removeId);
+          });
+          saveConsole(listingStatus, "Listing removed.");
+        }
+        if (removeType === "payment") {
+          state.console.payments = (state.console.payments || []).filter(function (item) {
+            return String(item.id) !== String(removeId);
+          });
+          saveConsole(paymentStatus, "Payment method removed.");
+        }
+      });
+
+      setActiveTab("profile");
+      setProfileStep(0);
+      loadPaymentOptions();
+      loadConsole();
+    }());
+  </script>
+</body>
+</html>
