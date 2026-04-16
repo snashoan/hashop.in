@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Hashop | Discovery Map</title>
-  <meta name="description" content="Browse shops on the Hashop discovery map and open Login to manage your shop.">
+  <meta name="description" content="Browse shops on the Hashop discovery map and log into your registered shop.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/site/styles.css?v=site-20260405b">
-  <link rel="stylesheet" href="/site/home.css?v=home-20260405k">
+  <link rel="stylesheet" href="/site/styles.css?v=site-20260408a">
+  <link rel="stylesheet" href="/site/home.css?v=home-20260409e">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body>
   <div class="shell shell-home">
     <header class="chrome home-chrome">
       <a class="brand" href="/" aria-label="Hashop home">
-        <img class="home-brand-logo" src="/site/hashop-logo.svg?v=hashop-20260405b" alt="" aria-hidden="true">
+        <img class="home-brand-logo" src="/site/hashop-logo.svg?v=hashop-20260408a" alt="" aria-hidden="true">
         <span class="home-brand-copy">
           <span class="brand-name home-brand-name">Hashop</span>
         </span>
@@ -28,13 +28,25 @@
         <div id="discoveryMap" class="discovery-map"></div>
       </section>
 
+      <section class="home-hero" aria-label="Hashop discovery intro">
+        <p class="home-hero-line">Scan map. Open a shop. Order fast.</p>
+      </section>
+
       <section class="shop-list-panel" aria-label="Shop list">
         <div class="shop-panel-bar">
           <button class="shop-back-action" type="button" id="shopBackAction" aria-label="Open Login">Login</button>
           <button class="shop-pane-toggle" type="button" id="shopPaneToggle" aria-expanded="false" aria-label="Expand shop list">
             <span class="shop-pane-handle" aria-hidden="true"></span>
           </button>
-          <button class="shop-list-action" type="button" id="locateAction">Locate me</button>
+          <div class="shop-panel-actions">
+            <button class="shop-list-action" type="button" id="locateAction">Cart</button>
+            <button class="shop-pane-nav-action" type="button" id="ordersAction" aria-label="Open recent history" title="Open recent history">
+              <span class="shop-pane-nav-glyph is-orders" aria-hidden="true"></span>
+            </button>
+            <button class="shop-pane-nav-action" type="button" id="mapLocateAction" aria-label="Locate me" title="Locate me">
+              <span class="shop-pane-nav-glyph is-locate" aria-hidden="true"></span>
+            </button>
+          </div>
         </div>
         <div class="shop-list-head">
           <label class="shop-list-search" aria-label="Search">
@@ -50,6 +62,6 @@
 
   <script id="bootstrapData" type="application/json">__HASHOP_BOOTSTRAP__</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="/site/home.js?v=home-20260405k" defer></script>
+  <script src="/site/home.js?v=home-20260409e" defer></script>
 </body>
 </html>

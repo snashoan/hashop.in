@@ -7,6 +7,9 @@
       return "";
     }
   }());
+  var DEFAULT_DISCOVERY_CENTER = [12.9716, 77.5946];
+  var DEFAULT_DISCOVERY_ZOOM = 14;
+  var LOCATE_REVEAL_DELAY_MS = 900;
 
   function loadBootstrap() {
     try {
@@ -25,6 +28,15 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function clampText(value, maxLength) {
+    var text = String(value || "").replace(/\s+/g, " ").trim();
+    var limit = Number(maxLength || 0);
+    if (!text || !Number.isFinite(limit) || limit < 1 || text.length <= limit) {
+      return text;
+    }
+    return text.slice(0, Math.max(1, limit - 1)).trimEnd() + "…";
   }
 
   function shopUrl(shop) {
@@ -342,6 +354,33 @@
     return normalized;
   }
 
+  function pruneAccountSessionToKnownShops(state) {
+    if (!state || !state.accountSession || !state.shopById) return state ? state.accountSession : null;
+    var knownShopIds = Object.keys(state.shopById);
+    if (!knownShopIds.length) return state.accountSession;
+    var session = state.accountSession;
+    var ownerShops = accountOwnerShops(session);
+    var filteredOwnerShops = ownerShops.filter(function (shop) {
+      var shopId = String(shop && shop.shopId || "").trim();
+      return !!shopId && knownShopIds.indexOf(shopId) !== -1;
+    });
+    if (filteredOwnerShops.length === ownerShops.length) {
+      return session;
+    }
+    if (!filteredOwnerShops.length) {
+      return setAccountSession(state, null);
+    }
+    return setAccountSession(state, {
+      displayName: session.displayName,
+      roles: session.roles,
+      ownerShops: filteredOwnerShops,
+      preferredOwnerShopId: preferredOwnerShopId({
+        ownerShops: filteredOwnerShops,
+        preferredOwnerShopId: session.preferredOwnerShopId
+      })
+    });
+  }
+
   function saveShopIdentity(shopName, shopId) {
     var safeShopId = slugify(String(shopId || "").trim()).slice(0, 64);
     if (!safeShopId) return loadAccountSession();
@@ -470,6 +509,85 @@
     return refs.length;
   }
 
+  function buyerHistorySummaryLabel(cartCount, orderCount) {
+    var safeCartCount = Math.max(0, Number(cartCount || 0) || 0);
+    var safeOrderCount = Math.max(0, Number(orderCount || 0) || 0);
+    if (safeCartCount && safeOrderCount) {
+      return safeCartCount + " cart" + (safeCartCount === 1 ? "" : "s") + " • " + safeOrderCount + " order" + (safeOrderCount === 1 ? "" : "s");
+    }
+    if (safeCartCount) {
+      return safeCartCount + " saved cart" + (safeCartCount === 1 ? "" : "s");
+    }
+    if (safeOrderCount) {
+      return safeOrderCount + " recent order" + (safeOrderCount === 1 ? "" : "s");
+    }
+    return "No history yet";
+  }
+
+  function ownerOrdersNavShopId(state) {
+    if (!state) return "";
+    if (isOwnerViewingShop(state)) {
+      return String(state.activeShopId || "").trim();
+    }
+    return String(preferredOwnerShopId(state.accountSession, state.ownerShopId) || "").trim();
+  }
+
+  function ownerPendingOrdersNavCount(state) {
+    if (!state) return 0;
+    var shopId = ownerOrdersNavShopId(state);
+    if (!shopId) return 0;
+    var consoleData = state.shopConsoles && state.shopConsoles[shopId];
+    var orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
+    return pendingOwnerOrdersCount(orders);
+  }
+
+  function ownerOrdersNavActive(state) {
+    return !!(
+      state
+      && isOwnerViewingShop(state)
+      && state.ownerPanel
+      && state.ownerPanel.tab === "history"
+      && state.ownerPanel.section === "orders"
+    );
+  }
+
+  function normalizeOwnerSettingsSection(value) {
+    var section = String(value || "").trim().toLowerCase();
+    return section === "payments" ? "payments" : "profile";
+  }
+
+  function normalizeOwnerHistorySection(value) {
+    var section = String(value || "").trim().toLowerCase();
+    if (section === "items" || section === "stats") return section;
+    return "orders";
+  }
+
+  function shouldUseOwnerOrdersNav(state) {
+    if (!state) return false;
+    var shopId = ownerOrdersNavShopId(state);
+    if (!shopId) return false;
+    if (isOwnerViewingShop(state)) return true;
+    return !state.activeShopId && state.debugPaneView !== "login" && state.debugPaneView !== "recent-orders";
+  }
+
+  function orderedOwnerOrders(orders) {
+    if (!Array.isArray(orders)) return [];
+    function priority(order) {
+      var status = normalizedOrderStatus(order);
+      if (status === "created" || status === "payment_pending") return 0;
+      if (status === "accepted" || status === "ready" || status === "paid") return 1;
+      if (status === "completed" || status === "cancelled") return 2;
+      return 1;
+    }
+    return orders.slice().sort(function (left, right) {
+      var priorityDelta = priority(left) - priority(right);
+      if (priorityDelta) return priorityDelta;
+      var timestampDelta = Number(right && right.timestamp || 0) - Number(left && left.timestamp || 0);
+      if (timestampDelta) return timestampDelta;
+      return String(right && right.id || "").localeCompare(String(left && left.id || ""));
+    });
+  }
+
   function rememberBuyerOrder(state, order, shopId) {
     if (!state || !order) return null;
     var current = state.buyerProfile && typeof state.buyerProfile === "object"
@@ -485,6 +603,149 @@
       name: String(order.buyerName || current.name || "").trim(),
       contact: String(order.buyerContact || current.contact || "").trim(),
       recentOrderRefs: nextRefs
+    });
+  }
+
+  function orderAmountValue(order) {
+    if (!order || typeof order !== "object") return 0;
+    var total = priceNumber(order.total);
+    if (total > 0) return total;
+    var price = priceNumber(order.price);
+    var quantity = Math.max(0, Number(order.quantity || 0));
+    if (price > 0 && quantity > 0) return price * quantity;
+    var items = Array.isArray(order.items) ? order.items : [];
+    return items.reduce(function (sum, item) {
+      return sum + (priceNumber(item && item.price) * Math.max(0, Number(item && item.quantity || 0)));
+    }, 0);
+  }
+
+  function ownerSalesStats(orders) {
+    var list = Array.isArray(orders) ? orders : [];
+    var dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    return list.reduce(function (stats, order) {
+      var status = normalizedOrderStatus(order);
+      var timestamp = Number(order && order.timestamp || 0);
+      var amount = orderAmountValue(order);
+      stats.totalOrders += 1;
+      if (status === "created" || status === "payment_pending") stats.pendingOrders += 1;
+      if (status === "accepted") stats.acceptedOrders += 1;
+      if (status === "ready") stats.readyOrders += 1;
+      if (status === "paid" || status === "completed") {
+        stats.settledOrders += 1;
+        stats.revenue += amount;
+      }
+      if (timestamp >= dayStart.getTime()) {
+        stats.todayOrders += 1;
+      }
+      return stats;
+    }, {
+      totalOrders: 0,
+      pendingOrders: 0,
+      acceptedOrders: 0,
+      readyOrders: 0,
+      settledOrders: 0,
+      todayOrders: 0,
+      revenue: 0
+    });
+  }
+
+  function ownerOrderDraft(state, shopId) {
+    if (!state || !shopId) {
+      return {
+        buyerName: "",
+        buyerContact: "",
+        notes: "",
+        paymentMode: "on_receive",
+        items: {}
+      };
+    }
+    if (!state.ownerOrderDraftByShop) {
+      state.ownerOrderDraftByShop = {};
+    }
+    if (!state.ownerOrderDraftByShop[shopId]) {
+      state.ownerOrderDraftByShop[shopId] = {
+        buyerName: "",
+        buyerContact: "",
+        notes: "",
+        paymentMode: "on_receive",
+        items: {}
+      };
+    }
+    return state.ownerOrderDraftByShop[shopId];
+  }
+
+  function setOwnerOrderDraftField(state, shopId, field, value) {
+    if (!state || !shopId || !field) return;
+    var draft = ownerOrderDraft(state, shopId);
+    if (field === "paymentMode") {
+      draft.paymentMode = String(value || "").trim().toLowerCase() === "before_delivery"
+        ? "before_delivery"
+        : "on_receive";
+      return;
+    }
+    draft[field] = String(value || "");
+  }
+
+  function stepOwnerOrderDraftItem(state, shopId, itemId, delta) {
+    if (!state || !shopId || !itemId || !delta) return;
+    var draft = ownerOrderDraft(state, shopId);
+    var nextCount = Math.max(0, Number(draft.items && draft.items[itemId] || 0) + Number(delta || 0));
+    if (!draft.items) draft.items = {};
+    if (nextCount > 0) {
+      draft.items[itemId] = nextCount;
+    } else {
+      delete draft.items[itemId];
+    }
+  }
+
+  function clearOwnerOrderDraft(state, shopId) {
+    if (!state || !shopId || !state.ownerOrderDraftByShop) return;
+    delete state.ownerOrderDraftByShop[shopId];
+  }
+
+  function ownerDraftItems(detail, draft) {
+    if (!detail || !draft) return [];
+    return cartItems(detail, draft.items || {});
+  }
+
+  function refreshItemLibrary(state, options) {
+    if (!state) return Promise.resolve([]);
+    var force = !!(options && options.force);
+    var silent = !!(options && options.silent);
+    if (state.itemLibraryLoading && !force) {
+      return Promise.resolve(Array.isArray(state.itemLibrary) ? state.itemLibrary : []);
+    }
+    if (!force && Array.isArray(state.itemLibrary) && state.itemLibrary.length) {
+      return Promise.resolve(state.itemLibrary);
+    }
+    if (!silent) {
+      state.itemLibraryLoading = true;
+      state.itemLibraryError = "";
+      if (isOwnerViewingShop(state) && state.ownerPanel.tab === "history" && state.ownerPanel.section === "items") {
+        renderShopList(state);
+      }
+    }
+    return fetchItemLibrary(240).then(function (result) {
+      if (!result || !result.ok) {
+        throw new Error(String(result && result.payload && result.payload.error || "item_library_failed"));
+      }
+      state.itemLibrary = Array.isArray(result.payload && result.payload.items) ? result.payload.items : [];
+      state.itemLibraryLoading = false;
+      state.itemLibraryError = "";
+      if (isOwnerViewingShop(state) && state.ownerPanel.tab === "history" && state.ownerPanel.section === "items") {
+        renderShopList(state);
+      }
+      return state.itemLibrary;
+    }).catch(function () {
+      state.itemLibraryLoading = false;
+      if (!silent) {
+        state.itemLibraryError = "Could not load saved items.";
+        if (isOwnerViewingShop(state) && state.ownerPanel.tab === "history" && state.ownerPanel.section === "items") {
+          renderShopList(state);
+        }
+      }
+      return Array.isArray(state.itemLibrary) ? state.itemLibrary : [];
     });
   }
 
@@ -611,33 +872,6 @@
     });
   }
 
-  function attemptCreate(shopId, shopName, password) {
-    return window.fetch("/api/shops", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        vendor_id: shopId,
-        display_name: shopName,
-        reach_plan: "free",
-        password: password,
-        map_unlock: {
-          method: "",
-          reference: ""
-        }
-      })
-    }).then(function (response) {
-      return parseJson(response).then(function (payload) {
-        return {
-          ok: response.ok,
-          status: response.status,
-          payload: payload
-        };
-      });
-    });
-  }
-
   function createShopOrder(shopId, payload) {
     return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/orders", {
       method: "POST",
@@ -673,6 +907,70 @@
         };
       });
     });
+  }
+
+  function fetchItemLibrary(limit) {
+    var params = new URLSearchParams();
+    if (limit != null) {
+      params.set("limit", String(limit));
+    }
+    return window.fetch("/api/items/library" + (params.toString() ? ("?" + params.toString()) : ""), {
+      cache: "no-store"
+    }).then(function (response) {
+      return parseJson(response).then(function (payload) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: payload
+        };
+      });
+    });
+  }
+
+  function uploadShopLogo(shopId, file) {
+    var formData = new FormData();
+    formData.append("file", file);
+    return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/logo", {
+      method: "POST",
+      body: formData
+    }).then(function (response) {
+      return parseJson(response).then(function (payload) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: payload
+        };
+      });
+    });
+  }
+
+  function uploadOwnerItemImage(shopId, itemId, file) {
+    var formData = new FormData();
+    formData.append("file", file);
+    return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/items/" + encodeURIComponent(itemId) + "/image", {
+      method: "POST",
+      body: formData
+    }).then(function (response) {
+      return parseJson(response).then(function (payload) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: payload
+        };
+      });
+    });
+  }
+
+  function shopLogoUrl(shopId) {
+    var safeShopId = String(shopId || "").trim();
+    if (!safeShopId) return "";
+    return "/api/shops/" + encodeURIComponent(safeShopId) + "/logo";
+  }
+
+  function assetFileUrl(fileName) {
+    var safeName = String(fileName || "").trim();
+    if (!safeName) return "";
+    return "/api/assets/" + encodeURIComponent(safeName);
   }
 
   function mergeShopRecord(state, record, fallbackName) {
@@ -883,12 +1181,25 @@
     return mode === "before_delivery" ? "before_delivery" : "on_receive";
   }
 
+  function normalizedOrderStatus(order) {
+    var status = String(order && order.status || "").trim().toLowerCase();
+    var mode = orderPaymentMode(order);
+    if (!status || status === "new") {
+      return mode === "before_delivery" ? "payment_pending" : "created";
+    }
+    if (status === "pending") {
+      return mode === "before_delivery" ? "payment_pending" : "created";
+    }
+    return status;
+  }
+
   function orderPaymentModeLabel(order) {
     return orderPaymentMode(order) === "before_delivery" ? "Pay before" : "Pay on receive";
   }
 
   function orderStatusText(order) {
-    var status = String(order && order.status || "").trim().toLowerCase();
+    var status = normalizedOrderStatus(order);
+    if (status === "created") return "Pending";
     if (status === "payment_pending") return "Waiting for payment";
     if (status === "accepted") return "Accepted";
     if (status === "ready") return "Ready";
@@ -899,7 +1210,7 @@
   }
 
   function buyerOrderStatusText(order) {
-    var status = String(order && order.status || "").trim().toLowerCase();
+    var status = normalizedOrderStatus(order);
     if (status === "created") return "Waiting for shop";
     if (status === "payment_pending") return "Waiting for payment";
     if (status === "accepted") return "Confirmed by shop";
@@ -911,7 +1222,7 @@
   }
 
   function buyerConfirmationTitle(order) {
-    var status = String(order && order.status || "").trim().toLowerCase();
+    var status = normalizedOrderStatus(order);
     if (status === "accepted") return "Shop confirmed your order.";
     if (status === "ready") return "Order is ready.";
     if (status === "paid") return "Payment confirmed.";
@@ -922,11 +1233,11 @@
   }
 
   function buyerConfirmationMessage(order) {
-    var status = String(order && order.status || "").trim().toLowerCase();
+    var status = normalizedOrderStatus(order);
     if (status === "accepted") return "The shop accepted your order. This screen keeps updating as they move it forward.";
-    if (status === "ready") return "The shop marked your order ready. Open Recent orders anytime to check later.";
+    if (status === "ready") return "The shop marked your order ready. Open Recent history anytime to check later.";
     if (status === "paid") return "The shop confirmed payment. The next status update will appear here automatically.";
-    if (status === "completed") return "This order is finished. You can still reopen it from Recent orders.";
+    if (status === "completed") return "This order is finished. You can still reopen it from Recent history.";
     if (status === "cancelled") return "The shop cancelled this order.";
     if (status === "payment_pending") return "Your order is saved. Once payment is confirmed, this screen will update automatically.";
     return "Your order is saved. This screen waits for the shop confirmation callback and updates automatically.";
@@ -966,13 +1277,13 @@
   function pendingOwnerOrdersCount(orders) {
     if (!Array.isArray(orders)) return 0;
     return orders.reduce(function (sum, order) {
-      var status = String(order && order.status || "").trim().toLowerCase();
-      return sum + (status === "completed" || status === "cancelled" ? 0 : 1);
+      var status = normalizedOrderStatus(order);
+      return sum + (status === "created" || status === "payment_pending" ? 1 : 0);
     }, 0);
   }
 
   function nextOwnerOrderAction(order) {
-    var status = String(order && order.status || "").trim().toLowerCase();
+    var status = normalizedOrderStatus(order);
     var mode = orderPaymentMode(order);
     if (mode === "before_delivery") {
       if (status === "payment_pending" || status === "created") {
@@ -1036,7 +1347,7 @@
         gps: gps,
         hours: String(detail && detail.hours || "").trim(),
         notes: String(detail && detail.note || "").trim(),
-        logoFile: ""
+        logoFile: String(detail && detail.logoFile || "").trim()
       },
       listings: items.map(function (item, index) {
         return {
@@ -1045,8 +1356,10 @@
           description: String(item.description || "").trim(),
           price: String(item.price || "").trim(),
           quantity: Math.max(0, Number(item.quantity || 0)),
-          imageFiles: [],
-          createdAt: 0
+          imageFiles: Array.isArray(item.imageFiles) ? item.imageFiles.slice(0, 8).map(function (fileName) {
+            return String(fileName || "").trim();
+          }).filter(Boolean) : [],
+          createdAt: Math.max(0, Number(item.createdAt || 0))
         };
       }),
       payments: paymentEntries.map(function (item, index) {
@@ -1148,6 +1461,33 @@
     });
   }
 
+  function refreshOwnerOrdersNavData(state, options) {
+    if (!state) return Promise.resolve(null);
+    var shopId = ownerOrdersNavShopId(state);
+    var force = !!(options && options.force);
+    if (!shopId) {
+      state.ownerOrdersNavLoading = false;
+      syncActionButton(state);
+      return Promise.resolve(null);
+    }
+    if (!force && state.shopConsoles && state.shopConsoles[shopId]) {
+      state.ownerOrdersNavLoading = false;
+      syncActionButton(state);
+      return Promise.resolve(state.shopConsoles[shopId]);
+    }
+    state.ownerOrdersNavLoading = true;
+    syncActionButton(state);
+    return refreshShopConsole(state, shopId, { preserveScroll: true })
+      .catch(function () {
+        return null;
+      })
+      .then(function (record) {
+        state.ownerOrdersNavLoading = false;
+        syncActionButton(state);
+        return record;
+      });
+  }
+
   function ownerStatusMarkup(state) {
     var tone = String(state.ownerPanel.tone || "").trim();
     return '<p class="shop-owner-status' + (tone ? (' is-' + escapeHtml(tone)) : '') + '">' + escapeHtml(state.ownerPanel.message || "") + '</p>';
@@ -1214,9 +1554,15 @@
         '</div>' +
       '</section>'
     ) : '';
+    var selectedItemEditorMarkup = selectedItemMarkup ? (
+      '<div class="shop-owner-item-editor">' +
+        '<span class="shop-owner-inline-label">Edit selected item</span>' +
+        selectedItemMarkup +
+      '</div>'
+    ) : '';
     var ordersMarkup = orders.length ? (
       '<div class="shop-owner-order-list">' +
-        orders.map(function (item) {
+        orderedOwnerOrders(orders).map(function (item) {
           var nextAction = nextOwnerOrderAction(item);
           return '' +
             '<article class="shop-owner-order-card">' +
@@ -1282,7 +1628,7 @@
           '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
           '<div class="shop-owner-item-list">' +
             itemPickerMarkup +
-            selectedItemMarkup +
+            selectedItemEditorMarkup +
           '</div>' +
         '</form>' +
         '<form class="shop-owner-form" data-owner-form="payments">' +
@@ -1370,9 +1716,15 @@
         '</div>' +
       '</section>'
     ) : '';
+    var selectedItemEditorMarkup = selectedItemMarkup ? (
+      '<div class="shop-owner-item-editor">' +
+        '<span class="shop-owner-inline-label">Edit selected item</span>' +
+        selectedItemMarkup +
+      '</div>'
+    ) : '';
     var ordersMarkup = orders.length ? (
       '<div class="shop-owner-order-list">' +
-        orders.map(function (item) {
+        orderedOwnerOrders(orders).map(function (item) {
           var nextAction = nextOwnerOrderAction(item);
           return '' +
             '<article class="shop-owner-order-card">' +
@@ -1454,7 +1806,7 @@
             '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
             '<div class="shop-owner-item-list">' +
               itemPickerMarkup +
-              selectedItemMarkup +
+              selectedItemEditorMarkup +
             '</div>' +
           '</form>'
         ) +
@@ -1483,11 +1835,408 @@
       '</section>';
   }
 
+  function ownerItemPreviewMarkup(item, className) {
+    var safeClassName = String(className || "").trim();
+    var imageFiles = Array.isArray(item && item.imageFiles) ? item.imageFiles : [];
+    var firstImage = imageFiles.length ? assetFileUrl(imageFiles[0]) : "";
+    if (firstImage) {
+      return '' +
+        '<span class="shop-owner-item-preview is-image' + (safeClassName ? (" " + safeClassName) : "") + '">' +
+          '<img class="shop-owner-item-preview-image" src="' + escapeHtml(firstImage) + '" alt="' + escapeHtml(String(item && item.title || "Item")) + '">' +
+        '</span>';
+    }
+    return '<span class="shop-owner-item-preview' + (safeClassName ? (" " + safeClassName) : "") + '" aria-hidden="true"></span>';
+  }
+
+  function ownerSelectedItemEditorMarkup(selectedItem) {
+    if (!selectedItem) return "";
+    var imageFiles = Array.isArray(selectedItem.imageFiles) ? selectedItem.imageFiles : [];
+    var galleryMarkup = imageFiles.length ? (
+      '<div class="shop-owner-item-gallery">' +
+        imageFiles.map(function (fileName, index) {
+          return '' +
+            '<span class="shop-owner-item-gallery-thumb' + (index === 0 ? ' is-primary' : '') + '">' +
+              '<img src="' + escapeHtml(assetFileUrl(fileName)) + '" alt="' + escapeHtml((selectedItem.title || "Item") + " image " + (index + 1)) + '">' +
+            '</span>';
+        }).join('') +
+      '</div>'
+    ) : '<p class="shop-owner-media-note">No item images yet.</p>';
+    return '' +
+      '<div class="shop-owner-item-editor">' +
+        '<span class="shop-owner-inline-label">Edit selected item</span>' +
+        '<section class="shop-owner-item-card" data-owner-item-id="' + escapeHtml(selectedItem.id || "") + '">' +
+          '<div class="shop-owner-item-card-head">' +
+            '<div class="shop-owner-item-card-title">' +
+              ownerItemPreviewMarkup(selectedItem, "is-card") +
+              '<div class="shop-owner-item-card-copy">' +
+                '<strong>' + escapeHtml(selectedItem.title || "Item") + '</strong>' +
+                '<span>' + escapeHtml(String(selectedItem.id || "").trim()) + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="shop-owner-grid">' +
+            '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
+            '<div class="shop-owner-field shop-owner-field-wide">' +
+              '<span>Images</span>' +
+              galleryMarkup +
+              '<label class="shop-owner-upload-button">' +
+                '<input class="shop-owner-file-input" type="file" accept="image/*" data-owner-item-image-input="' + escapeHtml(selectedItem.id || "") + '">' +
+                '<span>' + escapeHtml(imageFiles.length ? "Add another image" : "Upload image") + '</span>' +
+              '</label>' +
+            '</div>' +
+          '</div>' +
+          '<div class="shop-owner-item-actions">' +
+            '<button class="shop-owner-save" type="button" data-owner-item-save="' + escapeHtml(selectedItem.id || "") + '">Save item</button>' +
+            '<button class="shop-owner-chip-button is-danger" type="button" data-owner-item-remove="' + escapeHtml(selectedItem.id || "") + '">Remove</button>' +
+          '</div>' +
+        '</section>' +
+      '</div>';
+  }
+
+  function ownerSettingsMarkup(state, detail, consoleData) {
+    if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "settings") return "";
+    var section = normalizeOwnerSettingsSection(state && state.ownerPanel && state.ownerPanel.section);
+    var profile = consoleData && consoleData.profile && typeof consoleData.profile === "object"
+      ? consoleData.profile
+      : createConsoleFromDetail(null, detail).profile;
+    var payments = Array.isArray(consoleData && consoleData.payments) ? consoleData.payments : [];
+    var paymentDetails = "";
+    var upiId = "";
+    var btcAddress = "";
+    var ethAddress = "";
+    payments.forEach(function (payment) {
+      if (!paymentDetails && payment && payment.details) paymentDetails = String(payment.details).trim();
+      if (!upiId && payment && payment.upiId) upiId = String(payment.upiId).trim();
+      if (!btcAddress && payment && payment.btcAddress) btcAddress = String(payment.btcAddress).trim();
+      if (!ethAddress && payment && payment.ethAddress) ethAddress = String(payment.ethAddress).trim();
+    });
+    var pickupGps = parseGpsValue(profile.gps || (detail && detail.gps));
+    var pickupSummary = pickupGps
+      ? (pickupGps[0].toFixed(5) + ", " + pickupGps[1].toFixed(5))
+      : "No pickup point set";
+    var logoMarkup = profile.logoFile ? (
+      '<span class="shop-owner-logo-preview is-logo">' +
+        '<img class="shop-owner-logo-image" src="' + escapeHtml(shopLogoUrl(state.activeShopId)) + '" alt="' + escapeHtml((detail && detail.name) || "Shop logo") + '">' +
+      '</span>'
+    ) : '<span class="shop-owner-logo-preview" aria-hidden="true"></span>';
+    var settingsTabsMarkup = '' +
+      '<div class="shop-owner-tab-row">' +
+        '<button class="shop-owner-tab' + (section === "profile" ? ' is-active' : '') + '" type="button" data-owner-settings-section="profile">Shop</button>' +
+        '<button class="shop-owner-tab' + (section === "payments" ? ' is-active' : '') + '" type="button" data-owner-settings-section="payments">Payments</button>' +
+      '</div>';
+    var bodyMarkup = section === "payments"
+      ? (
+        '<form class="shop-owner-form" data-owner-form="payments">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Payments</strong>' +
+            '<span>What buyers can use here.</span>' +
+          '</div>' +
+          '<div class="shop-owner-grid">' +
+            '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" /></label>' +
+            '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." /></label>' +
+            '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." /></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
+          '</div>' +
+          '<div class="shop-owner-action-row">' +
+            '<button class="shop-owner-save" type="button" data-owner-save="payments">Save payments</button>' +
+          '</div>' +
+        '</form>'
+      )
+      : (
+        '<form class="shop-owner-form" data-owner-form="profile">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Shop settings</strong>' +
+            '<span>Production shop details and pickup point.</span>' +
+          '</div>' +
+          '<div class="shop-owner-grid">' +
+            '<div class="shop-owner-field shop-owner-field-wide">' +
+              '<span>Logo</span>' +
+              '<div class="shop-owner-logo-row">' +
+                logoMarkup +
+                '<div class="shop-owner-logo-copy">' +
+                  '<strong>' + escapeHtml(profile.logoFile ? "Logo uploaded" : "No logo yet") + '</strong>' +
+                  '<span>Square images work best. This shows without an outline in the shop header.</span>' +
+                '</div>' +
+                '<label class="shop-owner-upload-button">' +
+                  '<input class="shop-owner-file-input" type="file" accept="image/*" data-owner-logo-input="true">' +
+                  '<span>' + escapeHtml(profile.logoFile ? "Replace logo" : "Upload logo") + '</span>' +
+                '</label>' +
+              '</div>' +
+            '</div>' +
+            '<label class="shop-owner-field"><span>Name</span><input class="shop-owner-input" name="name" value="' + escapeHtml(profile.name || detail.name || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Type</span><input class="shop-owner-input" name="type" value="' + escapeHtml(profile.type || detail.type || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Hours</span><input class="shop-owner-input" name="hours" value="' + escapeHtml(profile.hours || detail.hours || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Currency prefix</span><input class="shop-owner-input" name="currencyPrefix" value="' + escapeHtml(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "") + '" placeholder="Rs" /></label>' +
+            '<input type="hidden" name="gps" value="' + escapeHtml(profile.gps || "") + '">' +
+            '<div class="shop-owner-field shop-owner-field-wide shop-owner-pickup">' +
+              '<span>Pickup location</span>' +
+              '<div class="shop-owner-pickup-map" id="ownerPickupMap"></div>' +
+              '<div class="shop-owner-pickup-bar">' +
+                '<button class="shop-owner-chip-button" type="button" data-pickup-use-map="true">Use current map</button>' +
+                '<button class="shop-owner-chip-button" type="button" data-pickup-use-me="true">Use my location</button>' +
+                '<span class="shop-owner-pickup-text" id="ownerPickupSummary">' + escapeHtml(pickupSummary) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<label class="shop-owner-field shop-owner-field-wide"><span>Notes</span><textarea class="shop-owner-textarea" name="notes" rows="3">' + escapeHtml(profile.notes || detail.note || "") + '</textarea></label>' +
+          '</div>' +
+          '<div class="shop-owner-action-row">' +
+            '<button class="shop-owner-save" type="button" data-owner-save="profile">Save shop</button>' +
+            '<button class="shop-owner-chip-button is-danger" type="button" data-owner-logout="true">Logout</button>' +
+          '</div>' +
+        '</form>'
+      );
+    return '' +
+      '<section class="shop-owner-stack">' +
+        ownerStatusMarkup(state) +
+        settingsTabsMarkup +
+        bodyMarkup +
+      '</section>';
+  }
+
+  function ownerHistoryMarkup(state, detail, consoleData) {
+    if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "history") return "";
+    var section = normalizeOwnerHistorySection(state && state.ownerPanel && state.ownerPanel.section);
+    var query = normalizeSearch(state && state.searchQuery || "");
+    var listings = Array.isArray(consoleData && consoleData.listings) ? consoleData.listings : [];
+    var orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
+    var selectedItemId = String(state && state.ownerPanel && state.ownerPanel.itemId || "").trim();
+    var selectedItem = listings.find(function (item) {
+      return String(item && item.id || "").trim() === selectedItemId;
+    }) || listings[0] || null;
+    if (selectedItem && state && state.ownerPanel) {
+      state.ownerPanel.itemId = String(selectedItem.id || "").trim();
+    }
+    var historyTabsMarkup = '' +
+      '<div class="shop-owner-tab-row">' +
+        '<button class="shop-owner-tab' + (section === "orders" ? ' is-active' : '') + '" type="button" data-owner-history-section="orders">Orders</button>' +
+        '<button class="shop-owner-tab' + (section === "items" ? ' is-active' : '') + '" type="button" data-owner-history-section="items">Items</button>' +
+        '<button class="shop-owner-tab' + (section === "stats" ? ' is-active' : '') + '" type="button" data-owner-history-section="stats">Stats</button>' +
+      '</div>';
+    var bodyMarkup = "";
+
+    if (section === "orders") {
+      var draft = ownerOrderDraft(state, state.activeShopId);
+      var draftItems = ownerDraftItems(detail, draft);
+      var draftTotal = draftItems.reduce(function (sum, item) {
+        return sum + Number(item.total || 0);
+      }, 0);
+      var filteredOrders = orderedOwnerOrders(orders).filter(function (order) {
+        return matchesSearch([
+          order.title,
+          order.id,
+          order.status,
+          order.paymentLabel,
+          order.total,
+          order.notes,
+          order.address,
+          order.buyerName,
+          order.buyerContact
+        ], query);
+      });
+      bodyMarkup = '' +
+        '<section class="shop-owner-form">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Start order</strong>' +
+            '<span>Walk-in customers can be added here directly from the shop.</span>' +
+          '</div>' +
+          '<div class="shop-owner-grid">' +
+            '<label class="shop-owner-field"><span>Buyer name</span><input class="shop-owner-input" data-owner-order-draft-field="buyerName" value="' + escapeHtml(draft.buyerName || "") + '" placeholder="Optional" /></label>' +
+            '<label class="shop-owner-field"><span>Buyer contact</span><input class="shop-owner-input" data-owner-order-draft-field="buyerContact" value="' + escapeHtml(draft.buyerContact || "") + '" placeholder="Optional" /></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide"><span>Notes</span><textarea class="shop-owner-textarea" data-owner-order-draft-field="notes" rows="2" placeholder="Cash, takeaway, table no...">' + escapeHtml(draft.notes || "") + '</textarea></label>' +
+          '</div>' +
+          '<div class="shop-owner-mode-row">' +
+            '<button class="shop-owner-tab' + (draft.paymentMode === "on_receive" ? ' is-active' : '') + '" type="button" data-owner-order-payment="on_receive">Pay on receive</button>' +
+            '<button class="shop-owner-tab' + (draft.paymentMode === "before_delivery" ? ' is-active' : '') + '" type="button" data-owner-order-payment="before_delivery">Pay before</button>' +
+          '</div>' +
+          (listings.length ? (
+            '<div class="shop-owner-draft-list">' +
+              listings.map(function (item) {
+                var quantity = Math.max(0, Number(draft.items && draft.items[item.id] || 0));
+                return '' +
+                  '<article class="shop-owner-draft-card">' +
+                    '<div class="shop-owner-draft-head">' +
+                      '<div class="shop-owner-draft-title">' +
+                        ownerItemPreviewMarkup(item, "is-draft") +
+                        '<div class="shop-owner-draft-copy">' +
+                          '<strong>' + escapeHtml(item.title || "Item") + '</strong>' +
+                          '<span>' + escapeHtml(formatPrice(item.price, detail && detail.pricing) || (item.quantity > 0 ? ("Qty " + item.quantity) : "Available")) + '</span>' +
+                        '</div>' +
+                      '</div>' +
+                      '<div class="shop-item-stepper">' +
+                        '<button class="shop-item-step" type="button" data-owner-draft-step="-1" data-item-id="' + escapeHtml(item.id || "") + '"' + (quantity ? '' : ' disabled') + '>-</button>' +
+                        '<span class="shop-item-qty">' + escapeHtml(quantity) + '</span>' +
+                        '<button class="shop-item-step" type="button" data-owner-draft-step="1" data-item-id="' + escapeHtml(item.id || "") + '">+</button>' +
+                      '</div>' +
+                    '</div>' +
+                  '</article>';
+              }).join('') +
+            '</div>'
+          ) : '<div class="shop-list-empty">Add items first before starting orders from the shop.</div>') +
+          '<div class="shop-owner-summary-bar">' +
+            '<span>' + escapeHtml(draftItems.length ? (draftItems.reduce(function (sum, item) { return sum + item.quantity; }, 0) + " items selected") : "No items selected") + '</span>' +
+            '<strong>' + escapeHtml(draftTotal > 0 ? formatTotalAmount(draftTotal, detail && detail.pricing) : "0") + '</strong>' +
+          '</div>' +
+          '<div class="shop-owner-action-row">' +
+            '<button class="shop-owner-save" type="button" data-owner-walkin-submit="true"' + (draftItems.length ? '' : ' disabled') + '>Start order</button>' +
+          '</div>' +
+        '</section>' +
+        '<section class="shop-owner-form">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Orders</strong>' +
+            '<span>' + escapeHtml(filteredOrders.length ? (filteredOrders.length + " visible") : "No matching orders") + '</span>' +
+          '</div>' +
+          (filteredOrders.length ? (
+            '<div class="shop-owner-order-list">' +
+              filteredOrders.map(function (item) {
+                var nextAction = nextOwnerOrderAction(item);
+                return '' +
+                  '<article class="shop-owner-order-card">' +
+                    '<div class="shop-owner-order-head">' +
+                      '<strong>' + escapeHtml(item.title || "Order") + '</strong>' +
+                      '<span>' + escapeHtml(orderStatusText(item)) + '</span>' +
+                    '</div>' +
+                    '<div class="shop-owner-order-meta">' +
+                      '<span>' + escapeHtml((item.buyerName || item.buyerContact || "Walk-in / buyer") + ' • ' + orderPaymentModeLabel(item)) + '</span>' +
+                      '<span>' + escapeHtml(item.total || item.price || "-") + '</span>' +
+                    '</div>' +
+                    '<div class="shop-owner-order-meta">' +
+                      '<span>' + escapeHtml(formatOrderTimestamp(item.timestamp)) + '</span>' +
+                      '<span>' + escapeHtml(item.paymentLabel || "Order") + '</span>' +
+                    '</div>' +
+                    '<p>' + escapeHtml(item.address || item.notes || "No order notes yet.") + '</p>' +
+                    (nextAction ? (
+                      '<div class="shop-owner-order-actions">' +
+                        '<button class="shop-owner-save" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="' + escapeHtml(nextAction.nextStatus) + '">' + escapeHtml(nextAction.label) + '</button>' +
+                      '</div>'
+                    ) : '') +
+                  '</article>';
+              }).join('') +
+            '</div>'
+          ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No orders match this search." : "No orders yet.") + '</div>') +
+        '</section>';
+    } else if (section === "items") {
+      var visibleItems = listings.filter(function (item) {
+        return matchesSearch([item.title, item.description, item.price, item.id], query);
+      });
+      var libraryItems = (Array.isArray(state.itemLibrary) ? state.itemLibrary : []).filter(function (item) {
+        return String(item && item.shopId || "").trim() !== String(state.activeShopId || "").trim()
+          && matchesSearch([item.title, item.description, item.shopName, item.shopId, item.price], query);
+      }).slice(0, 40);
+      bodyMarkup = '' +
+        '<section class="shop-owner-form" data-owner-form="item">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Add item</strong>' +
+            '<span>Create a new listing for this shop.</span>' +
+          '</div>' +
+          '<div class="shop-owner-grid">' +
+            '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
+            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" placeholder="20" /></label>' +
+            '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
+          '</div>' +
+          '<div class="shop-owner-action-row">' +
+            '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
+          '</div>' +
+        '</section>' +
+        '<section class="shop-owner-form">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Your items</strong>' +
+            '<span>' + escapeHtml(listings.length ? (listings.length + " saved in this shop") : "No items saved yet") + '</span>' +
+          '</div>' +
+          '<div class="shop-owner-item-list">' +
+            (visibleItems.length ? (
+              '<div class="shop-owner-item-picker">' +
+                visibleItems.map(function (item) {
+                  var itemId = String(item.id || "").trim();
+                  return '' +
+                    '<button class="shop-owner-item-select' + (selectedItem && itemId === String(selectedItem.id || "").trim() ? ' is-selected' : '') + '" type="button" data-owner-item-select="' + escapeHtml(itemId) + '">' +
+                      '<span class="shop-owner-item-select-row">' +
+                        ownerItemPreviewMarkup(item, "is-mini") +
+                        '<span class="shop-owner-item-select-copy">' +
+                          '<strong>' + escapeHtml(item.title || "Item") + '</strong>' +
+                          '<span>' + escapeHtml((item.price ? formatPrice(item.price, detail && detail.pricing) + ' • ' : '') + 'Qty ' + Math.max(0, Number(item.quantity || 0))) + '</span>' +
+                        '</span>' +
+                      '</span>' +
+                    '</button>';
+                }).join('') +
+              '</div>'
+            ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No items match this search." : "No items yet.") + '</div>') +
+            ownerSelectedItemEditorMarkup(selectedItem) +
+          '</div>' +
+        '</section>' +
+        '<section class="shop-owner-form">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Local item library</strong>' +
+            '<span>Reuse listings already saved in the local server DB.</span>' +
+          '</div>' +
+          (state.itemLibraryLoading
+            ? '<div class="shop-list-empty">Loading saved items...</div>'
+            : state.itemLibraryError
+            ? '<div class="shop-pane-notice is-error">' + escapeHtml(state.itemLibraryError) + '</div>'
+            : libraryItems.length
+            ? (
+              '<div class="shop-owner-library-grid">' +
+                libraryItems.map(function (item) {
+                  return '' +
+                    '<article class="shop-owner-library-card">' +
+                      '<div class="shop-owner-library-head">' +
+                        ownerItemPreviewMarkup(item, "is-library") +
+                        '<div class="shop-owner-library-copy">' +
+                          '<strong>' + escapeHtml(item.title || "Item") + '</strong>' +
+                          '<span>' + escapeHtml((item.shopName || item.shopId || "Shop") + ' • @' + (item.shopId || "")) + '</span>' +
+                        '</div>' +
+                      '</div>' +
+                      '<p>' + escapeHtml(item.description || "Ready to import into this shop.") + '</p>' +
+                      '<div class="shop-owner-library-meta">' +
+                        '<span>' + escapeHtml(formatPrice(item.price, detail && detail.pricing) || "-") + '</span>' +
+                        '<span>' + escapeHtml("Qty " + Math.max(0, Number(item.quantity || 0))) + '</span>' +
+                      '</div>' +
+                      '<button class="shop-owner-save" type="button" data-owner-library-import="' + escapeHtml(item.libraryId || "") + '">Import item</button>' +
+                    '</article>';
+                }).join('') +
+              '</div>'
+            )
+            : '<div class="shop-list-empty">' + escapeHtml(query ? "No library items match this search." : "No reusable items found in the local DB yet.") + '</div>') +
+        '</section>';
+    } else {
+      var stats = ownerSalesStats(orders);
+      bodyMarkup = '' +
+        '<section class="shop-owner-form">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Sales statistics</strong>' +
+            '<span>Current numbers for this shop.</span>' +
+          '</div>' +
+          '<div class="shop-owner-stats-grid">' +
+            '<article class="shop-owner-stat-card"><span>Total orders</span><strong>' + escapeHtml(stats.totalOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card"><span>Pending</span><strong>' + escapeHtml(stats.pendingOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card"><span>Accepted</span><strong>' + escapeHtml(stats.acceptedOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card"><span>Ready</span><strong>' + escapeHtml(stats.readyOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card"><span>Settled</span><strong>' + escapeHtml(stats.settledOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card"><span>Today</span><strong>' + escapeHtml(stats.todayOrders) + '</strong></article>' +
+            '<article class="shop-owner-stat-card is-wide"><span>Revenue</span><strong>' + escapeHtml(formatTotalAmount(stats.revenue, detail && detail.pricing) || "0") + '</strong></article>' +
+          '</div>' +
+        '</section>';
+    }
+
+    return '' +
+      '<section class="shop-owner-stack">' +
+        ownerStatusMarkup(state) +
+        historyTabsMarkup +
+        bodyMarkup +
+      '</section>';
+  }
+
   function saveOwnerConsole(state, shopId, consoleData, successMessage) {
     if (!state || !shopId || !consoleData) return Promise.resolve();
     state.ownerPanel.saving = true;
     state.ownerPanel.message = "Saving...";
     state.ownerPanel.tone = "";
+    syncActionButton(state);
     renderShopList(state);
     return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/console", {
       method: "PUT",
@@ -1504,6 +2253,8 @@
         state.ownerPanel.saving = false;
         state.ownerPanel.message = successMessage;
         state.ownerPanel.tone = "success";
+        refreshItemLibrary(state, { force: true, silent: true });
+        syncActionButton(state);
         renderShopList(state);
         if (state.activeShopId === shopId) {
           focusShopOnMap(state, state.shopById[shopId]);
@@ -1515,6 +2266,7 @@
       state.ownerPanel.saving = false;
       state.ownerPanel.message = "Could not save.";
       state.ownerPanel.tone = "error";
+      syncActionButton(state);
       renderShopList(state);
     });
   }
@@ -1615,6 +2367,112 @@
     var consoleData = ensureShopConsole(state, state.activeShopId);
     consoleData.payments = payments;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Payments updated.");
+  }
+
+  function importOwnerLibraryItem(state, libraryId) {
+    if (!state || !state.activeShopId || !libraryId) return;
+    var libraryItems = Array.isArray(state.itemLibrary) ? state.itemLibrary : [];
+    var sourceItem = libraryItems.find(function (item) {
+      return String(item && item.libraryId || "").trim() === String(libraryId || "").trim();
+    }) || null;
+    if (!sourceItem) {
+      state.ownerPanel.message = "Item library entry not found.";
+      state.ownerPanel.tone = "error";
+      renderShopList(state);
+      return;
+    }
+    var consoleData = ensureShopConsole(state, state.activeShopId);
+    var listings = Array.isArray(consoleData.listings) ? consoleData.listings.slice() : [];
+    var newItemId = slugify(sourceItem.title || "item") + "-" + Date.now().toString(36);
+    listings.unshift({
+      id: newItemId,
+      title: String(sourceItem.title || "").trim(),
+      description: String(sourceItem.description || "").trim(),
+      price: String(sourceItem.price || "").trim(),
+      quantity: Math.max(0, Number(sourceItem.quantity || 0)),
+      imageFiles: Array.isArray(sourceItem.imageFiles) ? sourceItem.imageFiles.slice(0, 8) : [],
+      createdAt: Date.now()
+    });
+    state.ownerPanel.itemId = newItemId;
+    consoleData.listings = listings;
+    saveOwnerConsole(state, state.activeShopId, consoleData, "Item imported.");
+  }
+
+  function submitOwnerWalkInOrder(state) {
+    if (!state || !state.activeShopId) return;
+    var detail = state.shopDetails[state.activeShopId] || shopDetailFromPreview(state.shopById[state.activeShopId]);
+    if (!detail) return;
+    var draft = ownerOrderDraft(state, state.activeShopId);
+    var items = ownerDraftItems(detail, draft);
+    if (!items.length) {
+      state.ownerPanel.message = "Select at least one item.";
+      state.ownerPanel.tone = "error";
+      renderShopList(state);
+      return;
+    }
+    var totalAmount = items.reduce(function (sum, item) {
+      return sum + Number(item.total || 0);
+    }, 0);
+    var paymentEntries = payablePaymentEntries(detail, totalAmount);
+    var paymentMode = String(draft.paymentMode || "").trim().toLowerCase() === "before_delivery"
+      ? "before_delivery"
+      : "on_receive";
+    var chosenPayment = paymentMode === "before_delivery" ? (paymentEntries[0] || null) : null;
+    var firstItem = items[0] || null;
+    var title = firstItem ? String(firstItem.title || "").trim() : "Walk-in order";
+    if (firstItem && items.length > 1) {
+      title += " +" + (items.length - 1);
+    }
+    var payload = {
+      buyer_key: "walkin-" + createClientNonce(),
+      buyer_name: String(draft.buyerName || "").trim(),
+      buyer_contact: String(draft.buyerContact || "").trim(),
+      payment_label: chosenPayment ? String(chosenPayment.label || "").trim() : "Walk-in",
+      payment_value: chosenPayment ? String(chosenPayment.value || "").trim() : "",
+      payment_mode: paymentMode,
+      notes: String(draft.notes || "").trim() || "Walk-in order",
+      address: "Walk-in",
+      item_id: String(firstItem && firstItem.id || "").trim(),
+      title: title || "Walk-in order",
+      total: formatTotalAmount(totalAmount, detail.pricing) || String(totalAmount || ""),
+      price: String(firstItem && firstItem.price || "").trim(),
+      quantity: items.reduce(function (sum, item) {
+        return sum + Math.max(0, Number(item.quantity || 0));
+      }, 0),
+      client_nonce: createClientNonce(),
+      items: items.map(function (item) {
+        return {
+          id: String(item.id || "").trim(),
+          title: String(item.title || "").trim(),
+          quantity: Math.max(0, Number(item.quantity || 0)),
+          price: formatPrice(item.price, detail && detail.pricing)
+        };
+      })
+    };
+    state.ownerPanel.saving = true;
+    state.ownerPanel.message = "Starting order...";
+    state.ownerPanel.tone = "";
+    renderShopList(state);
+    createShopOrder(state.activeShopId, payload)
+      .then(function (result) {
+        if (!result || !result.ok) {
+          throw new Error(String(result && result.payload && result.payload.error || "owner_order_create_failed"));
+        }
+        clearOwnerOrderDraft(state, state.activeShopId);
+        state.ownerPanel.saving = false;
+        state.ownerPanel.message = "Order started.";
+        state.ownerPanel.tone = "success";
+        return refreshShopConsole(state, state.activeShopId, { preserveScroll: true });
+      })
+      .then(function () {
+        renderShopList(state);
+      })
+      .catch(function () {
+        state.ownerPanel.saving = false;
+        state.ownerPanel.message = "Could not start the order.";
+        state.ownerPanel.tone = "error";
+        renderShopList(state);
+      });
   }
 
   function submitOwnerOrderAction(state, orderId, nextStatus) {
@@ -1842,6 +2700,7 @@
       contact: String(profile.contact || "").trim(),
       location: String(profile.location || shop.location_label || "").trim(),
       hours: String(profile.hours || "").trim(),
+      logoFile: String(profile.logoFile || "").trim(),
       pricing: normalizePricing({
         prefix: profile.currencyPrefix,
         suffix: profile.currencySuffix,
@@ -1855,7 +2714,11 @@
           title: String(item.title || "").trim(),
           description: String(item.description || "").trim(),
           price: String(item.price || "").trim(),
-          quantity: Number(item.quantity || 0)
+          quantity: Number(item.quantity || 0),
+          imageFiles: Array.isArray(item.imageFiles) ? item.imageFiles.slice(0, 8).map(function (fileName) {
+            return String(fileName || "").trim();
+          }).filter(Boolean) : [],
+          createdAt: Math.max(0, Number(item.createdAt || 0))
         };
       }).filter(function (item) {
         return item.title;
@@ -1986,9 +2849,16 @@
 
     var detail = state.shopDetails[state.activeShopId] || shopDetailFromPreview(shop);
     var ownerMode = isOwnerViewingShop(state);
-    var ownerManaging = ownerMode && state.ownerPanel.tab === "manage";
-    var ownerPreviewMode = ownerMode && !ownerManaging;
-    var ownerEditorMarkup = ownerMode ? ownerManageMarkup(state, detail, ensureShopConsole(state, state.activeShopId)) : "";
+    var ownerConsole = ownerMode ? ensureShopConsole(state, state.activeShopId) : null;
+    var ownerSettings = ownerMode && state.ownerPanel.tab === "settings";
+    var ownerHistory = ownerMode && state.ownerPanel.tab === "history";
+    var ownerOverlayOpen = ownerSettings || ownerHistory;
+    var ownerPreviewMode = ownerMode && !ownerOverlayOpen;
+    var ownerEditorMarkup = ownerSettings
+      ? ownerSettingsMarkup(state, detail, ownerConsole)
+      : ownerHistory
+      ? ownerHistoryMarkup(state, detail, ownerConsole)
+      : "";
     var cart = getShopCart(state, state.activeShopId);
     if (!detail) {
       state.listNode.innerHTML = '<div class="shop-pane-detail"><div class="shop-list-empty">Nothing is listed here yet.</div></div>';
@@ -2008,9 +2878,7 @@
     var query = normalizeSearch(state.searchQuery);
     var statusText = statusLabel(shop, state.userPoint);
     var locationText = String(detail.location || "").trim();
-    var showOwnerPreviewMeta = true;
     var heroOverlineMarkup = '';
-    var ownerTopBarMarkup = '';
     var statsParts = [];
     if (locationText && !(ownerPreviewMode && locationText === "Location pending")) {
       statsParts.push('<span>' + escapeHtml(locationText) + '</span>');
@@ -2105,6 +2973,10 @@
     }) : [];
     var itemsMarkup = filteredItems.length ? filteredItems.map(function (item) {
       var selectedQty = Math.max(0, Number(cart[item.id] || 0));
+      var imageFiles = Array.isArray(item.imageFiles) ? item.imageFiles : [];
+      var itemMediaMarkup = imageFiles.length
+        ? '<span class="shop-pane-item-mark is-image"><img class="shop-pane-item-image" src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(item.title || "Item") + '"></span>'
+        : '<span class="shop-pane-item-mark" aria-hidden="true"></span>';
       var itemMetaMarkup = ownerMode
         ? '<span>' + escapeHtml(item.quantity > 0 ? ("Qty " + item.quantity) : "Available") + '</span>'
         : '<span>' + escapeHtml(item.quantity > 0 ? ("Qty " + item.quantity) : "Available") + '</span>' +
@@ -2116,7 +2988,7 @@
       return '' +
         '<article class="shop-pane-item">' +
           '<div class="shop-pane-item-row">' +
-            '<span class="shop-pane-item-mark" aria-hidden="true"></span>' +
+            itemMediaMarkup +
             '<div class="shop-pane-item-copy">' +
               '<div class="shop-pane-item-head">' +
                 '<strong>' + escapeHtml(item.title) + '</strong>' +
@@ -2156,11 +3028,19 @@
       '</div>'
     ) : '<div class="shop-list-empty">' + escapeHtml(query ? "Nothing in the cart matches this search." : "Add items to build an order here.") + '</div>';
 
+    var shopHeroMarkMarkup = detail.logoFile
+      ? (
+        '<span class="shop-pane-copy-mark is-logo">' +
+          '<img class="shop-pane-logo-image" src="' + escapeHtml(shopLogoUrl(state.activeShopId)) + '" alt="' + escapeHtml((detail.name || shop.display_name || shop.shop_id || "Shop") + " logo") + '">' +
+        '</span>'
+      )
+      : '<span class="shop-pane-copy-mark" aria-hidden="true"></span>';
+
     var shopHeroMarkup = (
       '<div class="shop-pane-hero">' +
         heroOverlineMarkup +
         '<div class="shop-pane-copy-row">' +
-          '<span class="shop-pane-copy-mark" aria-hidden="true"></span>' +
+          shopHeroMarkMarkup +
           '<div class="shop-pane-copy">' +
             '<h2>' + escapeHtml(detail.name || shop.display_name || shop.shop_id) + '</h2>' +
             '<p>' + escapeHtml(detail.note || "Open this shop right from the map.") + '</p>' +
@@ -2211,7 +3091,7 @@
         '</div>' +
         '<div class="shop-pane-confirm-actions">' +
           '<button class="shop-cart-pay" type="button" data-confirm-items="true">Back to items</button>' +
-          '<button class="shop-cart-pay shop-cart-pay-secondary" type="button" data-open-recent-orders="true">Recent orders</button>' +
+          '<button class="shop-cart-pay shop-cart-pay-secondary" type="button" data-open-recent-orders="true">Recent history</button>' +
           (confirmation.paymentMode === "before_delivery" && confirmation.paymentHref && !confirmation.order.paymentPaid
             ? '<button class="shop-cart-pay" type="button" data-confirm-pay-now="true">' + escapeHtml("Pay now" + (confirmation.order && confirmation.order.total ? (" " + confirmation.order.total) : "")) + '</button>'
             : '') +
@@ -2262,13 +3142,12 @@
             '</div>'
           : shopHeroMarkup +
             orderNoticeMarkup +
-            ownerTopBarMarkup +
             statsMarkup +
             ownerEditorMarkup +
-            '<div class="shop-pane-items">' + itemsMarkup + '</div>' +
+            (ownerOverlayOpen ? '' : '<div class="shop-pane-items">' + itemsMarkup + '</div>') +
             (!ownerMode && totalAmount > 0 ? '<button class="shop-cart-pay shop-cart-pay-inline" type="button" data-open-cart="true">' + escapeHtml(paymentMode === "before_delivery" ? ("Pay before " + totalAmountLabel) : "Place order") + '</button>' : '')) +
       '</section>';
-    if (ownerManaging && state.ownerPanel.section === "profile") {
+    if (ownerSettings && state.ownerPanel.section === "profile") {
       ensureOwnerPickupMap(state);
     } else {
       destroyOwnerPickupMap(state);
@@ -2282,11 +3161,11 @@
     var statusTone = String(draft.tone || "").trim();
     var existingAccount = state.accountSession || loadAccountSession();
     var ownerShopCount = accountOwnerShops(existingAccount).length;
-    var loginChip = ownerShopCount ? "Add shop" : "Login";
-    var loginTitle = ownerShopCount ? "Add or open another shop here." : "Open your space here.";
+    var loginChip = ownerShopCount ? "Open shop" : "Login";
+    var loginTitle = ownerShopCount ? "Open another registered shop here." : "Open your registered shop here.";
     var loginCopy = ownerShopCount
-      ? "This shop will merge into the same account session on this device."
-      : "Enter username and password. Existing opens, new creates.";
+      ? "Only production-registered shops can be added to this account session on this device."
+      : "Enter the username and password for an already registered production shop.";
     state.listNode.innerHTML = '' +
       '<section class="shop-pane-detail shop-login-pane">' +
         '<div class="shop-pane-hero shop-login-hero">' +
@@ -2377,7 +3256,7 @@
       '<section class="shop-account-section">' +
         '<div class="shop-account-section-head">' +
           '<strong>Guest buyer on this device</strong>' +
-          '<span>' + escapeHtml(recentCount ? (recentCount + " order" + (recentCount === 1 ? "" : "s")) : "No orders yet") + '</span>' +
+          '<span>' + escapeHtml(buyerHistorySummaryLabel(buyerCartEntries(state).length, recentCount)) + '</span>' +
         '</div>' +
         '<p class="shop-account-note">Buying stays available without logging in. This data is local to this device.</p>' +
         '<div class="shop-account-summary">' +
@@ -2391,12 +3270,12 @@
           '</div>' +
         '</div>' +
         '<div class="shop-account-actions">' +
-          '<button class="shop-owner-save" type="button" data-account-open-orders="true">Recent orders</button>' +
+          '<button class="shop-owner-save" type="button" data-account-open-orders="true">Recent history</button>' +
         '</div>' +
       '</section>';
     var accountActionsMarkup = '' +
       '<div class="shop-account-actions">' +
-        (hasOwner ? '<button class="shop-owner-chip-button" type="button" data-account-open-login="true">Add shop</button>' : '') +
+        (hasOwner ? '<button class="shop-owner-chip-button" type="button" data-account-open-login="true">Open shop</button>' : '') +
         '<button class="shop-owner-chip-button is-danger" type="button" data-account-logout="true">Logout</button>' +
       '</div>';
     state.listNode.innerHTML = '' +
@@ -2425,24 +3304,54 @@
 
   function recentOrdersEntryMarkup(state) {
     var recentCount = recentBuyerOrderCount(state);
-    var buyerProfile = state && state.buyerProfile && typeof state.buyerProfile === "object"
-      ? state.buyerProfile
-      : loadBuyerProfile();
-    var subline = buyerProfile.contact
-      ? buyerProfile.contact
-      : (buyerProfile.name ? buyerProfile.name : "Saved on this device");
+    var cartCount = buyerCartEntries(state).length;
+    var subline = cartCount || recentCount
+      ? "Carts and orders together"
+      : "Carts and orders show up here";
     return '' +
       '<button class="shop-card shop-card-action" type="button" data-open-recent-orders="true" style="--shop-color:#29c6ea;">' +
         '<div class="shop-card-head">' +
           '<span class="shop-card-mark" aria-hidden="true"></span>' +
-          '<strong>Recent orders</strong>' +
+          '<strong>Recent history</strong>' +
           '<span class="shop-card-open">Open</span>' +
         '</div>' +
         '<div class="shop-card-meta">' +
-          '<span>' + escapeHtml(recentCount ? (recentCount + " order" + (recentCount === 1 ? "" : "s")) : "No orders yet") + '</span>' +
+          '<span>' + escapeHtml(buyerHistorySummaryLabel(cartCount, recentCount)) + '</span>' +
           '<span>' + escapeHtml(subline) + '</span>' +
         '</div>' +
       '</button>';
+  }
+
+  function buyerCartEntries(state) {
+    if (!state || !state.cartByShop) return [];
+    return Object.keys(state.cartByShop).map(function (shopId) {
+      var safeShopId = String(shopId || "").trim();
+      if (!safeShopId) return null;
+      var rawCart = state.cartByShop[safeShopId];
+      var itemCount = Object.keys(rawCart || {}).reduce(function (sum, key) {
+        return sum + Math.max(0, Number(rawCart[key] || 0));
+      }, 0);
+      if (!itemCount) return null;
+      var shop = state.shopById[safeShopId] || null;
+      var detail = state.shopDetails[safeShopId] || shopDetailFromPreview(shop);
+      var items = detail ? cartItems(detail, rawCart) : [];
+      var totalAmount = items.reduce(function (sum, item) {
+        return sum + Number(item.total || 0);
+      }, 0);
+      return {
+        shopId: safeShopId,
+        shopName: String((detail && detail.name) || (shop && (shop.display_name || shop.shop_id)) || safeShopId).trim(),
+        itemCount: itemCount,
+        totalLabel: detail ? formatTotalAmount(totalAmount, detail.pricing) : "",
+        itemSummary: items.map(function (item) {
+          return String(item && item.title || "").trim();
+        }).filter(Boolean).slice(0, 3).join(", "),
+      };
+    }).filter(Boolean).sort(function (left, right) {
+      var countDelta = Number(right.itemCount || 0) - Number(left.itemCount || 0);
+      if (countDelta) return countDelta;
+      return String(left.shopName || left.shopId).localeCompare(String(right.shopName || right.shopId));
+    });
   }
 
   function renderRecentOrdersPane(state) {
@@ -2450,6 +3359,16 @@
     destroyOwnerPickupMap(state);
     var query = normalizeSearch(state.searchQuery);
     var orders = Array.isArray(state.buyerOrders) ? state.buyerOrders : [];
+    var cartEntries = buyerCartEntries(state);
+    var filteredCartEntries = cartEntries.filter(function (entry) {
+      return matchesSearch([
+        entry.shopName,
+        entry.shopId,
+        entry.totalLabel,
+        entry.itemSummary,
+        entry.itemCount ? (entry.itemCount + " items") : ""
+      ], query);
+    });
     var filteredOrders = orders.filter(function (order) {
       return matchesSearch([
         order.title,
@@ -2469,9 +3388,32 @@
       : loadBuyerProfile();
     var overlineLabel = state.buyerOrdersLoading
       ? "Syncing"
-      : (orders.length ? (orders.length + " order" + (orders.length === 1 ? "" : "s")) : "No orders yet");
+      : buyerHistorySummaryLabel(cartEntries.length, orders.length);
+    var cartMarkup = filteredCartEntries.length ? (
+      '<section class="shop-account-section shop-history-cart-section">' +
+        '<div class="shop-account-section-head">' +
+          '<strong>Open carts</strong>' +
+          '<span>' + escapeHtml(filteredCartEntries.length === 1 ? "1 shop" : (filteredCartEntries.length + " shops")) + '</span>' +
+        '</div>' +
+        '<div class="shop-account-shop-list">' +
+          filteredCartEntries.map(function (entry) {
+            return '' +
+              '<button class="shop-account-shop" type="button" data-open-cart-shop="' + escapeHtml(entry.shopId) + '">' +
+                '<strong>' + escapeHtml(entry.shopName) + '</strong>' +
+                '<span>@' + escapeHtml(entry.shopId) + '</span>' +
+                '<span>' + escapeHtml(entry.itemCount + " item" + (entry.itemCount === 1 ? "" : "s") + (entry.totalLabel ? (" • " + entry.totalLabel) : "")) + '</span>' +
+                (entry.itemSummary ? '<span>' + escapeHtml(entry.itemSummary) + '</span>' : '') +
+              '</button>';
+          }).join('') +
+        '</div>' +
+      '</section>'
+    ) : (
+      cartEntries.length && query
+        ? '<div class="shop-list-empty">No carts match this search.</div>'
+        : ''
+    );
     var ordersMarkup = state.buyerOrdersLoading && !orders.length
-      ? '<div class="shop-list-empty">Loading recent orders...</div>'
+      ? '<div class="shop-list-empty">Loading recent history...</div>'
       : (filteredOrders.length ? (
           '<div class="shop-owner-order-list">' +
             filteredOrders.map(function (order) {
@@ -2496,7 +3438,7 @@
                 '</article>';
             }).join('') +
           '</div>'
-        ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No recent orders match this search." : "Orders you place on this device will show up here.") + '</div>');
+        ) : '<div class="shop-list-empty">' + escapeHtml(query ? "Nothing in recent history matches this search." : "Your recent carts and orders will show up here.") + '</div>');
     var statusMarkup = state.buyerOrdersError
       ? '<div class="shop-pane-notice is-error">' + escapeHtml(state.buyerOrdersError) + '</div>'
       : '';
@@ -2504,18 +3446,19 @@
       '<section class="shop-pane-detail" style="--shop-color:#29c6ea;">' +
         '<div class="shop-pane-hero">' +
           '<div class="shop-pane-overline">' +
-            '<div class="shop-pane-chip">Recent orders</div>' +
+            '<div class="shop-pane-chip">Recent history</div>' +
             '<span class="shop-pane-distance">' + escapeHtml(overlineLabel) + '</span>' +
           '</div>' +
           '<div class="shop-pane-copy-row">' +
             '<span class="shop-pane-copy-mark" aria-hidden="true"></span>' +
             '<div class="shop-pane-copy">' +
-              '<h2>' + escapeHtml(buyerProfile.name || "This device") + '</h2>' +
-              '<p>' + escapeHtml(buyerProfile.contact || "Orders placed from this device stay visible here without logging in.") + '</p>' +
+              '<h2>Recent history</h2>' +
+              '<p>Your open carts and recent history show up here.</p>' +
             '</div>' +
           '</div>' +
         '</div>' +
         statusMarkup +
+        cartMarkup +
         ordersMarkup +
       '</section>';
   }
@@ -2540,10 +3483,8 @@
       return;
     }
     destroyOwnerPickupMap(state);
-    var accountMarkup = accountEntryMarkup(state);
-    var recentOrdersMarkup = recentOrdersEntryMarkup(state);
     if (!state.shops.length) {
-      state.listNode.innerHTML = accountMarkup + recentOrdersMarkup + '<div class="shop-list-empty">No shops are on the map yet.</div>';
+      state.listNode.innerHTML = '<div class="shop-list-empty">No shops are on the map yet.</div>';
       return;
     }
     var query = normalizeSearch(state.searchQuery);
@@ -2559,10 +3500,21 @@
       ], query);
     });
     if (!visibleShops.length) {
-      state.listNode.innerHTML = accountMarkup + recentOrdersMarkup + '<div class="shop-list-empty">' + escapeHtml(query ? "No shops match this search." : "No shops are on the map yet.") + '</div>';
+      state.listNode.innerHTML = '<div class="shop-list-empty">' + escapeHtml(query ? "No shops match this search." : "No shops are on the map yet.") + '</div>';
       return;
     }
-    state.listNode.innerHTML = accountMarkup + recentOrdersMarkup + visibleShops.map(function (shop) {
+    state.listNode.innerHTML = visibleShops.map(function (shop) {
+      var preview = shop && shop.preview && typeof shop.preview === "object" ? shop.preview : {};
+      var previewDetail = state.shopDetails[String(shop.shop_id || "").trim()] || shopDetailFromPreview(shop);
+      var note = clampText((previewDetail && previewDetail.note) || shop.location_label || "", 96);
+      var descriptor = clampText((previewDetail && previewDetail.type) || preview.type || (shop.has_location ? "On map" : "Local shop"), 28);
+      var distance = clampText(statusLabel(shop, state.userPoint), 24);
+      var secondary = clampText(
+        (previewDetail && previewDetail.contact)
+          || shop.location_label
+          || statusLabel(shop, state.userPoint),
+        34
+      );
       return '' +
         '<a class="shop-card" data-shop-id="' + escapeHtml(shop.shop_id || "") + '" style="--shop-color:' + escapeHtml(shopColor(shop)) + ';" href="' + escapeHtml(shopUrl(shop)) + '">' +
           '<div class="shop-card-head">' +
@@ -2570,8 +3522,14 @@
             '<strong>' + escapeHtml(shop.display_name || shop.shop_id) + '</strong>' +
             '<span class="shop-card-open">Open</span>' +
           '</div>' +
+          '<div class="shop-card-tags">' +
+            '<span class="shop-card-tag">' + escapeHtml(descriptor) + '</span>' +
+            '<span class="shop-card-tag shop-card-tag-soft">' + escapeHtml(distance) + '</span>' +
+          '</div>' +
+          (note ? '<p class="shop-card-note">' + escapeHtml(note) + '</p>' : '') +
           '<div class="shop-card-meta">' +
             '<span>@' + escapeHtml(shop.shop_id || "") + '</span>' +
+            '<span>' + escapeHtml(secondary) + '</span>' +
           '</div>' +
         '</a>';
     }).join("");
@@ -2583,7 +3541,10 @@
     var hidden = state.debugPaneView === "login"
       || state.debugPaneView === "account"
       || (state.activeShopView === "confirmation")
-      || (isOwnerViewingShop(state) && state.ownerPanel.tab === "manage");
+      || (isOwnerViewingShop(state) && (
+        state.ownerPanel.tab === "settings"
+        || (state.ownerPanel.tab === "history" && state.ownerPanel.section === "stats")
+      ));
     if (searchHead) {
       searchHead.hidden = hidden;
     }
@@ -2593,9 +3554,13 @@
     }
     var placeholder = "Search shops";
     if (state.debugPaneView === "recent-orders") {
-      placeholder = "Search orders";
+      placeholder = "Search history";
     } else if (state.activeShopId) {
-      placeholder = state.activeShopView === "cart" ? "Search cart" : "Search items";
+      if (isOwnerViewingShop(state) && state.ownerPanel.tab === "history") {
+        placeholder = state.ownerPanel.section === "items" ? "Search items" : "Search orders";
+      } else {
+        placeholder = state.activeShopView === "cart" ? "Search cart" : "Search items";
+      }
     }
     state.searchInput.placeholder = placeholder;
     state.searchInput.setAttribute("aria-label", placeholder);
@@ -2609,6 +3574,26 @@
     button.classList.remove("is-loading", "is-active", "is-error", "is-danger");
     if (mode) button.classList.add(mode);
     button.textContent = label;
+  }
+
+  function setPaneNavButtonState(button, options) {
+    if (!button) return;
+    var settings = options && typeof options === "object" ? options : {};
+    var label = String(settings.label || "").trim();
+    var count = Math.max(0, Number(settings.count || 0) || 0);
+    button.classList.toggle("is-hidden", !!settings.hidden);
+    button.classList.toggle("is-active", !!settings.active);
+    button.classList.toggle("is-loading", !!settings.loading);
+    button.classList.toggle("has-count", count > 0);
+    if (count > 0) {
+      button.setAttribute("data-count", String(Math.min(count, 99)));
+    } else {
+      button.removeAttribute("data-count");
+    }
+    if (label) {
+      button.setAttribute("aria-label", label);
+      button.setAttribute("title", label);
+    }
   }
 
   function resetPaneScroll(state) {
@@ -2653,34 +3638,52 @@
   }
 
   function syncActionButton(state) {
-    if (!state || !state.locateButton) return;
-    state.locateButton.classList.toggle("is-hidden", state.debugPaneView === "login");
-    if (state.debugPaneView === "login") {
-      setLocateButtonState(state.locateButton, "", "Locate me");
-      return;
-    }
-    if (state.debugPaneView === "account") {
-      setLocateButtonState(
-        state.locateButton,
-        state.accountSession ? "is-danger" : "",
-        state.accountSession ? "Logout" : "Login"
-      );
-      return;
-    }
-    if (state.debugPaneView === "recent-orders") {
-      setLocateButtonState(
-        state.locateButton,
-        state.buyerOrdersLoading ? "is-loading" : "",
-        state.buyerOrdersLoading ? "Refreshing..." : "Refresh"
-      );
+    if (!state) return;
+    var ownerOrdersMode = shouldUseOwnerOrdersNav(state);
+    var ownerPendingCount = ownerPendingOrdersNavCount(state);
+    var ownerOrdersActive = ownerOrdersNavActive(state);
+    setPaneNavButtonState(state.ordersButton, {
+      hidden: state.debugPaneView === "login",
+      active: ownerOrdersMode ? ownerOrdersActive : state.debugPaneView === "recent-orders",
+      loading: ownerOrdersMode ? !!state.ownerOrdersNavLoading : (state.debugPaneView === "recent-orders" && state.buyerOrdersLoading),
+      count: ownerOrdersMode ? ownerPendingCount : recentBuyerOrderCount(state),
+      label: ownerOrdersMode
+        ? (
+          ownerOrdersActive
+            ? (state.ownerOrdersNavLoading ? "Refreshing shop history" : "Shop history")
+            : (
+              ownerPendingCount
+                ? (ownerPendingCount === 1 ? "1 pending shop order" : (ownerPendingCount + " pending shop orders"))
+                : "Open shop history"
+            )
+        )
+        : (
+          state.debugPaneView === "recent-orders"
+            ? (state.buyerOrdersLoading ? "Refreshing recent history" : "Recent history")
+            : "Open recent history"
+        )
+    });
+    setPaneNavButtonState(state.navLocateButton, {
+      hidden: state.debugPaneView === "login",
+      active: !state.locateLoading && !!state.userPoint,
+      loading: !!state.locateLoading,
+      label: state.locateLoading ? "Locating..." : (state.userPoint ? "Locate me again" : "Locate me")
+    });
+    if (!state.locateButton) return;
+    state.locateButton.classList.toggle(
+      "is-hidden",
+      !state.activeShopId || state.debugPaneView === "login" || state.debugPaneView === "account" || state.debugPaneView === "recent-orders"
+    );
+    if (state.debugPaneView === "login" || state.debugPaneView === "account" || state.debugPaneView === "recent-orders" || !state.activeShopId) {
+      setLocateButtonState(state.locateButton, "", "Cart");
       return;
     }
     if (state.activeShopId) {
       if (isOwnerViewingShop(state)) {
         setLocateButtonState(
           state.locateButton,
-          state.ownerPanel.tab === "manage" ? "is-danger" : "",
-          state.ownerPanel.tab === "manage" ? "Logout" : "Manage"
+          "",
+          state.ownerPanel.tab ? "Items" : "Settings"
         );
         return;
       }
@@ -2696,17 +3699,28 @@
       setLocateButtonState(state.locateButton, count ? "is-active" : "", count ? ("Cart (" + count + ")") : "Cart");
       return;
     }
-    if (state.userPoint) {
-      setLocateButtonState(state.locateButton, "is-active", "Located");
-      return;
-    }
-    setLocateButtonState(state.locateButton, "", "Locate me");
+  }
+
+  function pulseUserMarker(state) {
+    if (!state || !state.userMarker || typeof state.userMarker.getElement !== "function") return;
+    var markerNode = state.userMarker.getElement();
+    if (!(markerNode instanceof HTMLElement)) return;
+    var target = markerNode.querySelector(".map-user-marker");
+    if (!(target instanceof HTMLElement)) return;
+    target.classList.remove("is-revealed");
+    window.requestAnimationFrame(function () {
+      target.classList.add("is-revealed");
+      window.setTimeout(function () {
+        target.classList.remove("is-revealed");
+      }, 960);
+    });
   }
 
   function logoutOwnerSession(state) {
     clearShopIdentity();
     state.accountSession = null;
     state.ownerShopId = "";
+    state.ownerOrdersNavLoading = false;
     state.ownerPanel.tab = "";
     state.ownerPanel.section = "";
     state.ownerPanel.itemId = "";
@@ -2797,7 +3811,7 @@
       .catch(function () {
         if (!silent) {
           state.buyerOrdersLoading = false;
-          state.buyerOrdersError = "Could not load recent orders.";
+          state.buyerOrdersError = "Could not load recent history.";
           syncActionButton(state);
         }
         if (!silent && (state.debugPaneView === "recent-orders" || state.activeShopView === "confirmation")) {
@@ -2845,6 +3859,15 @@
   function updateMapView(state) {
     if (!state || !state.map) return;
     var bottomPadding = panelBottomPadding(state);
+    var activeShop = state.activeShopId ? state.shopById[state.activeShopId] : null;
+    if (activeShop && activeShop.has_location && isFinite(activeShop.lat) && isFinite(activeShop.lng)) {
+      state.map.fitBounds(window.L.latLng([activeShop.lat, activeShop.lng]).toBounds(210), {
+        paddingTopLeft: [24, 24],
+        paddingBottomRight: [24, bottomPadding],
+        maxZoom: 18
+      });
+      return;
+    }
     if (state.userPoint) {
       state.map.fitBounds(window.L.latLng(state.userPoint).toBounds(700), {
         paddingTopLeft: [24, 24],
@@ -2853,11 +3876,22 @@
       });
       return;
     }
-    if (!state.shopPoints.length) {
-      state.map.setView([22.9734, 78.6569], 6);
-      return;
-    }
-    fitArea(state.map, state.shopPoints, bottomPadding);
+    state.map.setView(DEFAULT_DISCOVERY_CENTER, DEFAULT_DISCOVERY_ZOOM, { animate: false });
+  }
+
+  function stabilizeMapViewport(state, delay) {
+    if (!state || !state.map) return;
+    var wait = Number(delay || 0);
+    window.setTimeout(function () {
+      if (!state.map) return;
+      state.map.invalidateSize(false);
+      updateMapView(state);
+      window.requestAnimationFrame(function () {
+        if (!state.map) return;
+        state.map.invalidateSize(false);
+        updateMapView(state);
+      });
+    }, Math.max(0, wait));
   }
 
   function syncPaneFocus(state) {
@@ -2879,11 +3913,7 @@
     }
     state.toggleButton.setAttribute("aria-expanded", state.isExpanded ? "true" : "false");
     state.toggleButton.setAttribute("aria-label", state.isExpanded ? "Shrink shop list" : "Expand shop list");
-    window.setTimeout(function () {
-      if (!state.map) return;
-      state.map.invalidateSize();
-      updateMapView(state);
-    }, 240);
+    stabilizeMapViewport(state, 240);
   }
 
   function togglePane(state) {
@@ -2893,6 +3923,80 @@
       return;
     }
     setPaneExpanded(state, true, "full");
+  }
+
+  function closeOwnerOverlayToItems(state) {
+    if (!state || !state.activeShopId || !isOwnerViewingShop(state)) return;
+    state.activeShopView = "items";
+    state.ownerPanel.tab = "";
+    state.ownerPanel.section = "";
+    state.searchQuery = "";
+    updateSearchField(state);
+    syncActionButton(state);
+    syncBackButton(state);
+    renderShopList(state);
+    resetPaneScroll(state);
+  }
+
+  function openOwnerSettingsPane(state, options) {
+    if (!state || !state.activeShopId || !isOwnerViewingShop(state)) return;
+    state.debugPaneView = "";
+    state.activeShopView = "items";
+    state.detailLoading = false;
+    state.searchQuery = "";
+    state.ownerPanel.tab = "settings";
+    state.ownerPanel.section = normalizeOwnerSettingsSection(options && options.section || state.ownerPanel.section || "profile");
+    state.panelNode.classList.add("is-shop-view");
+    state.panelNode.classList.remove("is-login-view");
+    updateSearchField(state);
+    syncActionButton(state);
+    syncBackButton(state);
+    setPaneExpanded(state, true, "full");
+    syncPaneUrl(state);
+    renderShopList(state);
+    resetPaneScroll(state);
+    refreshShopConsole(state, state.activeShopId, { preserveScroll: true }).catch(function () {});
+  }
+
+  function openOwnerHistoryPane(state, options) {
+    if (!state) return;
+    var shopId = String(options && options.shopId || ownerOrdersNavShopId(state) || "").trim();
+    if (!shopId) {
+      if (state.accountSession) {
+        openAccountPane(state);
+      } else {
+        openBuyerOrdersPane(state, options);
+      }
+      return;
+    }
+    var section = normalizeOwnerHistorySection(options && options.section || "orders");
+    if (state.activeShopId === shopId && isOwnerViewingShop(state)) {
+      state.debugPaneView = "";
+      state.activeShopView = "items";
+      state.detailLoading = false;
+      state.searchQuery = "";
+      state.ownerPanel.tab = "history";
+      state.ownerPanel.section = section;
+      state.panelNode.classList.add("is-shop-view");
+      state.panelNode.classList.remove("is-login-view");
+      updateSearchField(state);
+      syncActionButton(state);
+      syncBackButton(state);
+      setPaneExpanded(state, true, "full");
+      syncPaneUrl(state);
+      renderShopList(state);
+      resetPaneScroll(state);
+      if (section === "items") {
+        refreshItemLibrary(state, { force: !!(options && options.force) });
+      }
+      refreshOwnerOrdersNavData(state, { force: !!(options && options.force) });
+      return;
+    }
+    openSavedOwnerShop(state, {
+      shopId: shopId,
+      ownerTab: "history",
+      ownerSection: section
+    });
   }
 
   function openBuyerOrdersPane(state, options) {
@@ -2912,6 +4016,10 @@
     renderShopList(state);
     resetPaneScroll(state);
     refreshBuyerOrders(state, { force: !!(options && options.force) });
+  }
+
+  function openOwnerOrdersPane(state, options) {
+    openOwnerHistoryPane(state, Object.assign({}, options || {}, { section: "orders" }));
   }
 
   function openAccountPane(state) {
@@ -3004,9 +4112,9 @@
     resetPaneScroll(state);
   }
 
-  function openSavedOwnerShop(state) {
+  function openSavedOwnerShop(state, options) {
     if (!state) return;
-    var shopId = String(state.ownerShopId || preferredOwnerShopId(state.accountSession, state.ownerShopId) || "").trim();
+    var shopId = String(options && options.shopId || state.ownerShopId || preferredOwnerShopId(state.accountSession, state.ownerShopId) || "").trim();
     if (!shopId) {
       if (state.accountSession) {
         openAccountPane(state);
@@ -3018,7 +4126,7 @@
     setPreferredOwnerShop(state, shopId);
     var savedName = String(preferredOwnerShopName(state.accountSession, shopId) || loadSavedShopName() || "").trim();
     if (state.shopById[shopId]) {
-      openShopInPane(state, shopId);
+      openShopInPane(state, shopId, options);
       return;
     }
     if (state.loginDraft) {
@@ -3038,7 +4146,7 @@
           shop_id: shopId,
           display_name: savedName || shopId
         }, savedName || shopId);
-        openShopInPane(state, shopId);
+        openShopInPane(state, shopId, options);
       })
       .catch(function () {
         clearShopIdentity();
@@ -3081,7 +4189,7 @@
 
     state.loginDraft.submitting = true;
     state.loginDraft.tone = "";
-    state.loginDraft.status = "Opening...";
+    state.loginDraft.status = "Checking...";
     renderShopList(state);
 
     attemptLogin(shopId, password)
@@ -3089,35 +4197,29 @@
         if (loginResult.ok) {
           return {
             ok: true,
-            created: false,
             payload: loginResult.payload
           };
         }
-        return attemptCreate(shopId, username, password).then(function (createResult) {
-          if (createResult.ok) {
-            return {
-              ok: true,
-              created: true,
-              payload: createResult.payload
-            };
-          }
-          if (createResult.status === 409 || String(createResult.payload && createResult.payload.error || "") === "shop_exists") {
+        if (loginResult.status === 401) {
+          return shopExists(shopId).then(function (exists) {
             return {
               ok: false,
-              message: "That username already exists. Use the right password."
+              message: exists
+                ? "Wrong password."
+                : "This shop is not registered. Production registration is explicit only."
             };
-          }
-          return {
-            ok: false,
-            message: "Could not open this profile."
-          };
-        });
+          });
+        }
+        return {
+          ok: false,
+          message: "Could not open this production shop."
+        };
       })
       .then(function (result) {
         if (!result || !result.ok) {
           state.loginDraft.submitting = false;
           state.loginDraft.tone = "error";
-          state.loginDraft.status = String(result && result.message || "Could not open this profile.");
+          state.loginDraft.status = String(result && result.message || "Could not open this production shop.");
           renderShopList(state);
           return;
         }
@@ -3135,14 +4237,14 @@
         state.loginDraft.submitting = false;
         state.loginDraft.password = "";
         state.loginDraft.tone = "success";
-        state.loginDraft.status = result.created ? "Created." : "Opened.";
+        state.loginDraft.status = "Opened.";
         state.panelNode.classList.remove("is-login-view");
         openShopInPane(state, shopId);
       })
       .catch(function () {
         state.loginDraft.submitting = false;
         state.loginDraft.tone = "error";
-        state.loginDraft.status = "Could not open this profile.";
+        state.loginDraft.status = "Could not open this production shop.";
         renderShopList(state);
       });
   }
@@ -3216,8 +4318,17 @@
     state.toggleButton.addEventListener("pointercancel", stopDrag);
   }
 
-  function openShopInPane(state, shopId) {
+  function openShopInPane(state, shopId, options) {
     if (!state || !shopId) return;
+    var ownerTab = String(options && options.ownerTab || "").trim();
+    var ownerSection = String(options && options.ownerSection || "").trim();
+    if (ownerTab === "settings") {
+      ownerSection = normalizeOwnerSettingsSection(ownerSection);
+    } else if (ownerTab === "history") {
+      ownerSection = normalizeOwnerHistorySection(ownerSection);
+    } else {
+      ownerSection = "";
+    }
     if (state.accountSession && accountOwnerShops(state.accountSession).some(function (shop) {
       return String(shop && shop.shopId || "").trim() === String(shopId || "").trim();
     })) {
@@ -3228,8 +4339,8 @@
     state.activeShopId = shopId;
     state.activeShopView = "items";
     setSelectedPaymentMode(state, shopId, "on_receive");
-    state.ownerPanel.tab = "";
-    state.ownerPanel.section = "";
+    state.ownerPanel.tab = ownerTab;
+    state.ownerPanel.section = ownerSection;
     state.ownerPanel.itemId = "";
     state.ownerPanel.message = "";
     state.ownerPanel.tone = "";
@@ -3254,6 +4365,9 @@
       state.detailLoading = false;
       renderShopList(state);
       resetPaneScroll(state);
+      if (ownerTab === "history" && ownerSection === "items") {
+        refreshItemLibrary(state, { force: false });
+      }
       window.setTimeout(function () {
         focusShopOnMap(state, state.shopById[shopId]);
       }, 240);
@@ -3287,6 +4401,9 @@
         syncBackButton(state);
         renderShopList(state);
         resetPaneScroll(state);
+        if (ownerTab === "history" && ownerSection === "items") {
+          refreshItemLibrary(state, { force: false });
+        }
       });
   }
 
@@ -3343,6 +4460,10 @@
     if (!state || !state.activeShopId) return;
     setSelectedPaymentMode(state, state.activeShopId, "on_receive");
     state.activeShopView = "items";
+    if (isOwnerViewingShop(state)) {
+      state.ownerPanel.tab = "";
+      state.ownerPanel.section = "";
+    }
     setOrderConfirmation(state, state.activeShopId, null);
     state.searchQuery = "";
     updateSearchField(state);
@@ -3475,11 +4596,20 @@
       state.userAccuracy.setLatLng([lat, lng]);
       state.userAccuracy.setRadius(Math.max(Number(accuracy) || 0, 40));
     }
+    pulseUserMarker(state);
   }
 
   function locateUser(state, silent) {
     if (!state || !state.map) return;
+    if (state.locateRevealTimer) {
+      window.clearTimeout(state.locateRevealTimer);
+      state.locateRevealTimer = 0;
+    }
+    state.locateLoading = true;
+    syncActionButton(state);
     if (!navigator.geolocation) {
+      state.locateLoading = false;
+      syncActionButton(state);
       setLocateButtonState(state.locateButton, "is-error", "No GPS");
       return;
     }
@@ -3489,16 +4619,28 @@
       var lng = position && position.coords ? position.coords.longitude : null;
       var accuracy = position && position.coords ? position.coords.accuracy : 0;
       if (!isFinite(lat) || !isFinite(lng)) {
+        state.locateLoading = false;
+        syncActionButton(state);
         setLocateButtonState(state.locateButton, "is-error", "Try again");
         return;
       }
       upsertUserMarker(state, lat, lng, accuracy);
+      updateMapView(state);
+      state.locateLoading = false;
       renderShopList(state);
       updateSearchField(state);
-      updateMapView(state);
-      setPaneExpanded(state, true, "full");
-      setLocateButtonState(state.locateButton, "is-active", "Located");
+      syncActionButton(state);
+      if (!silent) {
+        state.locateRevealTimer = window.setTimeout(function () {
+          state.locateRevealTimer = 0;
+          window.requestAnimationFrame(function () {
+            setPaneExpanded(state, true, "full");
+          });
+        }, LOCATE_REVEAL_DELAY_MS);
+      }
     }, function () {
+      state.locateLoading = false;
+      syncActionButton(state);
       if (!silent) {
         setLocateButtonState(state.locateButton, "is-error", "Blocked");
       }
@@ -3549,10 +4691,10 @@
 
     updateMapView(state);
     maybeLocateOnLoad(state);
-    window.setTimeout(function () {
-      map.invalidateSize();
-      updateMapView(state);
-    }, 60);
+    map.whenReady(function () {
+      stabilizeMapViewport(state, 0);
+      stabilizeMapViewport(state, 120);
+    });
   }
 
   var bootstrap = loadBootstrap();
@@ -3581,6 +4723,8 @@
     listNode: document.getElementById("shopList"),
     searchInput: document.getElementById("shopSearchInput"),
     locateButton: document.getElementById("locateAction"),
+    ordersButton: document.getElementById("ordersAction"),
+    navLocateButton: document.getElementById("mapLocateAction"),
     backButton: document.getElementById("shopBackAction"),
     toggleButton: document.getElementById("shopPaneToggle"),
     loginNode: document.querySelector(".home-login-fab"),
@@ -3599,11 +4743,18 @@
     paymentModeByShop: {},
     checkoutNoticeByShop: {},
     orderConfirmationByShop: {},
+    ownerOrderDraftByShop: {},
+    itemLibrary: [],
+    itemLibraryLoading: false,
+    itemLibraryError: "",
     buyerProfile: loadBuyerProfile(),
     buyerOrders: [],
     buyerOrdersLoading: false,
     buyerOrdersError: "",
     buyerOrdersPollTimer: 0,
+    ownerOrdersNavLoading: false,
+    locateLoading: false,
+    locateRevealTimer: 0,
     loginDraft: {
       username: preferredOwnerShopName(initialAccountSession),
       password: "",
@@ -3618,19 +4769,25 @@
   });
   setBuyerProfile(state, state.buyerProfile);
   setAccountSession(state, state.accountSession);
+  pruneAccountSessionToKnownShops(state);
 
   renderShopList(state);
   updateSearchField(state);
   syncActionButton(state);
   syncBackButton(state);
   initMap(state);
+  refreshOwnerOrdersNavData(state);
 
   if (INITIAL_PANE === "login") {
     openDebugLoginPane(state);
   } else if (INITIAL_PANE === "account") {
     openAccountPane(state);
   } else if (INITIAL_PANE === "orders") {
-    openBuyerOrdersPane(state);
+    if (shouldUseOwnerOrdersNav(state)) {
+      openOwnerOrdersPane(state);
+    } else {
+      openBuyerOrdersPane(state);
+    }
   }
 
   if (state.searchInput) {
@@ -3656,34 +4813,44 @@
         }
         if (state.activeShopId) {
           if (isOwnerViewingShop(state)) {
-            if (state.ownerPanel.tab === "manage") {
-              logoutOwnerSession(state);
-              return;
+            if (state.ownerPanel.tab) {
+              closeOwnerOverlayToItems(state);
+            } else {
+              openOwnerSettingsPane(state, { section: "profile" });
             }
-            state.activeShopView = "items";
-          state.ownerPanel.tab = "manage";
-          state.ownerPanel.section = state.ownerPanel.section || "profile";
-          if (!state.ownerPanel.itemId) {
-            var currentDetail = state.shopDetails[state.activeShopId] || shopDetailFromPreview(state.shopById[state.activeShopId]);
-            if (currentDetail && Array.isArray(currentDetail.items) && currentDetail.items.length) {
-                state.ownerPanel.itemId = String(currentDetail.items[0].id || "").trim();
-              }
-            }
-            updateSearchField(state);
-          syncActionButton(state);
-          syncBackButton(state);
-          renderShopList(state);
-          refreshShopConsole(state, state.activeShopId, { preserveScroll: true });
-          scrollOwnerSectionIntoView(state, state.ownerPanel.section);
-          return;
-        }
+            return;
+          }
           if (state.activeShopView === "cart" || state.activeShopView === "confirmation") {
             focusItems(state);
           } else {
             focusCart(state);
+          }
+          return;
         }
+        locateUser(state, false);
+      });
+  }
+
+  if (state.ordersButton) {
+    state.ordersButton.addEventListener("click", function () {
+      if (state.debugPaneView === "recent-orders") {
+        refreshBuyerOrders(state, { force: true });
         return;
       }
+      if (shouldUseOwnerOrdersNav(state)) {
+        if (ownerOrdersNavActive(state)) {
+          refreshOwnerOrdersNavData(state, { force: true });
+          return;
+        }
+        openOwnerOrdersPane(state, { force: true });
+        return;
+      }
+      openBuyerOrdersPane(state);
+    });
+  }
+
+  if (state.navLocateButton) {
+    state.navLocateButton.addEventListener("click", function () {
       locateUser(state, false);
     });
   }
@@ -3734,6 +4901,17 @@
         }()));
         return;
       }
+      var ownerDraftField = target.closest("[data-owner-order-draft-field]");
+      if (ownerDraftField) {
+        if (!state.activeShopId) return;
+        setOwnerOrderDraftField(
+          state,
+          state.activeShopId,
+          String(ownerDraftField.getAttribute("data-owner-order-draft-field") || "").trim(),
+          ownerDraftField.value
+        );
+        return;
+      }
       var field = target.closest("[data-login-field]");
       if (!field) return;
       var key = String(field.getAttribute("data-login-field") || "").trim();
@@ -3752,6 +4930,60 @@
       if (event.key !== "Enter") return;
       event.preventDefault();
       submitDebugLoginPane(state);
+    });
+
+    state.listNode.addEventListener("change", function (event) {
+      var target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      var logoInput = target.closest("[data-owner-logo-input]");
+      if (logoInput) {
+        var logoFile = target.files && target.files[0];
+        if (!logoFile || !state.activeShopId) return;
+        state.ownerPanel.message = "Uploading logo...";
+        state.ownerPanel.tone = "";
+        renderShopList(state);
+        uploadShopLogo(state.activeShopId, logoFile)
+          .then(function (result) {
+            if (!result || !result.ok) {
+              throw new Error(String(result && result.payload && result.payload.error || "logo_upload_failed"));
+            }
+            applyConsoleRecord(state, state.activeShopId, result.payload);
+            state.ownerPanel.message = "Logo updated.";
+            state.ownerPanel.tone = "success";
+            renderShopList(state);
+          })
+          .catch(function () {
+            state.ownerPanel.message = "Could not upload the logo.";
+            state.ownerPanel.tone = "error";
+            renderShopList(state);
+          });
+        return;
+      }
+      var itemImageInput = target.closest("[data-owner-item-image-input]");
+      if (itemImageInput) {
+        var itemFile = target.files && target.files[0];
+        var imageItemId = String(itemImageInput.getAttribute("data-owner-item-image-input") || "").trim();
+        if (!itemFile || !state.activeShopId || !imageItemId) return;
+        state.ownerPanel.message = "Uploading image...";
+        state.ownerPanel.tone = "";
+        renderShopList(state);
+        uploadOwnerItemImage(state.activeShopId, imageItemId, itemFile)
+          .then(function (result) {
+            if (!result || !result.ok) {
+              throw new Error(String(result && result.payload && result.payload.error || "item_image_upload_failed"));
+            }
+            applyConsoleRecord(state, state.activeShopId, result.payload);
+            state.ownerPanel.message = "Item image updated.";
+            state.ownerPanel.tone = "success";
+            renderShopList(state);
+          })
+          .catch(function () {
+            state.ownerPanel.message = "Could not upload the image.";
+            state.ownerPanel.tone = "error";
+            renderShopList(state);
+          });
+        return;
+      }
     });
 
     state.listNode.addEventListener("click", function (event) {
@@ -3806,6 +5038,15 @@
       if (recentShopButton) {
         event.preventDefault();
         openShopInPane(state, String(recentShopButton.getAttribute("data-open-recent-shop") || "").trim());
+        return;
+      }
+      var historyCartButton = target.closest("[data-open-cart-shop]");
+      if (historyCartButton) {
+        event.preventDefault();
+        var historyCartShopId = String(historyCartButton.getAttribute("data-open-cart-shop") || "").trim();
+        if (!historyCartShopId) return;
+        openShopInPane(state, historyCartShopId);
+        focusCart(state);
         return;
       }
       var shopCard = target.closest(".shop-card");
@@ -3963,6 +5204,62 @@
           });
         return;
       }
+      var ownerSettingsSectionButton = target.closest("[data-owner-settings-section]");
+      if (ownerSettingsSectionButton) {
+        event.preventDefault();
+        openOwnerSettingsPane(state, {
+          section: String(ownerSettingsSectionButton.getAttribute("data-owner-settings-section") || "").trim()
+        });
+        return;
+      }
+      var ownerHistorySectionButton = target.closest("[data-owner-history-section]");
+      if (ownerHistorySectionButton) {
+        event.preventDefault();
+        openOwnerHistoryPane(state, {
+          shopId: state.activeShopId,
+          section: String(ownerHistorySectionButton.getAttribute("data-owner-history-section") || "").trim()
+        });
+        return;
+      }
+      var ownerOrderPaymentButton = target.closest("[data-owner-order-payment]");
+      if (ownerOrderPaymentButton) {
+        event.preventDefault();
+        if (!state.activeShopId) return;
+        setOwnerOrderDraftField(
+          state,
+          state.activeShopId,
+          "paymentMode",
+          String(ownerOrderPaymentButton.getAttribute("data-owner-order-payment") || "").trim()
+        );
+        renderShopList(state);
+        resetPaneScroll(state);
+        return;
+      }
+      var ownerDraftStepButton = target.closest("[data-owner-draft-step]");
+      if (ownerDraftStepButton) {
+        event.preventDefault();
+        if (!state.activeShopId) return;
+        stepOwnerOrderDraftItem(
+          state,
+          state.activeShopId,
+          String(ownerDraftStepButton.getAttribute("data-item-id") || "").trim(),
+          Number(ownerDraftStepButton.getAttribute("data-owner-draft-step") || 0)
+        );
+        renderShopList(state);
+        return;
+      }
+      var ownerWalkinSubmit = target.closest("[data-owner-walkin-submit]");
+      if (ownerWalkinSubmit) {
+        event.preventDefault();
+        submitOwnerWalkInOrder(state);
+        return;
+      }
+      var ownerLibraryImport = target.closest("[data-owner-library-import]");
+      if (ownerLibraryImport) {
+        event.preventDefault();
+        importOwnerLibraryItem(state, String(ownerLibraryImport.getAttribute("data-owner-library-import") || "").trim());
+        return;
+      }
       var ownerSave = target.closest("[data-owner-save]");
       if (ownerSave) {
         event.preventDefault();
@@ -3993,24 +5290,10 @@
       if (ownerItemSelect) {
         event.preventDefault();
         state.ownerPanel.itemId = String(ownerItemSelect.getAttribute("data-owner-item-select") || "").trim();
-        state.ownerPanel.section = "item";
+        state.ownerPanel.tab = "history";
+        state.ownerPanel.section = "items";
         renderShopList(state);
         resetPaneScroll(state);
-        return;
-      }
-      var ownerSectionToggle = target.closest("[data-owner-section-toggle]");
-      if (ownerSectionToggle) {
-        event.preventDefault();
-        var sectionName = String(ownerSectionToggle.getAttribute("data-owner-section-toggle") || "").trim();
-        var nextSection = state.ownerPanel.section === sectionName ? "" : sectionName;
-        state.ownerPanel.section = nextSection;
-        syncOwnerSectionUi(state);
-        if (state.ownerPanel.section) {
-          scrollOwnerSectionIntoView(state, state.ownerPanel.section);
-        }
-        if (nextSection === "orders" && state.activeShopId) {
-          refreshShopConsole(state, state.activeShopId, { preserveScroll: true });
-        }
         return;
       }
       var ownerItemRemove = target.closest("[data-owner-item-remove]");
@@ -4097,9 +5380,11 @@
 
   window.addEventListener("resize", function () {
     if (!state.map) return;
-    window.setTimeout(function () {
-      state.map.invalidateSize();
-      updateMapView(state);
-    }, 40);
+    stabilizeMapViewport(state, 40);
+  });
+
+  window.addEventListener("load", function () {
+    stabilizeMapViewport(state, 0);
+    stabilizeMapViewport(state, 180);
   });
 }());

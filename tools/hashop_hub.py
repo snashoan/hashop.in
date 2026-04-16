@@ -437,6 +437,79 @@ class ShopStore:
             ).fetchall()
         return [self._row_to_dict(row) for row in rows]
 
+    async def list_item_library(self, limit: int = 400) -> List[Dict[str, Any]]:
+        safe_limit = max(1, min(limit, 1000))
+        return await asyncio.to_thread(self._list_item_library_threadsafe, safe_limit)
+
+    def _list_item_library_threadsafe(self, limit: int) -> List[Dict[str, Any]]:
+        with self._lock:
+            return self._list_item_library_sync(limit)
+
+    def _list_item_library_sync(self, limit: int) -> List[Dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT shop_id, display_name, public_url, map_color, console_json
+                FROM shops
+                ORDER BY updated_at DESC, shop_id ASC
+                LIMIT 400
+                """
+            ).fetchall()
+
+        items: List[Dict[str, Any]] = []
+        for row in rows:
+            shop_id = str(row["shop_id"] or "").strip()
+            if not shop_id:
+                continue
+            display_name = str(row["display_name"] or shop_id).strip()[:80] or shop_id
+            console_payload = self._normalize_console(
+                shop_id=shop_id,
+                display_name=display_name,
+                public_url=str(row["public_url"] or "").strip(),
+                raw_console=row["console_json"] if "console_json" in row.keys() else "{}",
+            )
+            listings = console_payload.get("listings")
+            if not isinstance(listings, list):
+                continue
+            for item in listings:
+                if not isinstance(item, dict):
+                    continue
+                title = str(item.get("title") or "").strip()[:120]
+                if not title:
+                    continue
+                item_id = str(item.get("id") or "").strip()[:64]
+                images_raw = item.get("imageFiles") or []
+                image_files: List[str] = []
+                if isinstance(images_raw, list):
+                    for image in images_raw[:8]:
+                        value = str(image).strip()[:255]
+                        if value:
+                            image_files.append(value)
+                items.append(
+                    {
+                        "libraryId": f"{shop_id}:{item_id or uuid.uuid4().hex[:12]}",
+                        "shopId": shop_id,
+                        "shopName": display_name,
+                        "shopMapColor": self._normalize_map_color(str(row["map_color"] or "")) or "#29c6ea",
+                        "id": item_id,
+                        "title": title,
+                        "description": str(item.get("description") or "").strip()[:4000],
+                        "price": str(item.get("price") or "").strip()[:80],
+                        "quantity": self._safe_int(item.get("quantity"), minimum=0, maximum=999999),
+                        "imageFiles": image_files,
+                        "createdAt": self._safe_int(item.get("createdAt"), minimum=0, maximum=9999999999999),
+                    }
+                )
+
+        items.sort(
+            key=lambda item: (
+                -int(item.get("createdAt") or 0),
+                str(item.get("title") or "").lower(),
+                str(item.get("shopId") or ""),
+            )
+        )
+        return items[:limit]
+
     async def count_shops(self) -> int:
         return await asyncio.to_thread(self._count_shops_threadsafe)
 
@@ -558,6 +631,18 @@ class ShopStore:
         )
         return record
 
+    def _normalize_order_status(self, status: Any, payment_mode: Any) -> str:
+        raw_status = str(status or "").strip().lower()
+        raw_payment_mode = str(payment_mode or "").strip().lower()
+        mode = "before_delivery" if raw_payment_mode == "before_delivery" else "on_receive"
+        if raw_status in {"", "new"}:
+            return "payment_pending" if mode == "before_delivery" else "created"
+        if raw_status == "pending":
+            return "payment_pending" if mode == "before_delivery" else "created"
+        if raw_status in {"created", "payment_pending", "accepted", "ready", "paid", "completed", "cancelled"}:
+            return raw_status
+        return "payment_pending" if mode == "before_delivery" else "created"
+
     def _normalize_console(
         self,
         shop_id: str,
@@ -668,7 +753,7 @@ class ShopStore:
                         "quantity": self._safe_int(order.get("quantity"), minimum=0, maximum=999999),
                         "price": str(order.get("price") or "").strip()[:80],
                         "total": str(order.get("total") or "").strip()[:80],
-                        "status": str(order.get("status") or "").strip()[:80],
+                        "status": self._normalize_order_status(order.get("status"), order.get("paymentMode")),
                         "paymentPaid": bool(order.get("paymentPaid")),
                         "paymentReceived": bool(order.get("paymentReceived")),
                         "orderSent": bool(order.get("orderSent")),
@@ -939,6 +1024,7 @@ class HashopHub:
         site_dir: Path,
         store: ShopStore,
         uploads_dir: Path,
+        public_shop_create_enabled: bool = False,
     ) -> None:
         self.public_base_url = public_base_url.rstrip("/")
         if self.public_base_url.startswith("https://"):
@@ -951,6 +1037,7 @@ class HashopHub:
         self.site_dir = site_dir
         self.store = store
         self.uploads_dir = uploads_dir
+        self.public_shop_create_enabled = bool(public_shop_create_enabled)
         self.uploads_dir.mkdir(parents=True, exist_ok=True)
         self.sessions: Dict[str, TunnelSession] = {}
         self.pending: Dict[str, asyncio.Future] = {}
@@ -1135,10 +1222,17 @@ class HashopHub:
             "tunnel_ws_url": f"{self.ws_base_url}/api/tunnel/{escaped}",
         }
 
+    def registration_restricted_payload(self) -> Dict[str, str]:
+        return {
+            "error": "registration_restricted",
+            "message": "Production registration is handled explicitly.",
+        }
+
     async def discovery_bootstrap(self) -> Dict[str, object]:
         shops = await self.store.list_shops(limit=200)
         map_shops: List[Dict[str, object]] = []
         for shop in shops:
+            shop_id = str(shop["shop_id"])
             console_record = await self.store.get_shop_console(str(shop["shop_id"]))
             profile = {}
             if console_record is not None:
@@ -1158,9 +1252,9 @@ class HashopHub:
                     lng = None
             map_shops.append(
                 {
-                    "shop_id": str(shop["shop_id"]),
+                    "shop_id": shop_id,
                     "display_name": str(shop["display_name"]),
-                    "public_url": str(shop["public_url"]),
+                    "public_url": self.register_payload(shop_id)["public_url"],
                     "map_color": str(shop.get("map_color") or "#ffffff"),
                     "has_location": lat is not None and lng is not None,
                     "location_label": location_label,
@@ -1391,6 +1485,8 @@ class HashopHub:
         }
 
     async def handle_register(self, request: web.Request) -> web.Response:
+        if not self.public_shop_create_enabled:
+            return web.json_response(self.registration_restricted_payload(), status=403)
         try:
             payload = await request.json()
         except json.JSONDecodeError:
@@ -1471,6 +1567,8 @@ class HashopHub:
         )
 
     async def handle_create_shop(self, request: web.Request) -> web.Response:
+        if not self.public_shop_create_enabled:
+            return web.json_response(self.registration_restricted_payload(), status=403)
         try:
             payload = await request.json()
         except json.JSONDecodeError:
@@ -1641,6 +1739,11 @@ class HashopHub:
             headers={"Cache-Control": "no-cache"},
         )
 
+    async def handle_list_item_library(self, request: web.Request) -> web.Response:
+        limit = self.store._safe_int(request.query.get("limit"), minimum=1, maximum=1000)
+        items = await self.store.list_item_library(limit=limit)
+        return web.json_response({"items": items}, headers={"Cache-Control": "no-cache"})
+
     async def handle_create_shop_order(self, request: web.Request) -> web.Response:
         shop_id = self.normalize_shop_id(request.match_info["shop_id"])
         if not shop_id:
@@ -1804,6 +1907,74 @@ class HashopHub:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
         return web.json_response(record)
 
+    async def handle_upload_item_image(self, request: web.Request) -> web.Response:
+        shop_id = self.normalize_shop_id(request.match_info["shop_id"])
+        item_id = str(request.match_info.get("item_id") or "").strip()[:64]
+        if not shop_id or not item_id:
+            raise web.HTTPNotFound()
+        existing = await self.store.get_shop_console(shop_id)
+        if existing is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+
+        try:
+            reader = await request.multipart()
+        except AssertionError:
+            return web.json_response({"error": "multipart_required"}, status=400)
+
+        field = await reader.next()
+        if field is None or field.name != "file":
+            return web.json_response({"error": "file_required"}, status=400)
+
+        content_type = str(field.headers.get("Content-Type") or "").strip().lower()
+        extension = self._logo_extension(field.filename, content_type)
+        if not extension:
+            return web.json_response({"error": "invalid_image_type"}, status=400)
+
+        data = bytearray()
+        max_size = 5 * 1024 * 1024
+        while True:
+            chunk = await field.read_chunk()
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > max_size:
+                return web.json_response({"error": "file_too_large"}, status=413)
+
+        if not data:
+            return web.json_response({"error": "empty_file"}, status=400)
+
+        console_payload = existing["console"]
+        listings = console_payload.get("listings")
+        if not isinstance(listings, list):
+            listings = []
+        item_index = next(
+            (index for index, item in enumerate(listings) if isinstance(item, dict) and str(item.get("id") or "").strip() == item_id),
+            -1,
+        )
+        if item_index < 0:
+            return web.json_response({"error": "item_not_found"}, status=404)
+
+        file_name = f"{shop_id}-item-{uuid.uuid4().hex[:12]}{extension}"
+        file_path = self._asset_path(file_name)
+        file_path.write_bytes(bytes(data))
+
+        item_record = dict(listings[item_index])
+        images_raw = item_record.get("imageFiles") or []
+        next_images: List[str] = []
+        if isinstance(images_raw, list):
+            for image in images_raw[:7]:
+                value = str(image).strip()[:255]
+                if value:
+                    next_images.append(value)
+        next_images.insert(0, file_name)
+        item_record["imageFiles"] = next_images[:8]
+        listings[item_index] = item_record
+        console_payload["listings"] = listings
+        record = await self.store.save_shop_console(shop_id, console_payload)
+        if record is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        return web.json_response(record)
+
     async def handle_get_shop_logo(self, request: web.Request) -> web.StreamResponse:
         shop_id = self.normalize_shop_id(request.match_info["shop_id"])
         if not shop_id:
@@ -1819,6 +1990,16 @@ class HashopHub:
             raise web.HTTPNotFound()
         mime_type = mimetypes.guess_type(str(logo_path.name))[0] or "application/octet-stream"
         return web.FileResponse(logo_path, headers={"Content-Type": mime_type, "Cache-Control": "no-cache"})
+
+    async def handle_get_uploaded_asset(self, request: web.Request) -> web.StreamResponse:
+        asset_name = Path(str(request.match_info.get("file_name") or "")).name
+        if not asset_name:
+            raise web.HTTPNotFound()
+        asset_path = self._asset_path(asset_name)
+        if not asset_path.exists() or not asset_path.is_file():
+            raise web.HTTPNotFound()
+        mime_type = mimetypes.guess_type(str(asset_path.name))[0] or "application/octet-stream"
+        return web.FileResponse(asset_path, headers={"Content-Type": mime_type, "Cache-Control": "no-cache"})
 
     async def handle_reverse_geocode(self, request: web.Request) -> web.Response:
         raw_lat = str(request.query.get("lat") or "").strip()
@@ -2030,8 +2211,11 @@ class HashopHub:
         shop_id = cls.SHOP_ID_PATTERN.sub("-", value.strip().lower()).strip("-")
         return shop_id[:63]
 
+    def _asset_path(self, file_name: str) -> Path:
+        return self.uploads_dir / Path(file_name).name
+
     def _logo_path(self, logo_file: str) -> Path:
-        return self.uploads_dir / Path(logo_file).name
+        return self._asset_path(logo_file)
 
     def _serve_site_html(
         self,
@@ -2095,6 +2279,7 @@ def build_app(
     site_dir: Path,
     shop_db: Path,
     uploads_dir: Path,
+    public_shop_create_enabled: bool = False,
 ) -> web.Application:
     store = ShopStore(db_path=shop_db)
     hub = HashopHub(
@@ -2103,6 +2288,7 @@ def build_app(
         site_dir=site_dir,
         store=store,
         uploads_dir=uploads_dir,
+        public_shop_create_enabled=public_shop_create_enabled,
     )
     app = web.Application()
     app.on_startup.append(lambda _app: store.initialize())
@@ -2118,6 +2304,7 @@ def build_app(
     app.router.add_get("/healthz", hub.handle_health)
     app.router.add_get("/api/meta", hub.handle_meta)
     app.router.add_get("/api/orders", hub.handle_list_buyer_orders)
+    app.router.add_get("/api/items/library", hub.handle_list_item_library)
     app.router.add_get("/api/payment-options", hub.handle_payment_options)
     app.router.add_get("/api/shops", hub.handle_list_shops)
     app.router.add_post("/api/shops", hub.handle_create_shop)
@@ -2128,7 +2315,9 @@ def build_app(
     app.router.add_put("/api/shops/{shop_id}/console", hub.handle_put_shop_console)
     app.router.add_post("/api/shops/{shop_id}/orders", hub.handle_create_shop_order)
     app.router.add_post("/api/shops/{shop_id}/billing/map", hub.handle_update_map_unlock)
+    app.router.add_post("/api/shops/{shop_id}/items/{item_id}/image", hub.handle_upload_item_image)
     app.router.add_post("/api/shops/{shop_id}/logo", hub.handle_upload_shop_logo)
+    app.router.add_get("/api/assets/{file_name}", hub.handle_get_uploaded_asset)
     app.router.add_get("/api/shops/{shop_id}/logo", hub.handle_get_shop_logo)
     app.router.add_get("/api/geocode/reverse", hub.handle_reverse_geocode)
     app.router.add_get("/api/tunnel/{shop_id}", hub.handle_tunnel)
@@ -2150,6 +2339,7 @@ def main() -> None:
     parser.add_argument("--site-dir", default=str(Path(__file__).resolve().with_name("hashop_site")))
     parser.add_argument("--shop-db", default=str(Path(__file__).resolve().with_name("hashop.sqlite3")))
     parser.add_argument("--uploads-dir", default=str(Path(__file__).resolve().with_name("hashop_uploads")))
+    parser.add_argument("--allow-public-shop-create", action="store_true")
     args = parser.parse_args()
 
     app = build_app(
@@ -2158,6 +2348,7 @@ def main() -> None:
         site_dir=Path(args.site_dir).resolve(),
         shop_db=Path(args.shop_db).resolve(),
         uploads_dir=Path(args.uploads_dir).resolve(),
+        public_shop_create_enabled=args.allow_public_shop_create,
     )
     web.run_app(app, host=args.host, port=args.port, access_log=None)
 
