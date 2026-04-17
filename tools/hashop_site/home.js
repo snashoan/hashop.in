@@ -872,6 +872,28 @@
     });
   }
 
+  function createShopAccount(shopId, displayName, password) {
+    return window.fetch("/api/shops", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        shop_id: shopId,
+        display_name: displayName,
+        password: password
+      })
+    }).then(function (response) {
+      return parseJson(response).then(function (payload) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: payload
+        };
+      });
+    });
+  }
+
   function createShopOrder(shopId, payload) {
     return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/orders", {
       method: "POST",
@@ -2068,9 +2090,9 @@
                         '</div>' +
                       '</div>' +
                       '<div class="shop-item-stepper">' +
-                        '<button class="shop-item-step" type="button" data-owner-draft-step="-1" data-item-id="' + escapeHtml(item.id || "") + '"' + (quantity ? '' : ' disabled') + '>-</button>' +
+                        '<button class="shop-owner-step" type="button" data-owner-draft-step="-1" data-item-id="' + escapeHtml(item.id || "") + '"' + (quantity ? '' : ' disabled') + '>-</button>' +
                         '<span class="shop-item-qty">' + escapeHtml(quantity) + '</span>' +
-                        '<button class="shop-item-step" type="button" data-owner-draft-step="1" data-item-id="' + escapeHtml(item.id || "") + '">+</button>' +
+                        '<button class="shop-owner-step" type="button" data-owner-draft-step="1" data-item-id="' + escapeHtml(item.id || "") + '">+</button>' +
                       '</div>' +
                     '</div>' +
                   '</article>';
@@ -3174,10 +3196,10 @@
     var existingAccount = state.accountSession || loadAccountSession();
     var ownerShopCount = accountOwnerShops(existingAccount).length;
     var loginChip = ownerShopCount ? "Open shop" : "Login";
-    var loginTitle = ownerShopCount ? "Open another registered shop here." : "Open your registered shop here.";
+    var loginTitle = ownerShopCount ? "Open or create another shop here." : "Open or create your shop here.";
     var loginCopy = ownerShopCount
-      ? "Only production-registered shops can be added to this account session on this device."
-      : "Enter the username and password for an already registered production shop.";
+      ? "Use an existing username and password, or enter a new username to create another shop on this device."
+      : "Use an existing username and password, or enter a new username to create a shop now.";
     state.listNode.innerHTML = '' +
       '<section class="shop-pane-detail shop-login-pane">' +
         '<div class="shop-pane-hero shop-login-hero">' +
@@ -3703,9 +3725,9 @@
       if (isOwnerViewingShop(state)) {
         setLocateButtonState(
           state.locateButton,
-          "",
-          state.ownerPanel.tab ? "Items" : "Settings",
-          state.ownerPanel.tab ? null : { symbol: "⚙" }
+          state.ownerPanel.tab === "settings" ? "is-active" : "",
+          state.ownerPanel.tab === "settings" ? "Close shop settings" : "Shop settings",
+          { symbol: "⚙" }
         );
         return;
       }
@@ -4224,24 +4246,47 @@
         }
         if (loginResult.status === 401) {
           return shopExists(shopId).then(function (exists) {
-            return {
-              ok: false,
-              message: exists
-                ? "Wrong password."
-                : "This shop is not registered. Production registration is explicit only."
-            };
+            if (exists) {
+              return {
+                ok: false,
+                message: "Wrong password."
+              };
+            }
+            state.loginDraft.status = "Creating shop...";
+            state.loginDraft.tone = "";
+            renderShopList(state);
+            return createShopAccount(shopId, username, password).then(function (createResult) {
+              if (createResult.ok) {
+                return {
+                  ok: true,
+                  created: true,
+                  payload: createResult.payload
+                };
+              }
+              var createError = String(createResult && createResult.payload && createResult.payload.error || "").trim();
+              var createMessage = "Could not create this shop.";
+              if (createError === "password_too_short") {
+                createMessage = "Use at least 6 characters.";
+              } else if (createError === "registration_restricted") {
+                createMessage = "Shop creation is unavailable right now.";
+              }
+              return {
+                ok: false,
+                message: createMessage
+              };
+            });
           });
         }
         return {
           ok: false,
-          message: "Could not open this production shop."
+          message: "Could not open this shop."
         };
       })
       .then(function (result) {
         if (!result || !result.ok) {
           state.loginDraft.submitting = false;
           state.loginDraft.tone = "error";
-          state.loginDraft.status = String(result && result.message || "Could not open this production shop.");
+          state.loginDraft.status = String(result && result.message || "Could not open this shop.");
           renderShopList(state);
           return;
         }
@@ -4259,14 +4304,14 @@
         state.loginDraft.submitting = false;
         state.loginDraft.password = "";
         state.loginDraft.tone = "success";
-        state.loginDraft.status = "Opened.";
+        state.loginDraft.status = result.created ? "Created." : "Opened.";
         state.panelNode.classList.remove("is-login-view");
         openShopInPane(state, shopId);
       })
       .catch(function () {
         state.loginDraft.submitting = false;
         state.loginDraft.tone = "error";
-        state.loginDraft.status = "Could not open this production shop.";
+        state.loginDraft.status = "Could not open this shop.";
         renderShopList(state);
       });
   }
@@ -4835,7 +4880,7 @@
         }
         if (state.activeShopId) {
           if (isOwnerViewingShop(state)) {
-            if (state.ownerPanel.tab) {
+            if (state.ownerPanel.tab === "settings") {
               closeOwnerOverlayToItems(state);
             } else {
               openOwnerSettingsPane(state, { section: "profile" });

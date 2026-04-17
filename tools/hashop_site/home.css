@@ -2356,6 +2356,7 @@ body {
 }
 
 .shop-item-step,
+.shop-owner-step,
 .shop-cart-step {
   appearance: none;
   min-height: 2rem;
@@ -2371,7 +2372,8 @@ body {
   white-space: nowrap;
 }
 
-.shop-item-step:disabled {
+.shop-item-step:disabled,
+.shop-owner-step:disabled {
   opacity: 0.35;
   cursor: default;
 }

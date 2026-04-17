@@ -1024,7 +1024,7 @@ class HashopHub:
         site_dir: Path,
         store: ShopStore,
         uploads_dir: Path,
-        public_shop_create_enabled: bool = False,
+        public_shop_create_enabled: bool = True,
     ) -> None:
         self.public_base_url = public_base_url.rstrip("/")
         if self.public_base_url.startswith("https://"):
@@ -2279,7 +2279,7 @@ def build_app(
     site_dir: Path,
     shop_db: Path,
     uploads_dir: Path,
-    public_shop_create_enabled: bool = False,
+    public_shop_create_enabled: bool = True,
 ) -> web.Application:
     store = ShopStore(db_path=shop_db)
     hub = HashopHub(
@@ -2339,7 +2339,9 @@ def main() -> None:
     parser.add_argument("--site-dir", default=str(Path(__file__).resolve().with_name("hashop_site")))
     parser.add_argument("--shop-db", default=str(Path(__file__).resolve().with_name("hashop.sqlite3")))
     parser.add_argument("--uploads-dir", default=str(Path(__file__).resolve().with_name("hashop_uploads")))
-    parser.add_argument("--allow-public-shop-create", action="store_true")
+    parser.set_defaults(public_shop_create_enabled=True)
+    parser.add_argument("--allow-public-shop-create", dest="public_shop_create_enabled", action="store_true")
+    parser.add_argument("--restrict-public-shop-create", dest="public_shop_create_enabled", action="store_false")
     args = parser.parse_args()
 
     app = build_app(
@@ -2348,7 +2350,7 @@ def main() -> None:
         site_dir=Path(args.site_dir).resolve(),
         shop_db=Path(args.shop_db).resolve(),
         uploads_dir=Path(args.uploads_dir).resolve(),
-        public_shop_create_enabled=args.allow_public_shop_create,
+        public_shop_create_enabled=args.public_shop_create_enabled,
     )
     web.run_app(app, host=args.host, port=args.port, access_log=None)
 
