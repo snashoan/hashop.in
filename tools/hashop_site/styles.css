@@ -62,7 +62,9 @@ body {
     linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 31% 0 / 14% 100% no-repeat,
     linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 69% 0 / 14% 100% no-repeat,
     linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 0 31% / 100% 14% no-repeat,
-    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 0 69% / 100% 14% no-repeat;
+    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 0 69% / 100% 14% no-repeat,
+    rgba(9, 14, 18, 0.98);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.18));
 }
 .brand-name { font-weight: 700; font-size: 1.4rem; letter-spacing: -0.04em; color: var(--accent); }

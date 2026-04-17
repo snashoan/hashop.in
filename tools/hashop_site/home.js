@@ -2309,9 +2309,15 @@
     saveOwnerConsole(state, state.activeShopId, consoleData, "Shop updated.");
   }
 
+  function ownerFieldValue(container, name) {
+    if (!(container instanceof Element) || !name) return "";
+    var field = container.querySelector('[name="' + String(name) + '"]');
+    return String(field && "value" in field ? field.value : "").trim();
+  }
+
   function submitOwnerItem(state, form) {
-    if (!(form instanceof HTMLFormElement) || !state.activeShopId) return;
-    var title = String((form.elements.title && form.elements.title.value) || "").trim();
+    if (!(form instanceof Element) || !state.activeShopId) return;
+    var title = ownerFieldValue(form, "title");
     if (!title) {
       state.ownerPanel.message = "Enter an item name.";
       state.ownerPanel.tone = "error";
@@ -2324,9 +2330,9 @@
     listings.unshift({
       id: newItemId,
       title: title,
-      description: String((form.elements.description && form.elements.description.value) || "").trim(),
-      price: String((form.elements.price && form.elements.price.value) || "").trim(),
-      quantity: Math.max(0, Number((form.elements.quantity && form.elements.quantity.value) || 0)),
+      description: ownerFieldValue(form, "description"),
+      price: ownerFieldValue(form, "price"),
+      quantity: Math.max(0, Number(ownerFieldValue(form, "quantity") || 0)),
       imageFiles: [],
       createdAt: Date.now()
     });
@@ -5357,7 +5363,7 @@
           return;
         }
         if (mode === "item") {
-          submitOwnerItem(state, form);
+          submitOwnerItem(state, ownerSave.closest('[data-owner-form="item"]') || form);
           return;
         }
         if (mode === "payments") {
