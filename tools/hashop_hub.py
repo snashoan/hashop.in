@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit
 
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
@@ -817,10 +817,11 @@ class ShopStore:
         return base
 
     def _default_console(self, shop_id: str, display_name: str, public_url: str) -> Dict[str, Any]:
-        hub_base_url = public_url
-        if "/shop/" in public_url:
-            hub_base_url = public_url.split("/shop/", 1)[0]
-        hub_base_url = hub_base_url.rstrip("/")
+        parsed_public_url = urlsplit(public_url)
+        if parsed_public_url.scheme and parsed_public_url.netloc:
+            hub_base_url = f"{parsed_public_url.scheme}://{parsed_public_url.netloc}"
+        else:
+            hub_base_url = ""
         return {
             "profile": {
                 "name": display_name or shop_id,
@@ -993,6 +994,23 @@ class ShopStore:
 class HashopHub:
     SHOP_ID_PATTERN = re.compile(r"[^a-z0-9]+")
     VALID_REACH_PLANS = {"free", "map"}
+    DISCOVERY_RESERVED_SEGMENTS = {
+        "account",
+        "api",
+        "cloud",
+        "cloud-debug",
+        "debug-dropdown",
+        "hashop",
+        "hashop-debug",
+        "healthz",
+        "home-debug",
+        "login",
+        "login-debug",
+        "orders",
+        "shop",
+        "shop-debug",
+        "site",
+    }
     WALLET_METHOD_META = {
         "upi": {
             "label": "UPI",
@@ -1218,7 +1236,7 @@ class HashopHub:
         escaped = quote(shop_id, safe="")
         return {
             "shop_id": shop_id,
-            "public_url": f"{self.public_base_url}/shop/{escaped}/",
+            "public_url": f"{self.public_base_url}/{escaped}",
             "tunnel_ws_url": f"{self.ws_base_url}/api/tunnel/{escaped}",
         }
 
@@ -1227,6 +1245,24 @@ class HashopHub:
             "error": "registration_restricted",
             "message": "Production registration is handled explicitly.",
         }
+
+    def _normalized_shop_record(self, record: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        if not isinstance(record, dict):
+            return record
+        normalized = dict(record)
+        shop_id = self.normalize_shop_id(str(normalized.get("shop_id") or "").strip())
+        if shop_id:
+            normalized["public_url"] = self.register_payload(shop_id)["public_url"]
+        console_payload = normalized.get("console")
+        if isinstance(console_payload, dict):
+            share = console_payload.get("share")
+            if isinstance(share, dict) and shop_id:
+                share = dict(share)
+                share["publicUrl"] = self.register_payload(shop_id)["public_url"]
+                console_payload = dict(console_payload)
+                console_payload["share"] = share
+                normalized["console"] = console_payload
+        return normalized
 
     async def discovery_bootstrap(self) -> Dict[str, object]:
         shops = await self.store.list_shops(limit=200)
@@ -1510,12 +1546,21 @@ class HashopHub:
         )
 
     async def handle_index(self, request: web.Request) -> web.Response:
+        return await self._serve_discovery_index()
+
+    async def _serve_discovery_index(
+        self,
+        debug_page: str = "",
+        bootstrap: Optional[Dict[str, object]] = None,
+    ) -> web.Response:
         index_file = self.site_dir / "index.html"
         if index_file.exists():
-            bootstrap = await self.discovery_bootstrap()
+            if bootstrap is None:
+                bootstrap = await self.discovery_bootstrap()
             return self._serve_site_html(
                 "index.html",
                 bootstrap=bootstrap,
+                debug_page=debug_page,
             )
         return web.json_response(self.meta_payload())
 
@@ -1523,16 +1568,21 @@ class HashopHub:
         return self._serve_site_html("hashop.html")
 
     async def handle_cloud(self, request: web.Request) -> web.Response:
-        raise web.HTTPFound("/?pane=login")
+        raise web.HTTPFound("/login")
 
     async def handle_login_page(self, request: web.Request) -> web.Response:
-        raise web.HTTPFound("/?pane=login")
+        return await self._serve_discovery_index()
+
+    async def handle_account_page(self, request: web.Request) -> web.Response:
+        return await self._serve_discovery_index()
+
+    async def handle_orders_page(self, request: web.Request) -> web.Response:
+        return await self._serve_discovery_index()
 
     async def handle_index_debug(self, request: web.Request) -> web.Response:
-        return self._serve_site_html(
-            "index.html",
-            bootstrap=self.debug_discovery_bootstrap(),
+        return await self._serve_discovery_index(
             debug_page="home",
+            bootstrap=self.debug_discovery_bootstrap(),
         )
 
     async def handle_cloud_debug(self, request: web.Request) -> web.Response:
@@ -1547,6 +1597,24 @@ class HashopHub:
     async def handle_hashop_debug(self, request: web.Request) -> web.Response:
         return self._serve_site_html("hashop.html", debug_page="hashop")
 
+    async def handle_discovery_shop_page(self, request: web.Request) -> web.Response:
+        shop_id = self.normalize_shop_id(request.match_info.get("shop_id", ""))
+        tail = str(request.match_info.get("tail", "") or "").strip("/")
+        if not shop_id or shop_id in self.DISCOVERY_RESERVED_SEGMENTS:
+            raise web.HTTPNotFound()
+        if tail:
+            parts = [segment for segment in tail.split("/") if segment]
+            if not parts:
+                raise web.HTTPNotFound()
+            if parts[0] == "cart" and len(parts) == 1:
+                return await self._serve_discovery_index()
+            if parts[0] == "settings" and len(parts) <= 2 and (len(parts) == 1 or parts[1] in {"profile", "payments"}):
+                return await self._serve_discovery_index()
+            if parts[0] == "history" and len(parts) <= 2 and (len(parts) == 1 or parts[1] in {"orders", "items", "stats"}):
+                return await self._serve_discovery_index()
+            raise web.HTTPNotFound()
+        return await self._serve_discovery_index()
+
     async def handle_shop_debug_request(self, request: web.Request) -> web.Response:
         response = await self._proxy_shop_request(request, debug_page="shop")
         return response
@@ -1556,7 +1624,7 @@ class HashopHub:
             {
                 **self.meta_payload(),
                 "stored_shop_count": await self.store.count_shops(),
-                "recent_shops": await self.store.list_shops(limit=12),
+                "recent_shops": [self._normalized_shop_record(shop) for shop in await self.store.list_shops(limit=12)],
             }
         )
 
@@ -1618,7 +1686,7 @@ class HashopHub:
         return web.json_response(
             {
                 "created": created,
-                "shop": record,
+                "shop": self._normalized_shop_record(record),
                 "unlock": map_unlock,
                 "launch_url": f"/hashop?shop={quote(shop_id, safe='')}",
             },
@@ -1687,7 +1755,7 @@ class HashopHub:
             return web.json_response({"error": "invalid_login"}, status=401)
         return web.json_response(
             {
-                "shop": record,
+                "shop": self._normalized_shop_record(record),
                 "launch_url": f"/hashop?shop={quote(shop_id, safe='')}",
             }
         )
@@ -1699,7 +1767,7 @@ class HashopHub:
         record = await self.store.get_shop(shop_id)
         if record is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
-        return web.json_response(record)
+        return web.json_response(self._normalized_shop_record(record))
 
     async def handle_get_shop_console(self, request: web.Request) -> web.Response:
         shop_id = self.normalize_shop_id(request.match_info["shop_id"])
@@ -1708,7 +1776,7 @@ class HashopHub:
         record = await self.store.get_shop_console(shop_id)
         if record is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
-        return web.json_response(record)
+        return web.json_response(self._normalized_shop_record(record))
 
     async def handle_put_shop_console(self, request: web.Request) -> web.Response:
         shop_id = self.normalize_shop_id(request.match_info["shop_id"])
@@ -1726,7 +1794,7 @@ class HashopHub:
         record = await self.store.save_shop_console(shop_id, console_payload)
         if record is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
-        return web.json_response(record)
+        return web.json_response(self._normalized_shop_record(record))
 
     async def handle_list_buyer_orders(self, request: web.Request) -> web.Response:
         buyer_key = str(request.query.get("buyer_key") or "").strip()[:160]
@@ -2051,7 +2119,8 @@ class HashopHub:
             limit = int(raw_limit)
         except ValueError:
             limit = 100
-        return web.json_response({"shops": await self.store.list_shops(limit=limit)})
+        shops = [self._normalized_shop_record(shop) for shop in await self.store.list_shops(limit=limit)]
+        return web.json_response({"shops": shops})
 
     async def handle_tunnel(self, request: web.Request) -> web.StreamResponse:
         shop_id = request.match_info["shop_id"]
@@ -2295,6 +2364,8 @@ def build_app(
     app.router.add_get("/", hub.handle_index)
     app.router.add_get("/home-debug", hub.handle_index_debug)
     app.router.add_get("/login", hub.handle_login_page)
+    app.router.add_get("/account", hub.handle_account_page)
+    app.router.add_get("/orders", hub.handle_orders_page)
     app.router.add_get("/login-debug", hub.handle_login_page_debug)
     app.router.add_get("/cloud", hub.handle_cloud)
     app.router.add_get("/cloud-debug", hub.handle_cloud_debug)
@@ -2327,6 +2398,8 @@ def build_app(
     app.router.add_route("*", "/shop/{shop_id}/{tail:.*}", hub.handle_shop_request)
     if site_dir.exists():
         app.router.add_static("/site/", str(site_dir), show_index=False)
+    app.router.add_get(r"/{shop_id:[a-z0-9][a-z0-9-]{0,62}}", hub.handle_discovery_shop_page)
+    app.router.add_get(r"/{shop_id:[a-z0-9][a-z0-9-]{0,62}}/{tail:.*}", hub.handle_discovery_shop_page)
     return app
 
 

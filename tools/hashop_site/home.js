@@ -1,12 +1,6 @@
 (function () {
   var DEBUG_PAGE = String(window.__HASHOP_DEBUG_PAGE__ || "").trim();
-  var INITIAL_PANE = (function () {
-    try {
-      return String(new URLSearchParams(window.location.search).get("pane") || "").trim().toLowerCase();
-    } catch (error) {
-      return "";
-    }
-  }());
+  var INITIAL_ROUTE = parseInitialRoute();
   var DEFAULT_DISCOVERY_CENTER = [12.9716, 77.5946];
   var DEFAULT_DISCOVERY_ZOOM = 14;
   var LOCATE_REVEAL_DELAY_MS = 900;
@@ -40,10 +34,15 @@
   }
 
   function shopUrl(shop) {
-    var publicUrl = String(shop && shop.public_url || "").trim();
-    if (publicUrl) return publicUrl;
     var shopId = String(shop && shop.shop_id || "").trim();
-    return "/shop/" + encodeURIComponent(shopId) + "/";
+    var publicUrl = String(shop && shop.public_url || "").trim();
+    if (publicUrl) {
+      if (/\/shop\/[^/]+\/?$/i.test(publicUrl) && shopId) {
+        return discoveryShopPath(shopId);
+      }
+      return publicUrl;
+    }
+    return discoveryShopPath(shopId);
   }
 
   function shopColor(shop) {
@@ -165,33 +164,117 @@
     return isFinite(number) ? number : 0;
   }
 
-  function syncPaneUrl(state) {
-    if (!window.history || typeof window.history.replaceState !== "function") return;
-    try {
-      var url = new URL(window.location.href);
-      if (state && state.debugPaneView === "login") {
-        url.searchParams.set("pane", "login");
-      } else if (state && state.debugPaneView === "account") {
-        url.searchParams.set("pane", "account");
-      } else if (state && state.debugPaneView === "recent-orders") {
-        url.searchParams.set("pane", "orders");
-      } else {
-        url.searchParams.delete("pane");
-      }
-      var next = url.pathname + (url.search ? url.search : "") + url.hash;
-      var current = window.location.pathname + window.location.search + window.location.hash;
-      if (next !== current) {
-        window.history.replaceState({}, "", next);
-      }
-    } catch (error) {}
-  }
-
   function slugify(value) {
     return String(value || "")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+
+  function parseLegacyPaneRoute(url) {
+    var pane = String(url && url.searchParams && url.searchParams.get("pane") || "").trim().toLowerCase();
+    if (pane === "login") return { kind: "login" };
+    if (pane === "account") return { kind: "account" };
+    if (pane === "orders") return { kind: "orders" };
+    return { kind: "home" };
+  }
+
+  function parseInitialRoute() {
+    try {
+      var url = new URL(window.location.href);
+      var segments = url.pathname
+        .split("/")
+        .filter(function (part) {
+          return !!String(part || "").trim();
+        })
+        .map(function (part) {
+          try {
+            return decodeURIComponent(part);
+          } catch (error) {
+            return String(part || "");
+          }
+        });
+      if (!segments.length) return parseLegacyPaneRoute(url);
+      var first = slugify(segments[0]).slice(0, 63);
+      if (first === "login") return { kind: "login" };
+      if (first === "account") return { kind: "account" };
+      if (first === "orders") return { kind: "orders" };
+      if (!first) return parseLegacyPaneRoute(url);
+      var second = String(segments[1] || "").trim().toLowerCase();
+      if (!second) {
+        return { kind: "shop", shopId: first };
+      }
+      if (second === "cart") {
+        return { kind: "shop", shopId: first, shopView: "cart" };
+      }
+      if (second === "settings") {
+        return {
+          kind: "shop",
+          shopId: first,
+          ownerTab: "settings",
+          ownerSection: normalizeOwnerSettingsSection(segments[2] || "profile")
+        };
+      }
+      if (second === "history") {
+        return {
+          kind: "shop",
+          shopId: first,
+          ownerTab: "history",
+          ownerSection: normalizeOwnerHistorySection(segments[2] || "orders")
+        };
+      }
+      return parseLegacyPaneRoute(url);
+    } catch (error) {
+      return { kind: "home" };
+    }
+  }
+
+  function encodePathSegment(value) {
+    return encodeURIComponent(String(value || "").trim());
+  }
+
+  function discoveryShopPath(shopId) {
+    var safeShopId = slugify(shopId).slice(0, 63);
+    return safeShopId ? ("/" + encodePathSegment(safeShopId)) : "/";
+  }
+
+  function panePath(state) {
+    if (!state) return "/";
+    if (state.debugPaneView === "login") return "/login";
+    if (state.debugPaneView === "account") return "/account";
+    if (state.debugPaneView === "recent-orders") return "/orders";
+    if (!state.activeShopId) return "/";
+    var shopPath = discoveryShopPath(state.activeShopId);
+    if (isOwnerViewingShop(state)) {
+      if (state.ownerPanel.tab === "settings") {
+        return state.ownerPanel.section === "payments"
+          ? (shopPath + "/settings/payments")
+          : (shopPath + "/settings");
+      }
+      if (state.ownerPanel.tab === "history") {
+        return state.ownerPanel.section === "items"
+          ? (shopPath + "/history/items")
+          : state.ownerPanel.section === "stats"
+          ? (shopPath + "/history/stats")
+          : (shopPath + "/history");
+      }
+    }
+    if (state.activeShopView === "cart") {
+      return shopPath + "/cart";
+    }
+    return shopPath;
+  }
+
+  function syncPaneUrl(state) {
+    if (!window.history || typeof window.history.replaceState !== "function") return;
+    try {
+      var next = panePath(state);
+      var current = window.location.pathname;
+      if (next !== current || window.location.search) {
+        window.history.replaceState({}, "", next + window.location.hash);
+      }
+    } catch (error) {}
   }
 
   function parseJson(response) {
@@ -1003,7 +1086,10 @@
     var merged = Object.assign({}, existing, record);
     merged.shop_id = shopId;
     merged.display_name = String(merged.display_name || fallbackName || shopId).trim() || shopId;
-    merged.public_url = String(merged.public_url || existing.public_url || ("/shop/" + encodeURIComponent(shopId) + "/")).trim();
+    merged.public_url = shopUrl({
+      shop_id: shopId,
+      public_url: String(merged.public_url || existing.public_url || "").trim()
+    });
     merged.map_color = String(merged.map_color || existing.map_color || "#29c6ea").trim();
     merged.lat = Number.isFinite(Number(merged.lat)) ? Number(merged.lat) : null;
     merged.lng = Number.isFinite(Number(merged.lng)) ? Number(merged.lng) : null;
@@ -3981,6 +4067,7 @@
     state.ownerPanel.tab = "";
     state.ownerPanel.section = "";
     state.searchQuery = "";
+    syncPaneUrl(state);
     updateSearchField(state);
     syncActionButton(state);
     syncBackButton(state);
@@ -4395,12 +4482,16 @@
     if (!state || !shopId) return;
     var ownerTab = String(options && options.ownerTab || "").trim();
     var ownerSection = String(options && options.ownerSection || "").trim();
+    var shopView = String(options && options.shopView || "").trim();
     if (ownerTab === "settings") {
       ownerSection = normalizeOwnerSettingsSection(ownerSection);
     } else if (ownerTab === "history") {
       ownerSection = normalizeOwnerHistorySection(ownerSection);
     } else {
       ownerSection = "";
+    }
+    if (shopView !== "cart") {
+      shopView = "items";
     }
     if (state.accountSession && accountOwnerShops(state.accountSession).some(function (shop) {
       return String(shop && shop.shopId || "").trim() === String(shopId || "").trim();
@@ -4410,7 +4501,7 @@
     var previewDetail = state.shopDetails[shopId] || shopDetailFromPreview(state.shopById[shopId]);
     state.debugPaneView = "";
     state.activeShopId = shopId;
-    state.activeShopView = "items";
+    state.activeShopView = ownerTab ? "items" : shopView;
     setSelectedPaymentMode(state, shopId, "on_receive");
     state.ownerPanel.tab = ownerTab;
     state.ownerPanel.section = ownerSection;
@@ -4523,6 +4614,7 @@
     state.activeShopView = "cart";
     setOrderConfirmation(state, state.activeShopId, null);
     state.searchQuery = "";
+    syncPaneUrl(state);
     updateSearchField(state);
     syncActionButton(state);
     renderShopList(state);
@@ -4539,6 +4631,7 @@
     }
     setOrderConfirmation(state, state.activeShopId, null);
     state.searchQuery = "";
+    syncPaneUrl(state);
     updateSearchField(state);
     syncActionButton(state);
     renderShopList(state);
@@ -4851,16 +4944,22 @@
   initMap(state);
   refreshOwnerOrdersNavData(state);
 
-  if (INITIAL_PANE === "login") {
+  if (INITIAL_ROUTE.kind === "login") {
     openDebugLoginPane(state);
-  } else if (INITIAL_PANE === "account") {
+  } else if (INITIAL_ROUTE.kind === "account") {
     openAccountPane(state);
-  } else if (INITIAL_PANE === "orders") {
+  } else if (INITIAL_ROUTE.kind === "orders") {
     if (shouldUseOwnerOrdersNav(state)) {
       openOwnerOrdersPane(state);
     } else {
       openBuyerOrdersPane(state);
     }
+  } else if (INITIAL_ROUTE.kind === "shop" && INITIAL_ROUTE.shopId) {
+    openShopInPane(state, INITIAL_ROUTE.shopId, {
+      shopView: INITIAL_ROUTE.shopView,
+      ownerTab: INITIAL_ROUTE.ownerTab,
+      ownerSection: INITIAL_ROUTE.ownerSection
+    });
   }
 
   if (state.searchInput) {
@@ -5261,6 +5360,7 @@
                 : ""
             });
             state.activeShopView = "confirmation";
+            syncPaneUrl(state);
             renderShopList(state);
             updateSearchField(state);
             syncActionButton(state);
