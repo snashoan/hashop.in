@@ -2876,7 +2876,6 @@
     var cartView = state.activeShopView === "cart";
     var confirmationView = state.activeShopView === "confirmation";
     var query = normalizeSearch(state.searchQuery);
-    var statusText = statusLabel(shop, state.userPoint);
     var locationText = String(detail.location || "").trim();
     var heroOverlineMarkup = '';
     var statsParts = [];
@@ -2891,6 +2890,18 @@
     }
     var statsMarkup = statsParts.length ? (
       '<div class="shop-pane-stats">' + statsParts.join('') + '</div>'
+    ) : '';
+    var ownerOrders = Array.isArray(ownerConsole && ownerConsole.orders) ? ownerConsole.orders : [];
+    var ownerPendingCount = pendingOwnerOrdersCount(ownerOrders);
+    var ownerQuickBarMarkup = ownerMode && !ownerOverlayOpen ? (
+      '<div class="shop-owner-bar">' +
+        '<div class="shop-owner-actions">' +
+          '<button class="shop-owner-save" type="button" data-owner-main-start-order="true">Start order</button>' +
+          '<button class="shop-owner-tab" type="button" data-owner-main-open-history="orders">' +
+            escapeHtml(ownerPendingCount ? (ownerPendingCount + " pending") : "Orders") +
+          '</button>' +
+        '</div>' +
+      '</div>'
     ) : '';
     var paymentEntries = payablePaymentEntries(detail, totalAmount);
     var paymentMode = effectivePaymentMode(state, state.activeShopId, paymentEntries);
@@ -3142,6 +3153,7 @@
             '</div>'
           : shopHeroMarkup +
             orderNoticeMarkup +
+            ownerQuickBarMarkup +
             statsMarkup +
             ownerEditorMarkup +
             (ownerOverlayOpen ? '' : '<div class="shop-pane-items">' + itemsMarkup + '</div>') +
@@ -3569,10 +3581,19 @@
     }
   }
 
-  function setLocateButtonState(button, mode, label) {
+  function setLocateButtonState(button, mode, label, options) {
     if (!button) return;
-    button.classList.remove("is-loading", "is-active", "is-error", "is-danger");
+    var settings = options && typeof options === "object" ? options : {};
+    var symbol = String(settings.symbol || "").trim();
+    button.classList.remove("is-loading", "is-active", "is-error", "is-danger", "is-symbol");
     if (mode) button.classList.add(mode);
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+    if (symbol) {
+      button.classList.add("is-symbol");
+      button.innerHTML = '<span class="shop-list-action-symbol" aria-hidden="true">' + escapeHtml(symbol) + '</span><span class="shop-visually-hidden">' + escapeHtml(label) + '</span>';
+      return;
+    }
     button.textContent = label;
   }
 
@@ -3683,7 +3704,8 @@
         setLocateButtonState(
           state.locateButton,
           "",
-          state.ownerPanel.tab ? "Items" : "Settings"
+          state.ownerPanel.tab ? "Items" : "Settings",
+          state.ownerPanel.tab ? null : { symbol: "⚙" }
         );
         return;
       }
@@ -5218,6 +5240,26 @@
         openOwnerHistoryPane(state, {
           shopId: state.activeShopId,
           section: String(ownerHistorySectionButton.getAttribute("data-owner-history-section") || "").trim()
+        });
+        return;
+      }
+      var ownerMainStartOrderButton = target.closest("[data-owner-main-start-order]");
+      if (ownerMainStartOrderButton) {
+        event.preventDefault();
+        openOwnerHistoryPane(state, {
+          shopId: state.activeShopId,
+          section: "orders",
+          force: true
+        });
+        return;
+      }
+      var ownerMainHistoryButton = target.closest("[data-owner-main-open-history]");
+      if (ownerMainHistoryButton) {
+        event.preventDefault();
+        openOwnerHistoryPane(state, {
+          shopId: state.activeShopId,
+          section: String(ownerMainHistoryButton.getAttribute("data-owner-main-open-history") || "").trim() || "orders",
+          force: true
         });
         return;
       }
