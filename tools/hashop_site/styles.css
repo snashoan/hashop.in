@@ -53,19 +53,41 @@ body {
   color: inherit;
 }
 .brand-mark {
+  --brand-hash-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='32' y='4' width='14' height='92' rx='7'/%3E%3Crect x='54' y='4' width='14' height='92' rx='7'/%3E%3Crect x='4' y='32' width='92' height='14' rx='7'/%3E%3Crect x='4' y='54' width='92' height='14' rx='7'/%3E%3C/svg%3E");
   width: var(--comb-width);
   height: var(--comb-height);
   display: inline-block;
   flex: none;
-  border-radius: 0.28rem;
-  background:
-    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 31% 0 / 14% 100% no-repeat,
-    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 69% 0 / 14% 100% no-repeat,
-    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 0 31% / 100% 14% no-repeat,
-    linear-gradient(180deg, #f7d85d 0%, var(--accent) 100%) 0 69% / 100% 14% no-repeat,
-    rgba(9, 14, 18, 0.98);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 0.32rem;
+  background: linear-gradient(180deg, rgba(11, 23, 29, 0.98), rgba(7, 16, 21, 0.98));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.18));
+}
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: 15%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f8e27e 0%, var(--accent) 100%);
+  -webkit-mask-image: var(--brand-hash-mask-image);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-image: var(--brand-hash-mask-image);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.26));
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), transparent 42%);
 }
 .brand-name { font-weight: 700; font-size: 1.4rem; letter-spacing: -0.04em; color: var(--accent); }
 

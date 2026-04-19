@@ -33,6 +33,97 @@
     return text.slice(0, Math.max(1, limit - 1)).trimEnd() + "…";
   }
 
+  function loadLastLocation() {
+    try {
+      var raw = window.localStorage.getItem("hashop_last_location");
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      var lat = Number(parsed && parsed.lat);
+      var lng = Number(parsed && parsed.lng);
+      var accuracy = Math.max(0, Number(parsed && parsed.accuracy) || 0);
+      if (!isFinite(lat) || !isFinite(lng)) return null;
+      return {
+        lat: lat,
+        lng: lng,
+        accuracy: accuracy
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function padTimePart(value) {
+    return String(Math.max(0, Number(value) || 0)).padStart(2, "0");
+  }
+
+  function parseHoursToken(hoursValue, minutesValue, meridiemValue) {
+    var hours = Number(hoursValue);
+    var minutes = Number(minutesValue || 0);
+    if (!isFinite(hours) || !isFinite(minutes) || minutes < 0 || minutes > 59) {
+      return "";
+    }
+    var meridiem = String(meridiemValue || "").trim().toLowerCase();
+    if (meridiem) {
+      if (hours < 1 || hours > 12) return "";
+      if (meridiem === "pm" && hours !== 12) hours += 12;
+      if (meridiem === "am" && hours === 12) hours = 0;
+    } else if (hours < 0 || hours > 23) {
+      return "";
+    }
+    return padTimePart(hours) + ":" + padTimePart(minutes);
+  }
+
+  function parseHoursRange(value) {
+    var text = String(value || "").trim();
+    if (!text) {
+      return { open: "", close: "" };
+    }
+    var matches = [];
+    var pattern = /(\d{1,2})(?::(\d{2}))?\s*([ap]m)?/ig;
+    var match;
+    while ((match = pattern.exec(text)) && matches.length < 2) {
+      var timeValue = parseHoursToken(match[1], match[2], match[3]);
+      if (timeValue) matches.push(timeValue);
+    }
+    return {
+      open: matches[0] || "",
+      close: matches[1] || ""
+    };
+  }
+
+  function serializeHoursRange(openValue, closeValue) {
+    var open = String(openValue || "").trim();
+    var close = String(closeValue || "").trim();
+    if (open && close) return open + " - " + close;
+    return open || close;
+  }
+
+  function ownerHoursFieldMarkup(value) {
+    var rawValue = String(value || "").trim();
+    var parsed = parseHoursRange(rawValue);
+    var parsedAny = !!(parsed.open || parsed.close);
+    return '' +
+      '<div class="shop-owner-field shop-owner-field-wide">' +
+        '<span>Hours</span>' +
+        '<div class="shop-owner-time-grid">' +
+          '<label class="shop-owner-time-field">' +
+            '<span>Open</span>' +
+            '<input class="shop-owner-input" type="time" name="hoursOpen" value="' + escapeHtml(parsed.open) + '">' +
+          '</label>' +
+          '<label class="shop-owner-time-field">' +
+            '<span>Close</span>' +
+            '<input class="shop-owner-input" type="time" name="hoursClose" value="' + escapeHtml(parsed.close) + '">' +
+          '</label>' +
+        '</div>' +
+        '<input type="hidden" name="hoursLegacy" value="' + escapeHtml(rawValue) + '" data-hours-parsed="' + (parsedAny ? "true" : "false") + '">' +
+        '<span class="shop-owner-field-note">' + escapeHtml(
+          rawValue && !parsedAny
+            ? ("Current saved text stays unchanged until you set times: " + rawValue)
+            : "Use opening and closing time."
+        ) + '</span>' +
+      '</div>';
+  }
+
   function shopUrl(shop) {
     var shopId = String(shop && shop.shop_id || "").trim();
     var publicUrl = String(shop && shop.public_url || "").trim();
@@ -1652,7 +1743,7 @@
         '</div>' +
         '<div class="shop-owner-grid">' +
           '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
-          '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
+          '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
           '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
         '</div>' +
@@ -1705,8 +1796,8 @@
             '<label class="shop-owner-field"><span>Name</span><input class="shop-owner-input" name="name" value="' + escapeHtml(profile.name || detail.name || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Type</span><input class="shop-owner-input" name="type" value="' + escapeHtml(profile.type || detail.type || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Hours</span><input class="shop-owner-input" name="hours" value="' + escapeHtml(profile.hours || detail.hours || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" type="tel" inputmode="tel" autocomplete="tel" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
+            ownerHoursFieldMarkup(profile.hours || detail.hours || "") +
             '<label class="shop-owner-field"><span>Currency prefix</span><input class="shop-owner-input" name="currencyPrefix" value="' + escapeHtml(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "") + '" placeholder="Rs" /></label>' +
             '<input type="hidden" name="gps" value="' + escapeHtml(profile.gps || "") + '">' +
             '<div class="shop-owner-field shop-owner-field-wide shop-owner-pickup">' +
@@ -1729,7 +1820,7 @@
           '</div>' +
           '<div class="shop-owner-grid">' +
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
-            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" placeholder="20" /></label>' +
+            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
           '</div>' +
@@ -1745,9 +1836,9 @@
             '<span>What buyers can use here</span>' +
           '</div>' +
           '<div class="shop-owner-grid">' +
-            '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" /></label>' +
-            '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." /></label>' +
-            '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." /></label>' +
+            '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
           '</div>' +
           '<button class="shop-owner-save" type="button" data-owner-save="payments">Save payments</button>' +
@@ -1814,7 +1905,7 @@
         '</div>' +
         '<div class="shop-owner-grid">' +
           '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
-          '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
+          '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
           '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
         '</div>' +
@@ -1882,8 +1973,8 @@
               '<label class="shop-owner-field"><span>Name</span><input class="shop-owner-input" name="name" value="' + escapeHtml(profile.name || detail.name || "") + '" /></label>' +
               '<label class="shop-owner-field"><span>Type</span><input class="shop-owner-input" name="type" value="' + escapeHtml(profile.type || detail.type || "") + '" /></label>' +
               '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" /></label>' +
-              '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
-              '<label class="shop-owner-field"><span>Hours</span><input class="shop-owner-input" name="hours" value="' + escapeHtml(profile.hours || detail.hours || "") + '" /></label>' +
+              '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" type="tel" inputmode="tel" autocomplete="tel" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
+              ownerHoursFieldMarkup(profile.hours || detail.hours || "") +
               '<label class="shop-owner-field"><span>Currency prefix</span><input class="shop-owner-input" name="currencyPrefix" value="' + escapeHtml(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "") + '" placeholder="Rs" /></label>' +
               '<input type="hidden" name="gps" value="' + escapeHtml(profile.gps || "") + '">' +
               '<div class="shop-owner-field shop-owner-field-wide shop-owner-pickup">' +
@@ -1907,7 +1998,7 @@
           '<form class="shop-owner-form" data-owner-form="item">' +
             '<div class="shop-owner-grid">' +
               '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
-              '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" placeholder="20" /></label>' +
+              '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
               '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
               '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
             '</div>' +
@@ -1924,9 +2015,9 @@
           'What buyers can use here',
           '<form class="shop-owner-form" data-owner-form="payments">' +
             '<div class="shop-owner-grid">' +
-              '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" /></label>' +
-              '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." /></label>' +
-              '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." /></label>' +
+              '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+              '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+              '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
               '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
             '</div>' +
             '<button class="shop-owner-save" type="button" data-owner-save="payments">Save payments</button>' +
@@ -1984,7 +2075,7 @@
           '</div>' +
           '<div class="shop-owner-grid">' +
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
             '<div class="shop-owner-field shop-owner-field-wide">' +
@@ -2043,9 +2134,9 @@
             '<span>What buyers can use here.</span>' +
           '</div>' +
           '<div class="shop-owner-grid">' +
-            '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" /></label>' +
-            '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." /></label>' +
-            '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." /></label>' +
+            '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
           '</div>' +
           '<div class="shop-owner-action-row">' +
@@ -2076,9 +2167,9 @@
             '</div>' +
             '<label class="shop-owner-field"><span>Name</span><input class="shop-owner-input" name="name" value="' + escapeHtml(profile.name || detail.name || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Type</span><input class="shop-owner-input" name="type" value="' + escapeHtml(profile.type || detail.type || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
-            '<label class="shop-owner-field"><span>Hours</span><input class="shop-owner-input" name="hours" value="' + escapeHtml(profile.hours || detail.hours || "") + '" /></label>' +
+            '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" autocomplete="street-address" /></label>' +
+            '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" type="tel" inputmode="tel" autocomplete="tel" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
+            ownerHoursFieldMarkup(profile.hours || detail.hours || "") +
             '<label class="shop-owner-field"><span>Currency prefix</span><input class="shop-owner-input" name="currencyPrefix" value="' + escapeHtml(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "") + '" placeholder="Rs" /></label>' +
             '<input type="hidden" name="gps" value="' + escapeHtml(profile.gps || "") + '">' +
             '<div class="shop-owner-field shop-owner-field-wide shop-owner-pickup">' +
@@ -2154,7 +2245,7 @@
           '</div>' +
           '<div class="shop-owner-grid">' +
             '<label class="shop-owner-field"><span>Buyer name</span><input class="shop-owner-input" data-owner-order-draft-field="buyerName" value="' + escapeHtml(draft.buyerName || "") + '" placeholder="Optional" /></label>' +
-            '<label class="shop-owner-field"><span>Buyer contact</span><input class="shop-owner-input" data-owner-order-draft-field="buyerContact" value="' + escapeHtml(draft.buyerContact || "") + '" placeholder="Optional" /></label>' +
+            '<label class="shop-owner-field"><span>Buyer contact</span><input class="shop-owner-input" type="tel" inputmode="tel" autocomplete="tel" data-owner-order-draft-field="buyerContact" value="' + escapeHtml(draft.buyerContact || "") + '" placeholder="Optional" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Notes</span><textarea class="shop-owner-textarea" data-owner-order-draft-field="notes" rows="2" placeholder="Cash, takeaway, table no...">' + escapeHtml(draft.notes || "") + '</textarea></label>' +
           '</div>' +
           '<div class="shop-owner-mode-row">' +
@@ -2243,7 +2334,7 @@
           '</div>' +
           '<div class="shop-owner-grid">' +
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
-            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" placeholder="20" /></label>' +
+            '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
           '</div>' +
@@ -2383,11 +2474,17 @@
     if (!(form instanceof HTMLFormElement) || !state.activeShopId) return;
     var consoleData = ensureShopConsole(state, state.activeShopId);
     var profile = consoleData.profile || {};
+    var hoursLegacyField = form.elements.hoursLegacy;
+    var hoursOpen = String((form.elements.hoursOpen && form.elements.hoursOpen.value) || "").trim();
+    var hoursClose = String((form.elements.hoursClose && form.elements.hoursClose.value) || "").trim();
+    var hoursValue = serializeHoursRange(hoursOpen, hoursClose);
+    var hoursLegacy = String((hoursLegacyField && hoursLegacyField.value) || "").trim();
+    var hoursParsed = !!(hoursLegacyField && String(hoursLegacyField.getAttribute("data-hours-parsed") || "").trim() === "true");
     profile.name = String((form.elements.name && form.elements.name.value) || "").trim();
     profile.type = String((form.elements.type && form.elements.type.value) || "").trim();
     profile.location = String((form.elements.location && form.elements.location.value) || "").trim();
     profile.contact = String((form.elements.contact && form.elements.contact.value) || "").trim();
-    profile.hours = String((form.elements.hours && form.elements.hours.value) || "").trim();
+    profile.hours = hoursValue || (hoursParsed ? "" : hoursLegacy);
     profile.notes = String((form.elements.notes && form.elements.notes.value) || "").trim();
     profile.currencyPrefix = String((form.elements.currencyPrefix && form.elements.currencyPrefix.value) || "").trim();
     profile.gps = String((form.elements.gps && form.elements.gps.value) || "").trim();
@@ -3048,7 +3145,7 @@
         '</label>' +
         '<label class="shop-login-field">' +
           '<span>Contact</span>' +
-          '<input class="shop-login-input" type="text" data-buyer-field="contact" value="' + escapeHtml(buyerProfile.contact || "") + '" placeholder="Phone or handle" autocomplete="tel" spellcheck="false">' +
+          '<input class="shop-login-input" type="tel" inputmode="tel" data-buyer-field="contact" value="' + escapeHtml(buyerProfile.contact || "") + '" placeholder="Phone or handle" autocomplete="tel" spellcheck="false">' +
         '</label>' +
       '</div>'
     ) : '';
@@ -4641,38 +4738,77 @@
   function installReliableBaseLayer(map) {
     if (!map || !window.L) return null;
 
-    var providers = [
-      {
-        layers: [
+    var prefersDark = false;
+    try {
+      prefersDark = !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    } catch (error) {}
+    var localHour = (new Date()).getHours();
+    var nightMode = prefersDark || localHour < 6 || localHour >= 18;
+    var providers = nightMode
+      ? [
           {
-            url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-            options: {
-              maxZoom: 20,
-              subdomains: "abcd",
-              attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-            }
-          }
-        ]
-      },
-      {
-        layers: [
-          {
-            url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-            options: {
-              maxZoom: 16,
-              attribution: "Tiles &copy; Esri"
-            }
+            layers: [
+              {
+                url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                options: {
+                  maxZoom: 20,
+                  subdomains: "abcd",
+                  attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+                }
+              }
+            ]
           },
           {
-            url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
-            options: {
-              maxZoom: 16,
-              attribution: "Labels &copy; Esri"
-            }
+            layers: [
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Tiles &copy; Esri"
+                }
+              },
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Labels &copy; Esri"
+                }
+              }
+            ]
           }
         ]
-      }
-    ];
+      : [
+          {
+            layers: [
+              {
+                url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                options: {
+                  maxZoom: 20,
+                  subdomains: "abcd",
+                  attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+                }
+              }
+            ]
+          },
+          {
+            layers: [
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Tiles &copy; Esri"
+                }
+              },
+              {
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+                options: {
+                  maxZoom: 16,
+                  attribution: "Labels &copy; Esri"
+                }
+              }
+            ]
+          }
+        ];
 
     var activeIndex = -1;
     var activeLayers = [];
@@ -4837,6 +4973,14 @@
     });
     state.map = map;
     installReliableBaseLayer(map);
+    if (state.savedUserLocation) {
+      upsertUserMarker(
+        state,
+        state.savedUserLocation.lat,
+        state.savedUserLocation.lng,
+        state.savedUserLocation.accuracy
+      );
+    }
 
     state.shops.filter(function (shop) {
       return shop.has_location && isFinite(shop.lat) && isFinite(shop.lng);
@@ -4865,6 +5009,7 @@
 
   var bootstrap = loadBootstrap();
   var initialAccountSession = loadAccountSession();
+  var lastLocation = loadLastLocation();
   var state = {
     shops: Array.isArray(bootstrap.map_shops) ? bootstrap.map_shops : [],
     shopById: {},
@@ -4872,9 +5017,10 @@
     shopConsoles: {},
     map: null,
     shopPoints: [],
-    userPoint: null,
+    userPoint: lastLocation ? [lastLocation.lat, lastLocation.lng] : null,
     userMarker: null,
     userAccuracy: null,
+    savedUserLocation: lastLocation,
     isExpanded: false,
     expandMode: "normal",
     activeShopId: "",
