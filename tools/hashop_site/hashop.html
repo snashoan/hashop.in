@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Hashop Cloud | Shop Console</title>
+  <title>Hashop | Merchant Console</title>
   <meta name="description" content="Hosted Hashop merchant console.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/site/styles.css?v=site-20260417b">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site/styles.css?v=site-20260418a">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="/site/hashop.css?v=hashop-20260325g">
+  <link rel="stylesheet" href="/site/hashop.css?v=hashop-20260418a">
 </head>
 <body>
   <div class="shell shell-console">
@@ -23,10 +23,33 @@
       <div class="top-status">
         <div class="status-pill">
           <span class="status-dot"></span>
-          <span id="consoleStatus">Hashop Cloud</span>
+          <span id="consoleStatus">Merchant Console</span>
         </div>
       </div>
     </header>
+
+    <section class="console-masthead" aria-label="Hashop console overview">
+      <div class="console-masthead-copy">
+        <p class="eyebrow">Merchant Workspace</p>
+        <h1 class="console-masthead-title">Run profile, catalog, payments, and orders from one focused console.</h1>
+        <p class="console-masthead-text">Every section edits the same shop information customers see in the storefront, with mobile-friendly steps and clearer visual separation between tasks.</p>
+      </div>
+
+      <div class="console-masthead-grid" aria-hidden="true">
+        <article class="console-masthead-card">
+          <strong>Profile</strong>
+          <span>Brand image, address, contact, hours, and public notes.</span>
+        </article>
+        <article class="console-masthead-card">
+          <strong>Listings</strong>
+          <span>Titles, pricing, quantity, and product descriptions in one edit pass.</span>
+        </article>
+        <article class="console-masthead-card">
+          <strong>Payments</strong>
+          <span>Public methods, map unlock requests, and live order routing.</span>
+        </article>
+      </div>
+    </section>
 
     <nav class="step-nav" aria-label="Hashop console sections">
       <div class="step-track">
@@ -296,76 +319,76 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
     (function () {
-      var params = new URLSearchParams(window.location.search);
-      var requestedShop = (params.get("shop") || "").trim();
-      var tabButtons = Array.from(document.querySelectorAll("[data-tab-button]"));
-      var tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
-      var profileStepButtons = Array.from(document.querySelectorAll("[data-profile-step-jump]"));
-      var profileStepPanels = Array.from(document.querySelectorAll("[data-profile-step-panel]"));
-      var consoleProgress = document.getElementById("consoleProgress");
-      var profileProgress = document.getElementById("profileProgress");
-      var consoleStatus = document.getElementById("consoleStatus");
-      var profileHeading = document.getElementById("profileHeading");
-      var profileLead = document.getElementById("profileLead");
-      var profileStatus = document.getElementById("profileStatus");
-      var listingStatus = document.getElementById("listingStatus");
-      var paymentStatus = document.getElementById("paymentStatus");
-      var ordersStatus = document.getElementById("ordersStatus");
-      var ordersCount = document.getElementById("ordersCount");
-      var ordersUpdated = document.getElementById("ordersUpdated");
-      var listingsList = document.getElementById("listingsList");
-      var paymentsList = document.getElementById("paymentsList");
-      var ordersList = document.getElementById("ordersList");
-      var editSetupLink = document.getElementById("editSetupLink");
+      const params = new URLSearchParams(window.location.search);
+      const requestedShop = (params.get("shop") || "").trim();
+      const tabButtons = Array.from(document.querySelectorAll("[data-tab-button]"));
+      const tabPanels = Array.from(document.querySelectorAll("[data-tab-panel]"));
+      const profileStepButtons = Array.from(document.querySelectorAll("[data-profile-step-jump]"));
+      const profileStepPanels = Array.from(document.querySelectorAll("[data-profile-step-panel]"));
+      const consoleProgress = document.getElementById("consoleProgress");
+      const profileProgress = document.getElementById("profileProgress");
+      const consoleStatus = document.getElementById("consoleStatus");
+      const profileHeading = document.getElementById("profileHeading");
+      const profileLead = document.getElementById("profileLead");
+      const profileStatus = document.getElementById("profileStatus");
+      const listingStatus = document.getElementById("listingStatus");
+      const paymentStatus = document.getElementById("paymentStatus");
+      const ordersStatus = document.getElementById("ordersStatus");
+      const ordersCount = document.getElementById("ordersCount");
+      const ordersUpdated = document.getElementById("ordersUpdated");
+      const listingsList = document.getElementById("listingsList");
+      const paymentsList = document.getElementById("paymentsList");
+      const ordersList = document.getElementById("ordersList");
+      const editSetupLink = document.getElementById("editSetupLink");
 
-      var profileLogoPreview = document.getElementById("profileLogoPreview");
-      var profileLogoFallback = document.getElementById("profileLogoFallback");
-      var profileLogoInput = document.getElementById("profileLogoInput");
-      var uploadLogoBtn = document.getElementById("uploadLogoBtn");
-      var logoStatus = document.getElementById("logoStatus");
-      var profileName = document.getElementById("profileName");
-      var profileType = document.getElementById("profileType");
-      var profileContact = document.getElementById("profileContact");
-      var profileLocation = document.getElementById("profileLocation");
-      var profileHours = document.getElementById("profileHours");
-      var profileNotes = document.getElementById("profileNotes");
-      var gpsStatus = document.getElementById("gpsStatus");
-      var gpsMapCard = document.getElementById("gpsMapCard");
-      var gpsMapNode = document.getElementById("gpsMap");
-      var locateProfileBtn = document.getElementById("locateProfileBtn");
+      const profileLogoPreview = document.getElementById("profileLogoPreview");
+      const profileLogoFallback = document.getElementById("profileLogoFallback");
+      const profileLogoInput = document.getElementById("profileLogoInput");
+      const uploadLogoBtn = document.getElementById("uploadLogoBtn");
+      const logoStatus = document.getElementById("logoStatus");
+      const profileName = document.getElementById("profileName");
+      const profileType = document.getElementById("profileType");
+      const profileContact = document.getElementById("profileContact");
+      const profileLocation = document.getElementById("profileLocation");
+      const profileHours = document.getElementById("profileHours");
+      const profileNotes = document.getElementById("profileNotes");
+      const gpsStatus = document.getElementById("gpsStatus");
+      const gpsMapCard = document.getElementById("gpsMapCard");
+      const gpsMapNode = document.getElementById("gpsMap");
+      const locateProfileBtn = document.getElementById("locateProfileBtn");
 
-      var listingTitle = document.getElementById("listingTitle");
-      var listingPrice = document.getElementById("listingPrice");
-      var listingQty = document.getElementById("listingQty");
-      var listingDescription = document.getElementById("listingDescription");
+      const listingTitle = document.getElementById("listingTitle");
+      const listingPrice = document.getElementById("listingPrice");
+      const listingQty = document.getElementById("listingQty");
+      const listingDescription = document.getElementById("listingDescription");
 
-      var paymentLabel = document.getElementById("paymentLabel");
-      var paymentDetails = document.getElementById("paymentDetails");
-      var paymentUpi = document.getElementById("paymentUpi");
-      var paymentBtc = document.getElementById("paymentBtc");
-      var paymentEth = document.getElementById("paymentEth");
-      var mapUnlockTitle = document.getElementById("mapUnlockTitle");
-      var mapUnlockCopy = document.getElementById("mapUnlockCopy");
-      var mapUnlockRequested = document.getElementById("mapUnlockRequested");
-      var mapUnlockState = document.getElementById("mapUnlockState");
-      var mapUnlockMethodPreview = document.getElementById("mapUnlockMethodPreview");
-      var mapUnlockDestinationCard = document.getElementById("mapUnlockDestinationCard");
-      var mapUnlockDestinationLabel = document.getElementById("mapUnlockDestinationLabel");
-      var mapUnlockDestinationValue = document.getElementById("mapUnlockDestinationValue");
-      var mapUnlockDestinationNote = document.getElementById("mapUnlockDestinationNote");
-      var mapUnlockMethod = document.getElementById("mapUnlockMethod");
-      var mapUnlockReferenceLabel = document.getElementById("mapUnlockReferenceLabel");
-      var mapUnlockReference = document.getElementById("mapUnlockReference");
-      var mapUnlockStatus = document.getElementById("mapUnlockStatus");
-      var requestMapUnlockBtn = document.getElementById("requestMapUnlockBtn");
-      var keepFreePlanBtn = document.getElementById("keepFreePlanBtn");
+      const paymentLabel = document.getElementById("paymentLabel");
+      const paymentDetails = document.getElementById("paymentDetails");
+      const paymentUpi = document.getElementById("paymentUpi");
+      const paymentBtc = document.getElementById("paymentBtc");
+      const paymentEth = document.getElementById("paymentEth");
+      const mapUnlockTitle = document.getElementById("mapUnlockTitle");
+      const mapUnlockCopy = document.getElementById("mapUnlockCopy");
+      const mapUnlockRequested = document.getElementById("mapUnlockRequested");
+      const mapUnlockState = document.getElementById("mapUnlockState");
+      const mapUnlockMethodPreview = document.getElementById("mapUnlockMethodPreview");
+      const mapUnlockDestinationCard = document.getElementById("mapUnlockDestinationCard");
+      const mapUnlockDestinationLabel = document.getElementById("mapUnlockDestinationLabel");
+      const mapUnlockDestinationValue = document.getElementById("mapUnlockDestinationValue");
+      const mapUnlockDestinationNote = document.getElementById("mapUnlockDestinationNote");
+      const mapUnlockMethod = document.getElementById("mapUnlockMethod");
+      const mapUnlockReferenceLabel = document.getElementById("mapUnlockReferenceLabel");
+      const mapUnlockReference = document.getElementById("mapUnlockReference");
+      const mapUnlockStatus = document.getElementById("mapUnlockStatus");
+      const requestMapUnlockBtn = document.getElementById("requestMapUnlockBtn");
+      const keepFreePlanBtn = document.getElementById("keepFreePlanBtn");
 
-      var saveProfileBtn = document.getElementById("saveProfileBtn");
-      var profilePrevBtn = document.getElementById("profilePrevBtn");
-      var addListingBtn = document.getElementById("addListingBtn");
-      var addPaymentBtn = document.getElementById("addPaymentBtn");
+      const saveProfileBtn = document.getElementById("saveProfileBtn");
+      const profilePrevBtn = document.getElementById("profilePrevBtn");
+      const addListingBtn = document.getElementById("addListingBtn");
+      const addPaymentBtn = document.getElementById("addPaymentBtn");
 
-      var state = {
+      const state = {
         shopId: requestedShop,
         record: null,
         console: null,
@@ -383,7 +406,7 @@
         }
       };
 
-      var PROFILE_STEP_META = [
+      const PROFILE_STEP_META = [
         { heading: "Name the shop.", lead: "Use the public name customers should see first." },
         { heading: "Define the type.", lead: "Keep the category short and easy to scan." },
         { heading: "Add a picture.", lead: "Use one clear logo or profile image." },
@@ -394,7 +417,7 @@
       ];
 
       function tabIndex(name) {
-        for (var i = 0; i < tabButtons.length; i += 1) {
+        for (let i = 0; i < tabButtons.length; i += 1) {
           if (tabButtons[i].getAttribute("data-tab-button") === name) return i;
         }
         return 0;
@@ -403,7 +426,7 @@
       function installReliableBaseLayer(map) {
         if (!map || !window.L) return null;
 
-        var providers = [
+        const providers = [
           {
             layers: [
               {
@@ -436,10 +459,10 @@
           }
         ];
 
-        var activeIndex = -1;
-        var activeLayers = [];
-        var loadedAnyTile = false;
-        var fallbackTimer = null;
+        let activeIndex = -1;
+        let activeLayers = [];
+        let loadedAnyTile = false;
+        let fallbackTimer = null;
 
         function clearFallbackTimer() {
           if (fallbackTimer) {
@@ -449,7 +472,7 @@
         }
 
         function attach(index) {
-          var provider = providers[index];
+          const provider = providers[index];
           if (!provider) return;
 
           clearFallbackTimer();
@@ -464,7 +487,7 @@
 
           activeIndex = index;
           provider.layers.forEach(function (config) {
-            var layer = window.L.tileLayer(config.url, config.options);
+            const layer = window.L.tileLayer(config.url, config.options);
             layer.on("tileload", function () {
               loadedAnyTile = true;
               clearFallbackTimer();
@@ -490,7 +513,7 @@
       }
 
       function setActiveTab(name) {
-        var index = tabIndex(name);
+        const index = tabIndex(name);
         tabButtons.forEach(function (button) {
           button.classList.toggle("is-active", button.getAttribute("data-tab-button") === name);
         });
@@ -503,14 +526,14 @@
       }
 
       function updateProfileIntro() {
-        var meta = PROFILE_STEP_META[state.profileStep] || PROFILE_STEP_META[0];
+        const meta = PROFILE_STEP_META[state.profileStep] || PROFILE_STEP_META[0];
         if (profileHeading) profileHeading.textContent = meta.heading;
         if (profileLead) profileLead.textContent = meta.lead;
       }
 
       function setProfileStep(index) {
-        var previousIndex = state.profileStep;
-        var safeIndex = Math.max(0, Math.min(profileStepButtons.length - 1, index));
+        const previousIndex = state.profileStep;
+        const safeIndex = Math.max(0, Math.min(profileStepButtons.length - 1, index));
         state.profileStep = safeIndex;
         profileStepButtons.forEach(function (button, buttonIndex) {
           button.classList.toggle("is-active", buttonIndex === safeIndex);
@@ -559,7 +582,7 @@
       }
 
       function syncProfileDraft() {
-        var profile = ensureProfileDraft();
+        const profile = ensureProfileDraft();
         if (!profile) return;
         profile.name = profileName.value.trim();
         profile.type = profileType.value.trim();
@@ -582,28 +605,28 @@
       }
 
       function parseGpsCoords(value) {
-        var raw = String(value || "").trim();
-        var match = raw.match(/GPS:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i) ||
+        const raw = String(value || "").trim();
+        const match = raw.match(/GPS:\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/i) ||
           raw.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
         if (!match) return null;
-        var lat = Number(match[1]);
-        var lng = Number(match[2]);
+        const lat = Number(match[1]);
+        const lng = Number(match[2]);
         if (!isFinite(lat) || !isFinite(lng)) return null;
         return { lat: lat, lng: lng };
       }
 
       function withGpsTag(value, lat, lng) {
-        var cleaned = stripGpsTag(value);
-        var tag = "GPS:" + formatGpsToken(lat, lng);
+        const cleaned = stripGpsTag(value);
+        const tag = "GPS:" + formatGpsToken(lat, lng);
         return cleaned ? (cleaned + " | " + tag) : tag;
       }
 
       function getStoredGpsCoords() {
-        var profile = ensureProfileDraft();
+        const profile = ensureProfileDraft();
         if (!profile) return null;
-        var gps = String(profile.gps || "").trim();
+        const gps = String(profile.gps || "").trim();
         if (gps) return parseGpsCoords(gps);
-        var legacy = parseGpsCoords(profile.location || "");
+        const legacy = parseGpsCoords(profile.location || "");
         if (legacy) {
           profile.gps = formatGpsToken(legacy.lat, legacy.lng);
           profile.location = stripGpsTag(profile.location || "");
@@ -614,7 +637,7 @@
       }
 
       function setStoredGpsCoords(lat, lng) {
-        var profile = ensureProfileDraft();
+        const profile = ensureProfileDraft();
         if (!profile) return;
         profile.gps = formatGpsToken(lat, lng);
       }
@@ -642,9 +665,9 @@
       }
 
       function upsertGpsMarker(lat, lng, options) {
-        var map = ensureGpsMap();
+        const map = ensureGpsMap();
         if (!map) return;
-        var point = [Number(lat), Number(lng)];
+        const point = [Number(lat), Number(lng)];
         if (!state.gpsMarker) {
           state.gpsMarker = window.L.marker(point, {
             draggable: true,
@@ -656,8 +679,8 @@
             })
           }).addTo(map);
           state.gpsMarker.on("dragend", function (event) {
-            var marker = event && event.target ? event.target : null;
-            var markerPoint = marker ? marker.getLatLng() : null;
+            const marker = event && event.target ? event.target : null;
+            const markerPoint = marker ? marker.getLatLng() : null;
             if (!markerPoint) return;
             applyResolvedLocation(markerPoint.lat, markerPoint.lng, "Resolving moved pin...");
           });
@@ -670,8 +693,8 @@
       }
 
       function updateGpsUi(message) {
-        var coords = getStoredGpsCoords() || parseGpsCoords(profileLocation.value);
-        var map = ensureGpsMap();
+        const coords = getStoredGpsCoords() || parseGpsCoords(profileLocation.value);
+        const map = ensureGpsMap();
         if (gpsMapCard) {
           gpsMapCard.hidden = false;
         }
@@ -702,9 +725,9 @@
       }
 
       function applyResolvedLocation(lat, lng, resolvingMessage) {
-        var profile = ensureProfileDraft();
+        const profile = ensureProfileDraft();
         if (!profile) return Promise.resolve("");
-        var fallback = formatGpsCoords(lat, lng);
+        const fallback = formatGpsCoords(lat, lng);
         setStoredGpsCoords(lat, lng);
         upsertGpsMarker(lat, lng, { zoom: 16 });
         state.locationLookupPending = true;
@@ -751,7 +774,7 @@
         if (force) {
           state.locationFetchAttempted = false;
         }
-        var existingCoords = getStoredGpsCoords();
+        const existingCoords = getStoredGpsCoords();
         if (existingCoords && !force) {
           if (!profileLocation.value.trim() || parseGpsCoords(profileLocation.value)) {
             applyResolvedLocation(existingCoords.lat, existingCoords.lng);
@@ -775,7 +798,7 @@
         setStatus(gpsStatus, "Fetching current phone location...");
         navigator.geolocation.getCurrentPosition(
           function (position) {
-            var coords = position && position.coords ? position.coords : null;
+            const coords = position && position.coords ? position.coords : null;
             if (!coords) {
               setStatus(gpsStatus, "Could not read this device location.");
               return;
@@ -783,7 +806,7 @@
             applyResolvedLocation(coords.latitude, coords.longitude);
           },
           function (error) {
-            var message = "Could not retrieve current phone location.";
+            let message = "Could not retrieve current phone location.";
             if (error && error.code === error.PERMISSION_DENIED) {
               message = "Location access was denied on this device.";
             } else if (error && error.code === error.POSITION_UNAVAILABLE) {
@@ -812,15 +835,15 @@
       }
 
       function render() {
-        var record = state.record;
-        var consoleData = state.console;
+        const record = state.record;
+        const consoleData = state.console;
         if (!record || !consoleData) return;
 
-        var profile = consoleData.profile || {};
-        var listings = Array.isArray(consoleData.listings) ? consoleData.listings : [];
-        var payments = Array.isArray(consoleData.payments) ? consoleData.payments : [];
-        var orders = Array.isArray(consoleData.orders) ? consoleData.orders : [];
-        var mapUnlock = ensureBillingDraft() || {
+        const profile = consoleData.profile || {};
+        const listings = Array.isArray(consoleData.listings) ? consoleData.listings : [];
+        const payments = Array.isArray(consoleData.payments) ? consoleData.payments : [];
+        const orders = Array.isArray(consoleData.orders) ? consoleData.orders : [];
+        const mapUnlock = ensureBillingDraft() || {
           requestedPlan: "free",
           status: "not_required",
           method: "",
@@ -828,18 +851,18 @@
           note: "",
           updatedAt: 0
         };
-        var requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
-        var selectedUnlockOption = selectedPaymentOption(mapUnlock.method);
+        const requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
+        let selectedUnlockOption = selectedPaymentOption(mapUnlock.method);
         if (requestedPlan === "map" && mapUnlock.method && !selectedUnlockOption) {
           mapUnlock.method = "";
         }
         selectedUnlockOption = selectedPaymentOption(mapUnlock.method);
-        var logoFile = String(profile.logoFile || "").trim();
+        const logoFile = String(profile.logoFile || "").trim();
 
         document.title = (profile.name || record.display_name || record.shop_id) + " | Hashop Cloud";
         consoleStatus.textContent = state.uploadingLogo ? "Uploading..." : (state.saving ? "Saving..." : "Hashop Cloud");
         if (!profile.gps) {
-          var legacyCoords = parseGpsCoords(profile.location || "");
+          const legacyCoords = parseGpsCoords(profile.location || "");
           if (legacyCoords) {
             profile.gps = formatGpsToken(legacyCoords.lat, legacyCoords.lng);
             profile.location = stripGpsTag(profile.location || "");
@@ -870,7 +893,7 @@
         editSetupLink.href = "/login?mode=register&step=1";
 
         if (mapUnlockTitle) {
-          var unlockCopy = mapUnlockUiCopy(mapUnlock);
+          const unlockCopy = mapUnlockUiCopy(mapUnlock);
           mapUnlockTitle.textContent = unlockCopy.title;
           mapUnlockCopy.textContent = unlockCopy.copy;
           setStatus(mapUnlockStatus, unlockCopy.helper);
@@ -959,7 +982,7 @@
           "No payment methods yet.",
           "Add at least one way for customers to pay.",
           function (item) {
-            var lines = [];
+            const lines = [];
             if (item.details) lines.push('Details: ' + item.details);
             if (item.upiId) lines.push('UPI: ' + item.upiId);
             if (item.btcAddress) lines.push('BTC: ' + item.btcAddress);
@@ -1052,9 +1075,9 @@
       }
 
       function selectedPaymentOption(method) {
-        var selectedKey = String(method || "").trim().toLowerCase();
+        const selectedKey = String(method || "").trim().toLowerCase();
         if (!selectedKey) return null;
-        for (var index = 0; index < paymentMethods().length; index += 1) {
+        for (let index = 0; index < paymentMethods().length; index += 1) {
           if (String(paymentMethods()[index].key || "").trim().toLowerCase() === selectedKey) {
             return paymentMethods()[index];
           }
@@ -1064,8 +1087,8 @@
 
       function renderMapUnlockMethodOptions(selectedMethod) {
         if (!mapUnlockMethod) return;
-        var methods = paymentMethods();
-        var options = ['<option value="">' + escapeHtml(methods.length ? "Choose one" : "Payment paths unavailable") + '</option>'];
+        const methods = paymentMethods();
+        const options = ['<option value="">' + escapeHtml(methods.length ? "Choose one" : "Payment paths unavailable") + '</option>'];
         methods.forEach(function (method) {
           options.push(
             '<option value="' + escapeAttr(method.key || "") + '">' + escapeHtml((method.label || method.key || "") + (method.feeDisplay ? " - " + method.feeDisplay : "")) + '</option>'
@@ -1079,9 +1102,9 @@
       }
 
       function mapUnlockMethodLabel(method) {
-        var option = selectedPaymentOption(method);
+        const option = selectedPaymentOption(method);
         if (option && option.label) return String(option.label);
-        var normalized = String(method || "").trim().toLowerCase();
+        const normalized = String(method || "").trim().toLowerCase();
         if (normalized === "upi") return "UPI";
         if (normalized === "btc") return "Bitcoin transfer";
         if (normalized === "eth") return "Ethereum transfer";
@@ -1090,7 +1113,7 @@
       }
 
       function mapUnlockStatusLabel(status) {
-        var normalized = String(status || "").trim().toLowerCase();
+        const normalized = String(status || "").trim().toLowerCase();
         if (normalized === "unlocked") return "Unlocked";
         if (normalized === "pending") return "Pending review";
         if (normalized === "locked") return "Locked";
@@ -1098,9 +1121,9 @@
       }
 
       function mapUnlockUiCopy(mapUnlock) {
-        var requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
-        var status = String(mapUnlock.status || "not_required").trim().toLowerCase();
-        var methodsReady = paymentMethods().length > 0;
+        const requestedPlan = String(mapUnlock.requestedPlan || "free").trim().toLowerCase();
+        const status = String(mapUnlock.status || "not_required").trim().toLowerCase();
+        const methodsReady = paymentMethods().length > 0;
         if (requestedPlan !== "map") {
           return {
             title: "Shop link only is active.",
@@ -1228,8 +1251,8 @@
           setStatus(profileStatus, "Choose a picture first.");
           return;
         }
-        var file = profileLogoInput.files[0];
-        var validationMessage = validateLogoFile(file);
+        const file = profileLogoInput.files[0];
+        const validationMessage = validateLogoFile(file);
         if (validationMessage) {
           setStatus(profileStatus, validationMessage);
           setStatus(logoStatus, validationMessage);
@@ -1240,7 +1263,7 @@
         state.uploadingLogo = true;
         render();
         setStatus(profileStatus, "Uploading picture...");
-        var body = new FormData();
+        const body = new FormData();
         body.append("file", file);
         fetch("/api/shops/" + encodeURIComponent(state.shopId) + "/logo", {
           method: "POST",
@@ -1272,14 +1295,14 @@
           .catch(function (error) {
             state.uploadingLogo = false;
             render();
-            var message = logoErrorMessage(error);
+            const message = logoErrorMessage(error);
             setStatus(profileStatus, message);
             setStatus(logoStatus, message);
           });
       }
 
       function fileExtension(name) {
-        var match = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+        const match = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
         return match ? match[1] : "";
       }
 
@@ -1288,15 +1311,15 @@
         if (file.size > 5 * 1024 * 1024) {
           return "Picture is too large. Keep it under 5 MB.";
         }
-        var type = String(file.type || "").toLowerCase();
-        var extension = fileExtension(file.name);
-        var supportedTypes = {
+        const type = String(file.type || "").toLowerCase();
+        const extension = fileExtension(file.name);
+        const supportedTypes = {
           "image/png": true,
           "image/jpeg": true,
           "image/webp": true,
           "image/gif": true
         };
-        var supportedExtensions = {
+        const supportedExtensions = {
           png: true,
           jpg: true,
           jpeg: true,
@@ -1316,7 +1339,7 @@
       }
 
       function logoErrorMessage(error) {
-        var code = String(error && error.message || "");
+        const code = String(error && error.message || "");
         if (code === "invalid_image_type") {
           return "Use JPG, PNG, WEBP, or GIF.";
         }
@@ -1344,7 +1367,7 @@
               methods: Array.isArray(payload && payload.methods) ? payload.methods : []
             };
             if (state.console && state.console.billing && state.console.billing.mapUnlock) {
-              var currentMethod = String(state.console.billing.mapUnlock.method || "").trim().toLowerCase();
+              const currentMethod = String(state.console.billing.mapUnlock.method || "").trim().toLowerCase();
               if (currentMethod && !selectedPaymentOption(currentMethod)) {
                 state.console.billing.mapUnlock.method = "";
               }
@@ -1443,7 +1466,7 @@
 
       if (mapUnlockMethod) {
         mapUnlockMethod.addEventListener("change", function () {
-          var mapUnlock = ensureBillingDraft();
+          const mapUnlock = ensureBillingDraft();
           if (!mapUnlock) return;
           mapUnlock.method = String(mapUnlockMethod.value || "").trim().toLowerCase();
           render();
@@ -1452,7 +1475,7 @@
 
       if (mapUnlockReference) {
         mapUnlockReference.addEventListener("input", function () {
-          var mapUnlock = ensureBillingDraft();
+          const mapUnlock = ensureBillingDraft();
           if (!mapUnlock) return;
           mapUnlock.reference = String(mapUnlockReference.value || "");
         });
@@ -1476,9 +1499,9 @@
 
       if (profileLogoInput) {
         profileLogoInput.addEventListener("change", function () {
-          var file = profileLogoInput.files && profileLogoInput.files[0];
+          const file = profileLogoInput.files && profileLogoInput.files[0];
           if (!file) return;
-          var validationMessage = validateLogoFile(file);
+          const validationMessage = validateLogoFile(file);
           if (validationMessage) {
             if (state.localLogoPreviewUrl) {
               URL.revokeObjectURL(state.localLogoPreviewUrl);
@@ -1510,7 +1533,7 @@
       saveProfileBtn.addEventListener("click", function () {
         if (!state.console) return;
         syncProfileDraft();
-        var isLastProfileStep = state.profileStep === profileStepButtons.length - 1;
+        const isLastProfileStep = state.profileStep === profileStepButtons.length - 1;
         saveConsole(profileStatus, isLastProfileStep ? "Profile saved." : "Saved. Continue setup.")
           .then(function (saved) {
             if (saved && !isLastProfileStep) {
@@ -1521,7 +1544,7 @@
 
       addListingBtn.addEventListener("click", function () {
         if (!state.console) return;
-        var listing = makeListing();
+        const listing = makeListing();
         if (!listing.title) {
           setStatus(listingStatus, "Add a listing title first.");
           return;
@@ -1534,7 +1557,7 @@
 
       addPaymentBtn.addEventListener("click", function () {
         if (!state.console) return;
-        var payment = makePayment();
+        const payment = makePayment();
         if (!payment.label || (!payment.details && !payment.upiId && !payment.btcAddress && !payment.ethAddress)) {
           setStatus(paymentStatus, "Add a label and at least one payment value.");
           return;
@@ -1558,12 +1581,12 @@
       }
 
       document.addEventListener("click", function (event) {
-        var removeButton = event.target.closest(".console-remove");
+        const removeButton = event.target.closest(".console-remove");
         if (!removeButton || !state.console) return;
-        var card = removeButton.closest("[data-remove-type]");
+        const card = removeButton.closest("[data-remove-type]");
         if (!card) return;
-        var removeType = card.getAttribute("data-remove-type");
-        var removeId = card.getAttribute("data-remove-id");
+        const removeType = card.getAttribute("data-remove-type");
+        const removeId = card.getAttribute("data-remove-id");
         if (removeType === "listing") {
           state.console.listings = (state.console.listings || []).filter(function (item) {
             return String(item.id) !== String(removeId);

@@ -283,7 +283,7 @@ function renderUnlockMethods() {
     return;
   }
   unlockMethods.innerHTML = methods.map((method) => {
-    var subline = String(method.feeDisplay || "").trim();
+    let subline = String(method.feeDisplay || "").trim();
     if (!subline) {
       subline = maskedAddress(method.address);
     }

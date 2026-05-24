@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hashop Screen Review</title>
+  <meta name="description" content="Hashop touch review surface for one visible app state at a time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site/styles.css?v=site-20260418a">
+  <link rel="stylesheet" href="/site/home.css?v=hashop-home-i071">
+  <link rel="stylesheet" href="/site/home-ui.css?v=hashop-home-i071">
+  <style>
+    :root {
+      --exp-bg: #fff;
+      --exp-panel: #fff;
+      --exp-panel-soft: #f6f6f6;
+      --exp-line: #d9d9d9;
+      --exp-ink: #111;
+      --exp-muted: #5f5f5f;
+      --exp-gold: #9b813c;
+      --exp-danger: #ff7b7b;
+      --exp-ok: #9be7bd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--exp-bg);
+      color: var(--exp-ink);
+      font-family: Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .exp-shell {
+      width: min(100%, 1680px);
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .exp-top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      gap: 0.7rem;
+      padding: 0.9rem 0;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--exp-line);
+      backdrop-filter: blur(18px);
+    }
+
+    .exp-title-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .exp-title-row h1 {
+      margin: 0;
+      color: var(--exp-ink);
+      font: 800 1.35rem/1.05 Sora, Manrope, sans-serif;
+    }
+
+    .exp-title-row p {
+      max-width: 64rem;
+      margin: 0.22rem 0 0;
+      color: var(--exp-muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .exp-token {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.1rem;
+      padding: 0 0.72rem;
+      border: 1px solid rgba(155, 129, 60, 0.44);
+      border-radius: 8px;
+      color: var(--exp-gold);
+      font-size: 0.78rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .exp-audit {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.42rem;
+    }
+
+    .exp-audit-card {
+      min-height: 3.6rem;
+      padding: 0.58rem 0.64rem;
+      border: 1px solid var(--exp-line);
+      border-radius: 8px;
+      background: var(--exp-panel);
+    }
+
+    .exp-audit-card strong {
+      display: block;
+      color: var(--exp-ink);
+      font-size: 0.76rem;
+      line-height: 1.2;
+    }
+
+    .exp-audit-card span {
+      display: block;
+      margin-top: 0.18rem;
+      color: var(--exp-muted);
+      font-size: 0.7rem;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .exp-audit-card.is-ok {
+      border-color: rgba(155, 231, 189, 0.34);
+    }
+
+    .exp-audit-card.is-warn {
+      border-color: rgba(155, 129, 60, 0.62);
+    }
+
+    .exp-audit-card.is-bad {
+      border-color: rgba(255, 123, 123, 0.58);
+    }
+
+    .exp-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(18rem, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .exp-column {
+      display: grid;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .exp-section {
+      display: grid;
+      gap: 0.7rem;
+      min-width: 0;
+      padding: 0.78rem;
+      border: 1px solid var(--exp-line);
+      border-radius: 8px;
+      background: var(--exp-panel);
+    }
+
+    .exp-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding-bottom: 0.52rem;
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-section-head strong {
+      color: var(--exp-ink);
+      font-size: 0.9rem;
+      line-height: 1.1;
+    }
+
+    .exp-section-head span {
+      color: var(--exp-muted);
+      font-size: 0.7rem;
+      font-weight: 750;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .exp-phone {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--exp-line);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .exp-phone .shop-list-panel {
+      position: relative !important;
+      inset: auto !important;
+      width: 100% !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .exp-phone .shop-list-grid {
+      position: relative !important;
+      inset: auto !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    .exp-map {
+      height: 8rem;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid var(--exp-line);
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        #f4f4f4;
+      background-size: 28px 28px;
+      color: var(--exp-muted);
+      font-size: 0.74rem;
+      font-weight: 850;
+    }
+
+    .exp-map-pin {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 999px;
+      background: var(--exp-gold);
+      box-shadow: 0 0 0 0.42rem rgba(155, 129, 60, 0.14);
+    }
+
+    .exp-row {
+      display: grid;
+      gap: 0.6rem;
+    }
+
+    .exp-two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .exp-note {
+      margin: 0;
+      color: var(--exp-muted);
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .exp-symbol-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.42rem;
+    }
+
+    .exp-symbol {
+      display: grid;
+      place-items: center;
+      min-height: 3rem;
+      border: 1px solid rgba(155, 129, 60, 0.34);
+      border-radius: 8px;
+      color: var(--exp-gold);
+      font-size: 0.7rem;
+      font-weight: 850;
+    }
+
+    .exp-state-line {
+      display: grid;
+      grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.62rem;
+      padding: 0.62rem 0;
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-state-line strong {
+      display: block;
+      color: var(--exp-ink);
+      font-size: 0.86rem;
+    }
+
+    .exp-state-line span,
+    .exp-state-line em {
+      color: var(--exp-muted);
+      font-size: 0.72rem;
+      font-style: normal;
+    }
+
+    .exp-state-mark {
+      width: 2.4rem;
+      height: 2.4rem;
+      border: 1px solid rgba(155, 129, 60, 0.34);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--exp-gold);
+      font-weight: 900;
+    }
+
+    .exp-feed-target {
+      display: grid;
+      gap: 0.88rem;
+      padding: 0.9rem 0;
+      border-top: 1px solid var(--exp-line);
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-feed-target-head {
+      display: grid;
+      gap: 0.18rem;
+    }
+
+    .exp-feed-target-head strong {
+      color: var(--exp-ink);
+      font: 850 1.02rem/1.15 Sora, Manrope, sans-serif;
+    }
+
+    .exp-feed-target-head span {
+      color: var(--exp-muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .exp-feed-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .exp-feed-panel {
+      min-width: 0;
+      background: #fff;
+    }
+
+    .exp-feed-panel.is-reference {
+      border-left: 1px solid var(--exp-line);
+      padding-left: 1rem;
+    }
+
+    .exp-feed-caption {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-bottom: 0.56rem;
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-feed-caption strong {
+      color: var(--exp-ink);
+      font-size: 0.88rem;
+      line-height: 1.1;
+    }
+
+    .exp-feed-caption span {
+      color: var(--exp-muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .exp-feed-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 2.7rem;
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-feed-toolbar-count {
+      color: var(--exp-muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .exp-feed-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .exp-feed-toggle button,
+    .exp-feed-action {
+      min-height: 2rem;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--exp-muted);
+      font: 850 0.76rem/1.15 Manrope, system-ui, sans-serif;
+    }
+
+    .exp-feed-toggle button.is-active,
+    .exp-feed-action {
+      border-bottom-color: var(--exp-gold);
+      color: var(--exp-gold);
+    }
+
+    .exp-feed-list {
+      display: grid;
+      min-width: 0;
+    }
+
+    .exp-feed-row {
+      display: grid;
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      gap: 0.78rem;
+      align-items: start;
+      min-width: 0;
+      padding: 0.82rem 0;
+      border: 0;
+      border-bottom: 1px solid var(--exp-line);
+      border-radius: 0;
+      background: transparent;
+      color: var(--exp-ink);
+    }
+
+    .exp-feed-row.is-item {
+      grid-template-columns: 3rem minmax(0, 1fr) minmax(3.4rem, auto);
+    }
+
+    .exp-feed-media {
+      width: 3rem;
+      height: 3rem;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #f7f7f7;
+      color: var(--exp-gold);
+      font-weight: 900;
+    }
+
+    .exp-feed-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .exp-feed-copy {
+      display: grid;
+      gap: 0.24rem;
+      min-width: 0;
+    }
+
+    .exp-feed-copy strong {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--exp-ink);
+      font-size: 0.95rem;
+      line-height: 1.18;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .exp-feed-meta,
+    .exp-feed-line {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--exp-muted);
+      font-size: 0.76rem;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .exp-feed-line span + span::before {
+      content: " / ";
+      color: #9a9a9a;
+    }
+
+    .exp-feed-side {
+      display: grid;
+      justify-items: end;
+      gap: 0.32rem;
+      min-width: 3.4rem;
+      color: var(--exp-ink);
+      font-size: 0.78rem;
+      font-weight: 850;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .exp-feed-side span {
+      color: var(--exp-muted);
+      font-size: 0.68rem;
+      font-weight: 760;
+    }
+
+    .exp-feed-reference-list {
+      display: grid;
+      gap: 0;
+    }
+
+    .exp-feed-reference-list span {
+      padding: 0.72rem 0;
+      border-bottom: 1px solid var(--exp-line);
+      color: var(--exp-muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .exp-light {
+      --exp-bg: #fff;
+      --exp-panel: #fff;
+      --exp-panel-soft: #f5f5f5;
+      --exp-line: #d9d9d9;
+      --exp-ink: #050505;
+      --exp-muted: #606060;
+      --exp-gold: #8c742f;
+      color: var(--exp-ink);
+      background: var(--exp-bg);
+    }
+
+    .exp-light .exp-section,
+    .exp-light .exp-phone,
+    .exp-light .shop-list-panel,
+    .exp-light .shop-pane-detail,
+    .exp-light .shop-login-form,
+    .exp-light .shop-owner-form,
+    .exp-light .shop-pane-cart {
+      background: var(--exp-panel) !important;
+      color: var(--exp-ink) !important;
+      border-color: var(--exp-line) !important;
+    }
+
+    @media (max-width: 1180px) {
+      .exp-board {
+        grid-template-columns: repeat(2, minmax(18rem, 1fr));
+      }
+
+      .exp-audit {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .exp-shell {
+        padding: 0.7rem;
+      }
+
+      .exp-board,
+      .exp-two,
+      .exp-feed-stage {
+        grid-template-columns: 1fr;
+      }
+
+      .exp-feed-panel.is-reference {
+        border-left: 0;
+        border-top: 1px solid var(--exp-line);
+        padding-left: 0;
+        padding-top: 0.85rem;
+      }
+
+      .exp-audit {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    html body main.exp-shell.shell-home,
+    html body main.exp-shell.shell-home .exp-top,
+    html body main.exp-shell.shell-home .exp-section,
+    html body main.exp-shell.shell-home .exp-feed-target,
+    html body main.exp-shell.shell-home .exp-feed-stage,
+    html body main.exp-shell.shell-home .exp-feed-panel,
+    html body main.exp-shell.shell-home .exp-feed-list,
+    html body main.exp-shell.shell-home .exp-feed-row,
+    html body main.exp-shell.shell-home .exp-feed-toolbar {
+      background-color: #fff !important;
+      background-image: none !important;
+      color: var(--exp-ink) !important;
+      -webkit-text-fill-color: var(--exp-ink) !important;
+      box-shadow: none !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-target {
+      display: grid !important;
+      height: auto !important;
+      min-height: clamp(26rem, 128vw, 44rem) !important;
+      overflow: visible !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-target-head strong,
+    html body main.exp-shell.shell-home .exp-feed-caption strong,
+    html body main.exp-shell.shell-home .exp-feed-copy strong {
+      color: var(--exp-ink) !important;
+      -webkit-text-fill-color: var(--exp-ink) !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-target-head span,
+    html body main.exp-shell.shell-home .exp-feed-caption span,
+    html body main.exp-shell.shell-home .exp-feed-toolbar-count,
+    html body main.exp-shell.shell-home .exp-feed-meta,
+    html body main.exp-shell.shell-home .exp-feed-line,
+    html body main.exp-shell.shell-home .exp-feed-side span,
+    html body main.exp-shell.shell-home .exp-feed-reference-list span,
+    html body main.exp-shell.shell-home .exp-note {
+      color: var(--exp-muted) !important;
+      -webkit-text-fill-color: var(--exp-muted) !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-toggle button,
+    html body main.exp-shell.shell-home .exp-feed-action,
+    html body main.exp-shell.shell-home .exp-feed-side strong,
+    html body main.exp-shell.shell-home .exp-feed-media {
+      color: var(--exp-gold) !important;
+      -webkit-text-fill-color: var(--exp-gold) !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-row .exp-feed-action {
+      border: 0 !important;
+      border-bottom: 1px solid var(--exp-gold) !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+
+    html body main.exp-shell.shell-home .exp-feed-row {
+      border-radius: 0 !important;
+    }
+
+    /* Touch screen prototype mode: one state visible at a time. */
+    html,
+    body {
+      min-height: 100dvh;
+      overflow: hidden;
+      background: #fff !important;
+    }
+
+    body {
+      touch-action: manipulation;
+    }
+
+    .exp-shell {
+      width: min(100%, 34rem) !important;
+      height: 100dvh;
+      min-height: 100dvh;
+      padding: 0.72rem !important;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 0.72rem !important;
+      overflow: hidden;
+    }
+
+    .exp-top {
+      position: relative !important;
+      top: auto !important;
+      z-index: 4;
+      gap: 0.42rem !important;
+      padding: 0 0 0.62rem !important;
+      background: #fff !important;
+    }
+
+    .exp-title-row {
+      align-items: center;
+    }
+
+    .exp-title-row h1 {
+      font-size: 1.06rem;
+    }
+
+    .exp-title-row p,
+    .exp-audit,
+    .exp-feed-target,
+    .exp-board {
+      display: none !important;
+    }
+
+    .exp-token {
+      min-height: 1.8rem;
+      border-radius: 0;
+      font-size: 0.68rem;
+    }
+
+    .exp-screen-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      border-top: 1px solid var(--exp-line);
+      border-bottom: 1px solid var(--exp-line);
+      background: #fff;
+      z-index: 4;
+    }
+
+    .exp-screen-tab {
+      min-width: 0;
+      min-height: 2.65rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      border-bottom: 2px solid transparent;
+      background: #fff;
+      color: var(--exp-muted);
+      font: 850 0.72rem/1 Manrope, system-ui, sans-serif;
+      letter-spacing: 0;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .exp-screen-tab.is-active {
+      border-bottom-color: var(--exp-gold);
+      color: var(--exp-gold);
+    }
+
+    .exp-device {
+      min-height: 0;
+      border: 1px solid var(--exp-line);
+      border-radius: 0;
+      background: #fff;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .exp-device-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 2.7rem;
+      padding: 0 0.74rem;
+      border-bottom: 1px solid var(--exp-line);
+      background: #fff;
+    }
+
+    .exp-device-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      min-width: 0;
+      color: var(--exp-ink);
+      font-weight: 900;
+    }
+
+    .exp-device-brand span:first-child {
+      color: var(--exp-gold);
+      font: 950 1.08rem/1 Sora, Manrope, sans-serif;
+    }
+
+    .exp-device-state {
+      color: var(--exp-muted);
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .exp-device-body {
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+      position: relative;
+    }
+
+    .exp-screen {
+      display: none;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      background: #fff;
+      touch-action: pan-y;
+    }
+
+    .exp-screen.is-active {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .exp-screen-head {
+      display: grid;
+      gap: 0.2rem;
+      padding: 0.84rem 0.78rem 0.58rem;
+      border-bottom: 1px solid var(--exp-line);
+      background: #fff;
+    }
+
+    .exp-screen-head strong {
+      color: var(--exp-ink) !important;
+      -webkit-text-fill-color: var(--exp-ink) !important;
+      font: 900 1rem/1.12 Sora, Manrope, sans-serif;
+    }
+
+    .exp-screen-head span {
+      color: var(--exp-muted) !important;
+      -webkit-text-fill-color: var(--exp-muted) !important;
+      font-size: 0.74rem;
+      line-height: 1.32;
+    }
+
+    .exp-visible-feed,
+    .exp-visible-stack {
+      min-height: 0;
+      display: grid;
+      align-content: start;
+      padding: 0 0.78rem 0.9rem;
+      background: #fff;
+    }
+
+    .exp-visible-map {
+      height: 8.4rem;
+      display: grid;
+      place-items: center;
+      margin: 0 -0.78rem;
+      border-bottom: 1px solid var(--exp-line);
+      background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        #f5f5f5;
+      background-size: 30px 30px;
+    }
+
+    .exp-visible-row {
+      display: grid;
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      gap: 0.78rem;
+      align-items: start;
+      min-width: 0;
+      padding: 0.84rem 0;
+      border-bottom: 1px solid var(--exp-line);
+      background: #fff;
+      color: var(--exp-ink);
+    }
+
+    .exp-visible-row.is-item {
+      grid-template-columns: 3rem minmax(0, 1fr) minmax(3.3rem, auto);
+    }
+
+    .exp-visible-media {
+      width: 3rem;
+      height: 3rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: #f7f7f7;
+      color: var(--exp-gold);
+      font-weight: 950;
+    }
+
+    .exp-visible-copy {
+      display: grid;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+
+    .exp-visible-copy strong,
+    .exp-visible-side strong {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--exp-ink) !important;
+      -webkit-text-fill-color: var(--exp-ink) !important;
+      font-size: 0.92rem;
+      line-height: 1.18;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .exp-visible-copy span,
+    .exp-visible-side span,
+    .exp-visible-note {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--exp-muted) !important;
+      -webkit-text-fill-color: var(--exp-muted) !important;
+      font-size: 0.74rem;
+      line-height: 1.34;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .exp-visible-action {
+      align-self: start;
+      min-height: 2rem;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid var(--exp-gold);
+      border-radius: 0;
+      background: transparent;
+      color: var(--exp-gold);
+      font-weight: 900;
+      touch-action: manipulation;
+    }
+
+    .exp-visible-side {
+      display: grid;
+      justify-items: end;
+      gap: 0.28rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .exp-visible-cardless {
+      display: grid;
+      gap: 0.38rem;
+      padding: 0.92rem 0;
+      border-bottom: 1px solid var(--exp-line);
+    }
+
+    .exp-visible-cardless strong {
+      color: var(--exp-ink) !important;
+      -webkit-text-fill-color: var(--exp-ink) !important;
+      font-size: 0.94rem;
+      line-height: 1.2;
+    }
+
+    .exp-visible-controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.72rem;
+      padding: 0.9rem 0;
+    }
+
+    .exp-visible-button {
+      min-height: 2.5rem;
+      border: 0;
+      border-bottom: 1px solid var(--exp-gold);
+      border-radius: 0;
+      background: transparent;
+      color: var(--exp-ink);
+      font-weight: 900;
+      touch-action: manipulation;
+    }
+
+    .exp-device-bottom {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--exp-line);
+      background: #fff;
+    }
+
+    .exp-device-bottom button {
+      min-height: 3rem;
+      border: 0;
+      background: transparent;
+      color: var(--exp-muted);
+      font: 850 0.68rem/1 Manrope, system-ui, sans-serif;
+      touch-action: manipulation;
+    }
+
+    .exp-device-bottom button.is-active {
+      color: var(--exp-gold);
+    }
+  </style>
+</head>
+<body>
+  <main class="exp-shell shell-home" data-hashop-map-theme="light" data-hashop-screen="exp">
+    <header class="exp-top">
+      <div class="exp-title-row">
+        <div>
+          <h1>Hashop one-plane review</h1>
+          <p>Processing page only. Every important buyer, seller, account, cart, and management shape is visible together so mismatched symbols, buttons, outlines, forms, and empty states are easier to catch before production changes.</p>
+        </div>
+        <span class="exp-token">hashop-exp-screen-i001</span>
+      </div>
+      <section class="exp-audit" id="expAudit" aria-label="Computed style audit">
+        <div class="exp-audit-card"><strong>Audit</strong><span>Waiting for browser styles...</span></div>
+      </section>
+    </header>
+
+    <nav class="exp-screen-tabs" aria-label="Screen review states">
+      <button class="exp-screen-tab is-active" type="button" data-exp-screen-tab="feed">Feed</button>
+      <button class="exp-screen-tab" type="button" data-exp-screen-tab="shop">Shop</button>
+      <button class="exp-screen-tab" type="button" data-exp-screen-tab="cart">Cart</button>
+      <button class="exp-screen-tab" type="button" data-exp-screen-tab="account">Account</button>
+      <button class="exp-screen-tab" type="button" data-exp-screen-tab="seller">Seller</button>
+    </nav>
+
+    <section class="exp-device" aria-label="Hashop visible screen prototype">
+      <div class="exp-device-bar">
+        <div class="exp-device-brand"><span>#</span><span>Hashop</span></div>
+        <div class="exp-device-state" id="expDeviceState">Feed</div>
+      </div>
+      <div class="exp-device-body">
+        <section class="exp-screen is-active" data-exp-screen="feed" aria-label="Feed screen">
+          <div class="exp-screen-head">
+            <strong>Nearby feed</strong>
+            <span>Flat rows only. No boxed cards. Touch row or action.</span>
+          </div>
+          <div class="exp-visible-feed">
+            <div class="exp-visible-map"><span class="exp-map-pin" aria-hidden="true"></span></div>
+            <article class="exp-visible-row" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">H</div>
+              <div class="exp-visible-copy"><strong>Hassan Stores</strong><span>120 m / open / general store</span><span>Milk / Bread / Eggs / Rice</span></div>
+              <button class="exp-visible-action" type="button">Open</button>
+            </article>
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">M</div>
+              <div class="exp-visible-copy"><strong>Milk 500 ml</strong><span>Morning Dairy / 250 m / available</span><span>Pickup / Qty 14</span></div>
+              <div class="exp-visible-side"><strong>Rs 28</strong><span>Add</span></div>
+            </article>
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">C</div>
+              <div class="exp-visible-copy"><strong>Curd pouch</strong><span>Hassan Stores / fresh today</span><span>Delivery possible / Qty 9</span></div>
+              <div class="exp-visible-side"><strong>Rs 35</strong><span>Add</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="exp-screen" data-exp-screen="shop" aria-label="Shop screen">
+          <div class="exp-screen-head">
+            <strong>Morning Dairy</strong>
+            <span>Shop view keeps item rows readable and tappable.</span>
+          </div>
+          <div class="exp-visible-stack">
+            <div class="exp-visible-cardless"><strong>Pickup or delivery</strong><span class="exp-visible-note">12 MG Road / 7:00 - 22:00</span></div>
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">C</div>
+              <div class="exp-visible-copy"><strong>Curd</strong><span>Fresh today</span><span>Qty 9</span></div>
+              <div class="exp-visible-side"><strong>Rs 35</strong><span>Add</span></div>
+            </article>
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">M</div>
+              <div class="exp-visible-copy"><strong>Milk</strong><span>500 ml packet</span><span>Qty 14</span></div>
+              <div class="exp-visible-side"><strong>Rs 28</strong><span>Add</span></div>
+            </article>
+            <div class="exp-visible-controls"><button class="exp-visible-button" type="button">Items</button><button class="exp-visible-button" type="button">Cart</button></div>
+          </div>
+        </section>
+
+        <section class="exp-screen" data-exp-screen="cart" aria-label="Cart screen">
+          <div class="exp-screen-head">
+            <strong>Cart</strong>
+            <span>Item context stays visible before order placement.</span>
+          </div>
+          <div class="exp-visible-stack">
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">C</div>
+              <div class="exp-visible-copy"><strong>Curd</strong><span>Morning Dairy</span><span>2 x Rs 35</span></div>
+              <div class="exp-visible-side"><strong>Rs 70</strong><span>Edit</span></div>
+            </article>
+            <div class="exp-visible-cardless"><strong>Total Rs 70</strong><span class="exp-visible-note">Pay on receive / pickup selected</span></div>
+            <button class="exp-visible-button" type="button">Place order</button>
+          </div>
+        </section>
+
+        <section class="exp-screen" data-exp-screen="account" aria-label="Account screen">
+          <div class="exp-screen-head">
+            <strong>Account</strong>
+            <span>Persistence surface, not a vendor-first dashboard.</span>
+          </div>
+          <div class="exp-visible-stack">
+            <button class="exp-visible-row" type="button" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">A</div>
+              <div class="exp-visible-copy"><strong>Asha</strong><span>Verified contact</span><span>Buyer by default</span></div>
+              <span class="exp-visible-action">Edit</span>
+            </button>
+            <button class="exp-visible-row" type="button" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">#</div>
+              <div class="exp-visible-copy"><strong>Open shop</strong><span>Add location and stock when needed</span><span>Optional extension</span></div>
+              <span class="exp-visible-action">Start</span>
+            </button>
+            <button class="exp-visible-row" type="button" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">?</div>
+              <div class="exp-visible-copy"><strong>Help</strong><span>Order, shop, setup, account notes</span><span>Local support queue</span></div>
+              <span class="exp-visible-action">Open</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="exp-screen" data-exp-screen="seller" aria-label="Seller screen">
+          <div class="exp-screen-head">
+            <strong>Seller workspace</strong>
+            <span>Same shop object, owner tools attached below.</span>
+          </div>
+          <div class="exp-visible-stack">
+            <div class="exp-visible-cardless"><strong>Hassan Stores</strong><span class="exp-visible-note">Buyer-facing preview remains visible.</span></div>
+            <article class="exp-visible-row is-item" data-audit="row">
+              <div class="exp-visible-media" aria-hidden="true">M</div>
+              <div class="exp-visible-copy"><strong>Milk</strong><span>Shown exactly as buyers see it</span><span>Qty 14</span></div>
+              <div class="exp-visible-side"><strong>Rs 28</strong><span>Edit</span></div>
+            </article>
+            <div class="exp-visible-controls"><button class="exp-visible-button" type="button">Add item</button><button class="exp-visible-button" type="button">Orders</button></div>
+          </div>
+        </section>
+      </div>
+      <nav class="exp-device-bottom" aria-label="Phone bottom navigation">
+        <button class="is-active" type="button" data-exp-screen-tab="feed">Shops</button>
+        <button type="button" data-exp-screen-tab="shop">Items</button>
+        <button type="button" data-exp-screen-tab="cart">Cart</button>
+        <button type="button" data-exp-screen-tab="account">Account</button>
+      </nav>
+    </section>
+
+    <section class="exp-feed-target" aria-label="Feed list target">
+      <div class="exp-feed-target-head">
+        <strong>Feed/List Target</strong>
+        <span>Use this as the reference: flat rows, separators only, image/title/meta/action in one line system. No boxed cards, no nested containers.</span>
+      </div>
+      <div class="exp-feed-stage">
+        <section class="exp-feed-panel" aria-label="Target feed">
+          <div class="exp-feed-caption"><strong>Target Row Model</strong><span>Production candidate</span></div>
+          <div class="exp-feed-toolbar">
+            <span class="exp-feed-toolbar-count">7 nearby results</span>
+            <div class="exp-feed-toggle" aria-label="View switch">
+              <button type="button" class="is-active">List</button>
+              <button type="button">Feed</button>
+            </div>
+          </div>
+          <div class="exp-feed-list">
+            <article class="exp-feed-row" data-audit="row">
+              <div class="exp-feed-media" aria-hidden="true"><span>H</span></div>
+              <div class="exp-feed-copy">
+                <strong>Hassan Stores</strong>
+                <span class="exp-feed-meta">120 m / open / general store</span>
+                <span class="exp-feed-line"><span>Milk</span><span>Bread</span><span>Eggs</span><span>Rice</span></span>
+              </div>
+              <button class="exp-feed-action" type="button">Open</button>
+            </article>
+            <article class="exp-feed-row is-item" data-audit="row">
+              <div class="exp-feed-media" aria-hidden="true"><span>M</span></div>
+              <div class="exp-feed-copy">
+                <strong>Milk 500 ml</strong>
+                <span class="exp-feed-meta">Morning Dairy / 250 m / available now</span>
+                <span class="exp-feed-line"><span>Rs 28</span><span>Qty 14</span><span>Pickup</span></span>
+              </div>
+              <div class="exp-feed-side"><strong>Rs 28</strong><span>Add</span></div>
+            </article>
+            <article class="exp-feed-row is-item" data-audit="row">
+              <div class="exp-feed-media" aria-hidden="true"><span>C</span></div>
+              <div class="exp-feed-copy">
+                <strong>Curd pouch</strong>
+                <span class="exp-feed-meta">Hassan Stores / 120 m / fresh today</span>
+                <span class="exp-feed-line"><span>Rs 35</span><span>Qty 9</span><span>Delivery possible</span></span>
+              </div>
+              <div class="exp-feed-side"><strong>Rs 35</strong><span>Add</span></div>
+            </article>
+          </div>
+        </section>
+        <section class="exp-feed-panel is-reference" aria-label="Feed rules">
+          <div class="exp-feed-caption"><strong>Do Not Drift Into</strong><span>Anti-patterns</span></div>
+          <div class="exp-feed-reference-list">
+            <span>No card shell around every listing row.</span>
+            <span>No tile grid for the default list; feed rows remain one-column.</span>
+            <span>No chip soup for item names; plain inline text is enough.</span>
+            <span>No generic tint or filled gold surfaces.</span>
+            <span>Tap target is the row; action text is secondary.</span>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="exp-board">
+      <div class="exp-column">
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Buyer Discovery</strong><span>Root</span></div>
+          <div class="exp-phone">
+            <div class="exp-map"><span class="exp-map-pin" aria-hidden="true"></span></div>
+            <section class="shop-list-panel is-root-view" aria-label="Review discovery">
+              <div class="shop-panel-bar">
+                <button class="shop-back-action" type="button">Login</button>
+                <button class="shop-pane-toggle" type="button" aria-label="Expand"><span class="shop-pane-handle" aria-hidden="true"></span></button>
+              </div>
+              <div class="shop-list-head">
+                <label class="shop-list-search" aria-label="Search"><input class="shop-list-search-input" value="milk" readonly></label>
+              </div>
+              <div class="shop-list-grid">
+                <article class="shop-card shop-discovery-card" data-audit="row">
+                  <div class="shop-card-thumb"><span>H</span></div>
+                  <div class="shop-card-main">
+                    <div class="shop-card-topline">
+                      <div class="shop-card-title-block"><strong>Hassan Stores</strong><span class="shop-card-subtitle">120 m - open</span></div>
+                      <span class="shop-card-open">Open</span>
+                    </div>
+                    <div class="shop-card-items"><span class="shop-card-item">Milk</span><span class="shop-card-item">Bread</span><span class="shop-card-item">Eggs</span></div>
+                  </div>
+                </article>
+                <article class="shop-card shop-discovery-card shop-item-discovery-card" data-audit="row">
+                  <div class="shop-card-thumb"><span>M</span></div>
+                  <div class="shop-card-main">
+                    <div class="shop-card-topline">
+                      <div class="shop-card-title-block"><strong>Milk 500 ml</strong><span class="shop-card-subtitle">Morning Dairy</span></div>
+                      <span class="shop-card-open">Rs 28</span>
+                    </div>
+                    <div class="shop-card-items"><span class="shop-card-item">Qty 14</span><span class="shop-card-item">Tap row to add</span></div>
+                  </div>
+                </article>
+              </div>
+              <nav class="home-bottom-nav" aria-label="Buyer state bar">
+                <button class="home-bottom-link is-active" type="button"><span class="home-bottom-link-icon is-shops" aria-hidden="true"></span><span>Shops</span></button>
+                <button class="home-bottom-link" type="button"><span class="home-bottom-link-icon is-items" aria-hidden="true"></span><span>Items</span></button>
+                <button class="home-bottom-link" type="button"><span class="home-bottom-link-icon is-cart" aria-hidden="true"></span><span>Cart</span></button>
+                <button class="home-bottom-link" type="button"><span class="home-bottom-link-icon is-account" aria-hidden="true"></span><span>Account</span></button>
+              </nav>
+            </section>
+          </div>
+        </section>
+
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Shop And Checkout</strong><span>Buyer</span></div>
+          <section class="shop-pane-detail" data-audit="surface">
+            <div class="shop-pane-hero">
+              <div class="shop-pane-overline"><div class="shop-pane-chip">Shop</div><span class="shop-pane-distance">Near you</span></div>
+              <div class="shop-pane-copy-row">
+                <span class="shop-pane-copy-mark" aria-hidden="true"></span>
+                <div class="shop-pane-copy"><h2>Morning Dairy</h2><p>Pickup or quick delivery.</p></div>
+              </div>
+              <div class="shop-pane-stats"><span>12 MG Road</span><span>7:00 - 22:00</span></div>
+            </div>
+            <div class="shop-pane-items">
+              <article class="shop-pane-item is-touch-add" data-audit="row">
+                <div class="shop-pane-item-row">
+                  <span class="shop-pane-item-mark" aria-hidden="true"></span>
+                  <div class="shop-pane-item-copy">
+                    <div class="shop-pane-item-head"><strong>Curd</strong><span>Rs 35</span></div>
+                    <p>Fresh today.</p>
+                    <div class="shop-pane-item-meta"><span>Qty 9</span><span class="shop-item-qty-chip">Add</span></div>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <button class="shop-cart-pay shop-cart-pay-inline" type="button" data-audit="button">Place order</button>
+          </section>
+          <section class="shop-pane-cart-screen">
+            <div class="shop-pane-cart-title"><h2>Cart</h2><p class="exp-note">Cart must keep item context visible.</p></div>
+            <div class="shop-pane-cart" data-audit="surface">
+              <div class="shop-pane-cart-items">
+                <div class="shop-cart-rich-row" data-audit="row">
+                  <span class="shop-cart-media" aria-hidden="true"></span>
+                  <div class="shop-cart-copy"><strong>Curd</strong><span class="shop-cart-description">Morning Dairy</span><span class="shop-cart-meta">2 x Rs 35</span></div>
+                  <strong class="shop-cart-line-total">Rs 70</strong>
+                </div>
+              </div>
+              <div class="shop-pane-cart-foot"><span>Total</span><strong>Rs 70</strong></div>
+            </div>
+            <button class="shop-cart-pay" type="button" data-audit="button">Place order</button>
+          </section>
+        </section>
+      </div>
+
+      <div class="exp-column">
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Account And Setup</strong><span>Persistence</span></div>
+          <section class="shop-pane-detail">
+            <div class="shop-account-stack">
+              <button class="shop-account-profile-card shop-account-hero-card" type="button" data-audit="row">
+                <span class="shop-account-avatar" aria-hidden="true">A</span>
+                <span class="shop-account-profile-copy"><strong>Asha</strong><span>Verified contact</span><em class="is-signed-in">Verified</em></span>
+                <span class="shop-account-menu-arrow" aria-hidden="true">&rsaquo;</span>
+              </button>
+              <button class="shop-account-location-card" type="button" data-audit="row">
+                <span class="shop-account-menu-icon" data-account-symbol="address" aria-hidden="true"></span>
+                <span class="shop-account-menu-copy"><span>Delivery address</span><strong>Home, 4th cross</strong></span>
+                <span class="shop-account-menu-meta">Edit</span>
+              </button>
+              <div class="shop-account-menu-label">Buying</div>
+              <section class="shop-account-menu-card">
+                <button class="shop-account-menu-row" type="button" data-audit="row"><span class="shop-account-menu-icon" data-account-symbol="profile" aria-hidden="true"></span><span class="shop-account-menu-copy"><strong>Profile</strong><span>Name and contact</span></span><span class="shop-account-menu-arrow">&rsaquo;</span></button>
+                <button class="shop-account-menu-row" type="button" data-audit="row"><span class="shop-account-menu-icon" data-account-symbol="orders" aria-hidden="true"></span><span class="shop-account-menu-copy"><strong>Orders</strong><span>Past and ongoing</span></span><span class="shop-account-menu-meta">2</span></button>
+                <button class="shop-account-menu-row" type="button" data-audit="row"><span class="shop-account-menu-icon" data-account-symbol="shop" aria-hidden="true"></span><span class="shop-account-menu-copy"><strong>Open shop</strong><span>Add location and stock</span></span><span class="shop-account-menu-meta">+</span></button>
+              </section>
+            </div>
+          </section>
+          <div class="shop-login-form" data-audit="surface">
+            <label class="shop-login-field"><span>Name</span><input class="shop-login-input" value="Asha" readonly></label>
+            <label class="shop-login-field"><span>Contact</span><input class="shop-login-input" value="asha@example.com" readonly></label>
+            <label class="shop-login-field"><span>Address</span><input class="shop-login-input" value="Home, 4th cross" readonly></label>
+            <button class="shop-login-submit" type="button" data-audit="button">Continue</button>
+          </div>
+          <div class="shop-login-form" data-audit="surface">
+            <label class="shop-login-field"><span>Code</span><input class="shop-login-input" value="482610" readonly></label>
+            <button class="shop-login-submit" type="button" data-audit="button">Verify</button>
+            <div class="shop-account-auth-links"><button type="button">Send again</button><button type="button">Change contact</button></div>
+          </div>
+        </section>
+
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Account Substates</strong><span>Forms</span></div>
+          <div class="shop-account-form-card" data-audit="surface">
+            <label class="shop-login-field shop-account-field"><span>Label</span><input class="shop-login-input" placeholder="Home" readonly></label>
+            <label class="shop-login-field shop-account-field"><span>Address</span><input class="shop-login-input" placeholder="Street or local area" readonly></label>
+            <div class="shop-account-actions shop-account-form-actions"><button class="shop-owner-save" type="button" data-audit="button">Save address</button><button class="shop-owner-chip-button" type="button">Cancel</button></div>
+          </div>
+          <section class="shop-account-menu-card">
+            <div class="shop-account-menu-row shop-account-record-row" data-audit="row"><span class="shop-account-menu-icon" data-account-symbol="payment" aria-hidden="true"></span><span class="shop-account-menu-copy"><strong>Pay on receive</strong><span>Cash / direct</span></span><span class="shop-account-menu-meta">Default</span></div>
+            <div class="shop-account-menu-row shop-account-record-row" data-audit="row"><span class="shop-account-menu-icon" data-account-symbol="help" aria-hidden="true"></span><span class="shop-account-menu-copy"><strong>Saved note</strong><span>Order, shop, setup, or account issue</span></span><span class="shop-account-menu-meta">Local</span></div>
+          </section>
+        </section>
+      </div>
+
+      <div class="exp-column">
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Seller Workspace</strong><span>You see what you get</span></div>
+          <section class="shop-pane-detail" data-audit="surface">
+            <div class="shop-pane-hero">
+              <div class="shop-pane-overline"><div class="shop-pane-chip">My shop</div><span class="shop-pane-distance">Selected</span></div>
+              <div class="shop-pane-copy-row">
+                <span class="shop-pane-copy-mark" aria-hidden="true"></span>
+                <div class="shop-pane-copy"><h2>Hassan Stores</h2><p>Owner preview of the same buyer-facing shop.</p></div>
+              </div>
+            </div>
+            <div class="shop-owner-bar" data-audit="surface">
+              <div class="shop-owner-actions">
+                <button class="shop-owner-save shop-owner-add-toggle" type="button" data-audit="button"><span aria-hidden="true">+</span> Add</button>
+                <button class="shop-owner-tab" type="button" data-audit="button">Manage</button>
+                <button class="shop-owner-tab" type="button" data-audit="button">Stock</button>
+                <button class="shop-owner-tab" type="button" data-audit="button">Orders</button>
+              </div>
+            </div>
+            <div class="shop-pane-items">
+              <article class="shop-pane-item" data-audit="row">
+                <div class="shop-pane-item-row"><span class="shop-pane-item-mark" aria-hidden="true"></span><div class="shop-pane-item-copy"><div class="shop-pane-item-head"><strong>Milk</strong><span>Rs 28</span></div><p>Shown exactly as buyers see it.</p><div class="shop-pane-item-meta"><span>Qty 14</span></div></div></div>
+              </article>
+            </div>
+          </section>
+          <section class="shop-owner-stack">
+            <section class="shop-owner-form" data-audit="surface">
+              <div class="shop-owner-form-head"><strong>Shop settings</strong><span>Production shop details and pickup point.</span></div>
+              <div class="shop-owner-grid">
+                <label class="shop-owner-field"><span>Name</span><input class="shop-owner-input" value="Hassan Stores" readonly></label>
+                <label class="shop-owner-field"><span>Type</span><input class="shop-owner-input" value="General" readonly></label>
+                <label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" value="Market Road" readonly></label>
+                <label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" value="9999999999" readonly></label>
+                <div class="shop-owner-field shop-owner-field-wide shop-owner-pickup"><span>Pickup location</span><div class="shop-owner-pickup-map"></div><div class="shop-owner-pickup-bar"><button class="shop-owner-chip-button" type="button">Use current map</button><span class="shop-owner-pickup-text">12.97160, 77.59460</span></div></div>
+              </div>
+              <div class="shop-owner-action-row"><button class="shop-owner-save" type="button" data-audit="button">Save shop</button></div>
+            </section>
+          </section>
+        </section>
+
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Seller Orders And Stock</strong><span>Manage</span></div>
+          <div class="shop-owner-tab-row"><button class="shop-owner-tab is-active" type="button">Orders</button><button class="shop-owner-tab" type="button">Stock</button></div>
+          <section class="shop-owner-form shop-owner-compact-task" data-audit="surface"><div class="shop-owner-form-head"><strong>Orders</strong><button class="shop-owner-save" type="button" data-audit="button">Start order</button></div></section>
+          <article class="shop-owner-order-card" data-audit="row">
+            <div class="shop-owner-order-head"><strong>Order #1024</strong><span>New</span></div>
+            <div class="shop-owner-order-meta"><span>Asha - 9999999999</span><span>Rs 70</span></div>
+            <div class="shop-owner-order-meta"><span>Pay on receive</span><span>Today</span></div>
+            <p>Home, 4th cross</p>
+            <div class="shop-owner-order-actions"><button class="shop-owner-save" type="button" data-audit="button">Accept</button><button class="shop-owner-chip-button is-danger" type="button">Cancel</button></div>
+          </article>
+          <section class="shop-owner-form" data-audit="surface">
+            <div class="shop-owner-form-head"><strong>Add item</strong><span>Create a new listing for this shop.</span></div>
+            <div class="shop-owner-grid">
+              <label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" placeholder="Kitkat" readonly></label>
+              <label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" value="20" readonly></label>
+              <label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" value="12" readonly></label>
+              <label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" readonly>Quick note for buyers</textarea></label>
+            </div>
+            <button class="shop-owner-save" type="button" data-audit="button">Add item</button>
+          </section>
+        </section>
+      </div>
+
+      <div class="exp-column">
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Symbols And Controls</strong><span>Consistency</span></div>
+          <div class="exp-symbol-grid">
+            <span class="exp-symbol"><span class="home-bottom-link-icon is-shops" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="home-bottom-link-icon is-items" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="home-bottom-link-icon is-cart" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="home-bottom-link-icon is-orders" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="home-bottom-link-icon is-account" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="shop-account-menu-icon" data-account-symbol="profile" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="shop-account-menu-icon" data-account-symbol="shop" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="shop-account-menu-icon" data-account-symbol="payment" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="shop-account-menu-icon" data-account-symbol="privacy" aria-hidden="true"></span></span>
+            <span class="exp-symbol"><span class="shop-account-menu-icon" data-account-symbol="logout" aria-hidden="true"></span></span>
+          </div>
+          <div class="exp-row">
+            <button class="shop-owner-save" type="button" data-audit="button">Primary button</button>
+            <button class="shop-owner-chip-button" type="button" data-audit="button">Secondary button</button>
+            <button class="shop-owner-chip-button is-danger" type="button" data-audit="button">Danger button</button>
+          </div>
+          <p class="exp-note">Gold should read as symbol or outline, not as a big filled container. Large surfaces should be black/white only.</p>
+        </section>
+
+        <section class="exp-section">
+          <div class="exp-section-head"><strong>Empty And Failure States</strong><span>Micro states</span></div>
+          <div class="shop-empty-cart-card" data-audit="surface">
+            <div class="shop-empty-cart-visual" aria-hidden="true">
+              <span class="shop-empty-cart-code">cart: empty</span>
+              <span class="shop-empty-cart-line"></span>
+            </div>
+            <div class="shop-empty-cart-copy"><strong>Cart is empty</strong><span>Add something from a shop to start.</span></div>
+            <button class="shop-empty-cart-action" type="button" data-audit="button">Find items</button>
+          </div>
+          <div class="shop-state-card" data-audit="surface">
+            <span class="shop-state-mascot shop-state-mark" aria-hidden="true"><span class="shop-state-code">items: []</span></span>
+            <strong>No items yet</strong>
+            <span>Seller has the shelf, but not the stock.</span>
+            <button class="shop-state-action" type="button" data-audit="button">Add item</button>
+          </div>
+          <div class="shop-pane-notice is-error" data-audit="surface">Missing address. Save one before delivery.</div>
+        </section>
+
+        <section class="exp-section exp-light">
+          <div class="exp-section-head"><strong>Day Surface</strong><span>White/black</span></div>
+          <article class="shop-card shop-discovery-card" data-audit="row">
+            <div class="shop-card-thumb"><span>D</span></div>
+            <div class="shop-card-main">
+              <div class="shop-card-topline"><div class="shop-card-title-block"><strong>Day check</strong><span class="shop-card-subtitle">White background, black text</span></div><span class="shop-card-open">Open</span></div>
+              <div class="shop-card-items"><span class="shop-card-item">Gold outline only</span></div>
+            </div>
+          </article>
+          <button class="shop-owner-save" type="button" data-audit="button">Day button</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+  <script>
+    window.__HASHOP_EXP_BUILD__ = "hashop-exp-screen-i001";
+    window.addEventListener("DOMContentLoaded", function () {
+      if (window.lucide && typeof window.lucide.createIcons === "function") {
+        window.lucide.createIcons();
+      }
+
+      const auditNode = document.getElementById("expAudit");
+      const stateNode = document.getElementById("expDeviceState");
+      const screenLabels = {
+        feed: "Feed",
+        shop: "Shop",
+        cart: "Cart",
+        account: "Account",
+        seller: "Seller"
+      };
+      function setExpScreen(name) {
+        const next = screenLabels[name] ? name : "feed";
+        document.querySelectorAll("[data-exp-screen]").forEach(function (node) {
+          node.classList.toggle("is-active", node.getAttribute("data-exp-screen") === next);
+        });
+        document.querySelectorAll("[data-exp-screen-tab]").forEach(function (node) {
+          node.classList.toggle("is-active", node.getAttribute("data-exp-screen-tab") === next);
+        });
+        if (stateNode) stateNode.textContent = screenLabels[next];
+        scheduleAudit();
+      }
+      document.addEventListener("click", function (event) {
+        const trigger = event.target && event.target.closest ? event.target.closest("[data-exp-screen-tab]") : null;
+        if (!trigger) return;
+        event.preventDefault();
+        setExpScreen(String(trigger.getAttribute("data-exp-screen-tab") || "").trim());
+      });
+      document.addEventListener("pointerup", function (event) {
+        const trigger = event.target && event.target.closest ? event.target.closest("[data-exp-screen-tab]") : null;
+        if (!trigger) return;
+        trigger.blur();
+      });
+      const badGold = ["rgb(250, 204, 21)", "rgb(194, 160, 74)"];
+      function hasTextOverflow(node) {
+        const textNodes = Array.from(node.querySelectorAll("strong, span, p, em, button, input, textarea"));
+        return textNodes.some(function (child) {
+          const style = window.getComputedStyle(child);
+          const rect = child.getBoundingClientRect();
+          const text = (child.innerText || child.value || "").trim();
+          if (!text || rect.width < 8 || rect.height < 8 || style.display === "none" || style.display === "inline" || style.visibility === "hidden") return false;
+          const x = Math.ceil(child.scrollWidth - child.clientWidth);
+          const y = Math.ceil(child.scrollHeight - child.clientHeight);
+          return x > 1 || (y > 3 && style.overflowY === "hidden");
+        });
+      }
+
+      function renderAudit() {
+        const targets = Array.from(document.querySelectorAll("[data-audit]"));
+        const findings = targets.map(function (node) {
+          const style = window.getComputedStyle(node);
+          const type = node.getAttribute("data-audit") || "node";
+          const bg = style.backgroundColor;
+          const border = style.borderColor;
+          const radius = parseFloat(style.borderTopLeftRadius || "0") || 0;
+          const rect = node.getBoundingClientRect();
+          const goldFill = badGold.indexOf(bg) >= 0;
+          const overflow = Math.ceil(node.scrollWidth - node.clientWidth);
+          const textOverflow = hasTextOverflow(node);
+          let status = "ok";
+          if (goldFill && type !== "symbol") status = "bad";
+          if (overflow > 1) status = "bad";
+          if (textOverflow) status = "bad";
+          if (type === "row" && radius > 10) status = status === "bad" ? "bad" : "warn";
+          return {
+            type: type,
+            status: status,
+            bg: bg,
+            border: border,
+            radius: radius,
+            width: Math.round(rect.width),
+            overflow: overflow,
+            textOverflow: textOverflow
+          };
+        });
+        const counts = findings.reduce(function (acc, item) {
+          acc[item.status] = (acc[item.status] || 0) + 1;
+          return acc;
+        }, {});
+        const sample = findings.slice(0, 5);
+        auditNode.innerHTML = [
+          { title: "Nodes", value: String(findings.length), status: "ok" },
+          { title: "Pass", value: String(counts.ok || 0), status: "ok" },
+          { title: "Warn", value: String(counts.warn || 0), status: (counts.warn || 0) ? "warn" : "ok" },
+          { title: "Bad", value: String(counts.bad || 0), status: (counts.bad || 0) ? "bad" : "ok" },
+          { title: "Build", value: window.__HASHOP_EXP_BUILD__, status: "ok" },
+          { title: "Sample", value: sample.map(function (item) { return item.type + ":" + item.status; }).join(" / "), status: (counts.bad || 0) ? "bad" : "ok" }
+        ].map(function (item) {
+          return '<div class="exp-audit-card is-' + item.status + '"><strong>' + item.title + '</strong><span>' + item.value + '</span></div>';
+        }).join("");
+      }
+
+      const scheduleAudit = function () {
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(renderAudit);
+        });
+      };
+      scheduleAudit();
+      window.addEventListener("load", function () {
+        scheduleAudit();
+        window.setTimeout(renderAudit, 650);
+      });
+    });
+  </script>
+</body>
+</html>

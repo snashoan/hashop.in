@@ -5,14 +5,20 @@ import base64
 import hashlib
 import hmac
 import json
+import math
 import mimetypes
+import os
 import re
 import secrets
+import smtplib
 import sqlite3
+import ssl
 import threading
 import time
 import uuid
 from dataclasses import dataclass, field
+from email.message import EmailMessage
+from email.utils import formataddr
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -41,11 +47,61 @@ class TunnelSession:
     pending_ids: Set[str] = field(default_factory=set)
 
 
+@dataclass
+class SmtpConfig:
+    host: str = ""
+    port: int = 587
+    username: str = ""
+    password: str = ""
+    sender: str = ""
+    sender_name: str = "Hashop"
+    security: str = "starttls"
+    timeout: float = 12.0
+
+    @property
+    def configured(self) -> bool:
+        return bool(self.host and self.port and self.sender and self.username and self.password)
+
+    @classmethod
+    def from_env(cls) -> "SmtpConfig":
+        def safe_int(value: str, default: int) -> int:
+            try:
+                return int(str(value or "").strip() or default)
+            except ValueError:
+                return default
+
+        def safe_float(value: str, default: float) -> float:
+            try:
+                return float(str(value or "").strip() or default)
+            except ValueError:
+                return default
+
+        sender = str(os.environ.get("HASHOP_SMTP_FROM") or os.environ.get("HASHOP_SMTP_USERNAME") or "").strip()
+        return cls(
+            host=str(os.environ.get("HASHOP_SMTP_HOST") or "").strip(),
+            port=safe_int(os.environ.get("HASHOP_SMTP_PORT", "587"), 587),
+            username=str(os.environ.get("HASHOP_SMTP_USERNAME") or "").strip(),
+            password=str(os.environ.get("HASHOP_SMTP_PASSWORD") or ""),
+            sender=sender,
+            sender_name=str(os.environ.get("HASHOP_SMTP_FROM_NAME") or "Hashop").strip() or "Hashop",
+            security=str(os.environ.get("HASHOP_SMTP_SECURITY") or "starttls").strip().lower(),
+            timeout=safe_float(os.environ.get("HASHOP_SMTP_TIMEOUT", "12"), 12.0),
+        )
+
+
+def env_flag(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
 class ShopStore:
     GPS_PATTERN = re.compile(r"GPS:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)", re.IGNORECASE)
     GPS_COORDS_PATTERN = re.compile(r"^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$")
     VALID_MAP_UNLOCK_METHODS = {"", "manual", "upi", "btc", "eth"}
     VALID_MAP_UNLOCK_STATUSES = {"not_required", "locked", "pending", "unlocked"}
+    ORDER_STATES = {"created", "payment_pending", "accepted", "ready", "paid", "completed", "cancelled"}
     MAP_COLOR_PALETTE = [
         "#ffffff",
         "#facc15",
@@ -114,6 +170,155 @@ class ShopStore:
                     ADD COLUMN map_color TEXT NOT NULL DEFAULT '#ffffff'
                     """
                 )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS buyer_accounts (
+                    account_id TEXT PRIMARY KEY,
+                    display_name TEXT NOT NULL,
+                    contact TEXT NOT NULL,
+                    contact_key TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    buyer_key TEXT NOT NULL,
+                    account_token TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS shop_password_resets (
+                    reset_id TEXT PRIMARY KEY,
+                    shop_id TEXT NOT NULL,
+                    contact_key TEXT NOT NULL,
+                    code_hash TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    used_at INTEGER NOT NULL DEFAULT 0,
+                    attempts INTEGER NOT NULL DEFAULT 0
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_shop_password_resets_shop
+                ON shop_password_resets(shop_id, expires_at, used_at)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS shop_recovery_contacts (
+                    recovery_id TEXT PRIMARY KEY,
+                    shop_id TEXT NOT NULL,
+                    contact TEXT NOT NULL,
+                    contact_key TEXT NOT NULL,
+                    contact_type TEXT NOT NULL,
+                    is_primary INTEGER NOT NULL DEFAULT 0,
+                    verified_at INTEGER NOT NULL DEFAULT 0,
+                    source TEXT NOT NULL DEFAULT 'owner_password',
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(shop_id, contact_key)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_shop_recovery_contacts_shop
+                ON shop_recovery_contacts(shop_id, verified_at, is_primary)
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_shop_recovery_contacts_contact
+                ON shop_recovery_contacts(contact_key, shop_id)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS buyer_password_resets (
+                    reset_id TEXT PRIMARY KEY,
+                    contact_key TEXT NOT NULL,
+                    code_hash TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    used_at INTEGER NOT NULL DEFAULT 0,
+                    attempts INTEGER NOT NULL DEFAULT 0
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_buyer_password_resets_contact
+                ON buyer_password_resets(contact_key, expires_at, used_at)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS buyer_contact_verifications (
+                    verification_id TEXT PRIMARY KEY,
+                    contact TEXT NOT NULL,
+                    contact_key TEXT NOT NULL,
+                    code_hash TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    used_at INTEGER NOT NULL DEFAULT 0,
+                    attempts INTEGER NOT NULL DEFAULT 0
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_buyer_contact_verifications_contact
+                ON buyer_contact_verifications(contact_key, expires_at, used_at)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS account_auth_events (
+                    event_id TEXT PRIMARY KEY,
+                    scope TEXT NOT NULL,
+                    contact_key TEXT NOT NULL DEFAULT '',
+                    client_key TEXT NOT NULL DEFAULT '',
+                    created_at INTEGER NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_account_auth_events_contact
+                ON account_auth_events(scope, contact_key, created_at)
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_account_auth_events_client
+                ON account_auth_events(scope, client_key, created_at)
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS account_help_requests (
+                    help_id TEXT PRIMARY KEY,
+                    buyer_key TEXT NOT NULL,
+                    buyer_account_id TEXT NOT NULL DEFAULT '',
+                    name TEXT NOT NULL DEFAULT '',
+                    contact TEXT NOT NULL DEFAULT '',
+                    message TEXT NOT NULL,
+                    screen TEXT NOT NULL DEFAULT '',
+                    route TEXT NOT NULL DEFAULT '',
+                    build TEXT NOT NULL DEFAULT '',
+                    user_agent TEXT NOT NULL DEFAULT '',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_account_help_requests_created
+                ON account_help_requests(created_at)
+                """
+            )
             connection.commit()
 
     async def upsert_shop(
@@ -416,6 +621,1038 @@ class ShopStore:
             return None
         return self._row_to_dict(row)
 
+    async def link_shop_recovery_contact(
+        self,
+        shop_id: str,
+        contact: str,
+        source: str = "owner_password",
+        is_primary: bool = True,
+    ) -> Optional[Dict[str, Any]]:
+        return await asyncio.to_thread(
+            self._link_shop_recovery_contact_threadsafe,
+            shop_id,
+            contact,
+            source,
+            is_primary,
+        )
+
+    def _link_shop_recovery_contact_threadsafe(
+        self,
+        shop_id: str,
+        contact: str,
+        source: str,
+        is_primary: bool,
+    ) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            return self._link_shop_recovery_contact_sync(shop_id, contact, source, is_primary)
+
+    def _link_shop_recovery_contact_sync(
+        self,
+        shop_id: str,
+        contact: str,
+        source: str,
+        is_primary: bool,
+    ) -> Optional[Dict[str, Any]]:
+        safe_shop_id = str(shop_id or "").strip()[:64]
+        if not safe_shop_id:
+            return None
+        with self._connect() as connection:
+            shop_row = connection.execute(
+                """
+                SELECT shop_id
+                FROM shops
+                WHERE shop_id = ?
+                """,
+                (safe_shop_id,),
+            ).fetchone()
+            if shop_row is None:
+                return None
+            result = self._link_shop_recovery_contact_with_connection(
+                connection,
+                safe_shop_id,
+                contact,
+                source,
+                is_primary,
+            )
+            connection.commit()
+        return result
+
+    def _link_shop_recovery_contact_with_connection(
+        self,
+        connection: sqlite3.Connection,
+        shop_id: str,
+        contact: str,
+        source: str,
+        is_primary: bool,
+    ) -> Optional[Dict[str, Any]]:
+        safe_contact = str(contact or "").strip()[:255]
+        contact_key = self._reset_contact_key(safe_contact)
+        if not shop_id or not safe_contact or not contact_key:
+            return None
+        timestamp = self._utcnow()
+        now = int(time.time())
+        contact_type = self._recovery_contact_type(contact_key)
+        safe_source = re.sub(r"[^a-z0-9_-]+", "_", str(source or "owner_password").strip().lower())[:40] or "owner_password"
+        if is_primary:
+            connection.execute(
+                """
+                UPDATE shop_recovery_contacts
+                SET is_primary = 0, updated_at = ?
+                WHERE shop_id = ?
+                """,
+                (timestamp, shop_id),
+            )
+        connection.execute(
+            """
+            INSERT INTO shop_recovery_contacts (
+                recovery_id,
+                shop_id,
+                contact,
+                contact_key,
+                contact_type,
+                is_primary,
+                verified_at,
+                source,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(shop_id, contact_key) DO UPDATE SET
+                contact = excluded.contact,
+                contact_type = excluded.contact_type,
+                is_primary = excluded.is_primary,
+                verified_at = excluded.verified_at,
+                source = excluded.source,
+                updated_at = excluded.updated_at
+            """,
+            (
+                uuid.uuid4().hex,
+                shop_id,
+                safe_contact,
+                contact_key,
+                contact_type,
+                1 if is_primary else 0,
+                now,
+                safe_source,
+                timestamp,
+                timestamp,
+            ),
+        )
+        row = connection.execute(
+            """
+            SELECT recovery_id, shop_id, contact, contact_key, contact_type, is_primary, verified_at, source, created_at, updated_at
+            FROM shop_recovery_contacts
+            WHERE shop_id = ? AND contact_key = ?
+            """,
+            (shop_id, contact_key),
+        ).fetchone()
+        return self._shop_recovery_contact_row_to_dict(row) if row is not None else None
+
+    @staticmethod
+    def _recovery_contact_type(contact_key: str) -> str:
+        value = str(contact_key or "")
+        if value.startswith("email:"):
+            return "email"
+        if value.startswith("phone:"):
+            return "phone"
+        return "text"
+
+    @staticmethod
+    def _shop_recovery_contact_row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:
+        return {
+            "recovery_id": str(row["recovery_id"]),
+            "shop_id": str(row["shop_id"]),
+            "contact": str(row["contact"]),
+            "contact_type": str(row["contact_type"]),
+            "is_primary": bool(int(row["is_primary"] or 0)),
+            "verified_at": int(row["verified_at"] or 0),
+            "source": str(row["source"]),
+            "created_at": str(row["created_at"]),
+            "updated_at": str(row["updated_at"]),
+        }
+
+    def _legacy_shop_recovery_contacts_from_row(self, row: sqlite3.Row) -> List[str]:
+        raw_profile: Dict[str, Any] = {}
+        raw_console = row["console_json"] if "console_json" in row.keys() else "{}"
+        if isinstance(raw_console, str):
+            try:
+                raw_payload = json.loads(raw_console) if raw_console.strip() else {}
+            except json.JSONDecodeError:
+                raw_payload = {}
+        elif isinstance(raw_console, dict):
+            raw_payload = raw_console
+        else:
+            raw_payload = {}
+        if isinstance(raw_payload, dict) and isinstance(raw_payload.get("profile"), dict):
+            raw_profile = raw_payload.get("profile", {})
+        console_payload = self._normalize_console(
+            shop_id=str(row["shop_id"] or ""),
+            display_name=str(row["display_name"] or row["shop_id"] or ""),
+            public_url=str(row["public_url"] or ""),
+            raw_console=raw_console,
+        )
+        profile = console_payload.get("profile")
+        if not isinstance(profile, dict):
+            profile = {}
+        result: List[str] = []
+        for value in (
+            str(profile.get("contact") or "").strip(),
+            str(raw_profile.get("resetContact") or "").strip(),
+        ):
+            if value and value not in result:
+                result.append(value)
+        return result
+
+    def _match_shop_recovery_contact(
+        self,
+        connection: sqlite3.Connection,
+        shop_id: str,
+        contact_key: str,
+        shop_row: sqlite3.Row,
+    ) -> Tuple[str, bool]:
+        recovery_row = connection.execute(
+            """
+            SELECT contact
+            FROM shop_recovery_contacts
+            WHERE shop_id = ? AND contact_key = ? AND verified_at > 0
+            ORDER BY is_primary DESC, updated_at DESC
+            LIMIT 1
+            """,
+            (shop_id, contact_key),
+        ).fetchone()
+        if recovery_row is not None:
+            return str(recovery_row["contact"] or "").strip(), True
+
+        has_recovery = connection.execute(
+            """
+            SELECT 1
+            FROM shop_recovery_contacts
+            WHERE shop_id = ? AND verified_at > 0
+            LIMIT 1
+            """,
+            (shop_id,),
+        ).fetchone() is not None
+        legacy_contacts = self._legacy_shop_recovery_contacts_from_row(shop_row)
+        for saved_contact in legacy_contacts:
+            saved_contact_key = self._reset_contact_key(saved_contact)
+            if saved_contact_key and hmac.compare_digest(contact_key, saved_contact_key):
+                self._link_shop_recovery_contact_with_connection(
+                    connection,
+                    shop_id,
+                    saved_contact,
+                    "legacy_profile",
+                    not has_recovery,
+                )
+                return saved_contact, True
+        return "", has_recovery or bool(legacy_contacts)
+
+    async def create_shop_password_reset(
+        self,
+        shop_id: str,
+        contact: str,
+        ttl_seconds: int = 600,
+    ) -> Dict[str, Any]:
+        safe_ttl = max(60, min(3600, int(ttl_seconds or 600)))
+        return await asyncio.to_thread(self._create_shop_password_reset_threadsafe, shop_id, contact, safe_ttl)
+
+    def _create_shop_password_reset_threadsafe(
+        self,
+        shop_id: str,
+        contact: str,
+        ttl_seconds: int,
+    ) -> Dict[str, Any]:
+        with self._lock:
+            return self._create_shop_password_reset_sync(shop_id, contact, ttl_seconds)
+
+    def _create_shop_password_reset_sync(
+        self,
+        shop_id: str,
+        contact: str,
+        ttl_seconds: int,
+    ) -> Dict[str, Any]:
+        now = int(time.time())
+        contact_key = self._reset_contact_key(contact)
+        if not contact_key:
+            return {"ok": False, "error": "contact_required"}
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT shop_id, display_name, reach_plan, public_url, map_color, created_at, updated_at, console_json
+                FROM shops
+                WHERE shop_id = ?
+                """,
+                (shop_id,),
+            ).fetchone()
+            if row is None:
+                return {"ok": False, "error": "shop_not_found"}
+            matched_contact, has_recovery_contact = self._match_shop_recovery_contact(
+                connection,
+                shop_id,
+                contact_key,
+                row,
+            )
+            if not has_recovery_contact:
+                return {"ok": False, "error": "reset_contact_missing"}
+            if not matched_contact:
+                return {"ok": False, "error": "invalid_contact"}
+            recent = connection.execute(
+                """
+                SELECT created_at
+                FROM shop_password_resets
+                WHERE shop_id = ? AND used_at = 0 AND created_at >= ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (shop_id, now - 60),
+            ).fetchone()
+            if recent is not None:
+                return {"ok": False, "error": "reset_rate_limited", "retry_after": 60}
+            connection.execute(
+                """
+                DELETE FROM shop_password_resets
+                WHERE expires_at < ? OR used_at > 0
+                """,
+                (now - 86400,),
+            )
+            reset_code = f"{secrets.randbelow(1000000):06d}"
+            reset_id = uuid.uuid4().hex
+            expires_at = now + ttl_seconds
+            connection.execute(
+                """
+                INSERT INTO shop_password_resets (
+                    reset_id, shop_id, contact_key, code_hash, created_at, expires_at, used_at, attempts
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+                """,
+                (
+                    reset_id,
+                    shop_id,
+                    contact_key,
+                    self._hash_password(f"{shop_id}:{reset_code}"),
+                    now,
+                    expires_at,
+                ),
+            )
+            connection.commit()
+        return {
+            "ok": True,
+            "reset_code": reset_code,
+            "expires_at": expires_at,
+            "expires_in": ttl_seconds,
+            "shop": self._row_to_dict(row),
+            "contact_hint": self._mask_contact(matched_contact),
+            "delivery_contact": matched_contact,
+            "delivery_method": self._recovery_contact_type(contact_key),
+        }
+
+    async def reset_shop_password_with_code(
+        self,
+        shop_id: str,
+        reset_code: str,
+        password: str,
+    ) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(self._reset_shop_password_with_code_threadsafe, shop_id, reset_code, password)
+
+    def _reset_shop_password_with_code_threadsafe(
+        self,
+        shop_id: str,
+        reset_code: str,
+        password: str,
+    ) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._reset_shop_password_with_code_sync(shop_id, reset_code, password)
+
+    def _reset_shop_password_with_code_sync(
+        self,
+        shop_id: str,
+        reset_code: str,
+        password: str,
+    ) -> Optional[Dict[str, str]]:
+        now = int(time.time())
+        timestamp = self._utcnow()
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT reset_id, code_hash, attempts
+                FROM shop_password_resets
+                WHERE shop_id = ? AND used_at = 0 AND expires_at >= ? AND attempts < 5
+                ORDER BY created_at DESC
+                LIMIT 5
+                """,
+                (shop_id, now),
+            ).fetchall()
+            matched_reset_id = ""
+            for row in rows:
+                if self._verify_password(f"{shop_id}:{reset_code}", str(row["code_hash"] or "")):
+                    matched_reset_id = str(row["reset_id"] or "")
+                    break
+            if not matched_reset_id:
+                connection.execute(
+                    """
+                    UPDATE shop_password_resets
+                    SET attempts = attempts + 1
+                    WHERE shop_id = ? AND used_at = 0 AND expires_at >= ?
+                    """,
+                    (shop_id, now),
+                )
+                connection.commit()
+                return None
+            shop_row = connection.execute(
+                """
+                SELECT shop_id, display_name, reach_plan, public_url, map_color, created_at, updated_at
+                FROM shops
+                WHERE shop_id = ?
+                """,
+                (shop_id,),
+            ).fetchone()
+            if shop_row is None:
+                return None
+            connection.execute(
+                """
+                UPDATE shops
+                SET password_hash = ?, updated_at = ?
+                WHERE shop_id = ?
+                """,
+                (self._hash_password(password), timestamp, shop_id),
+            )
+            connection.execute(
+                """
+                UPDATE shop_password_resets
+                SET used_at = ?
+                WHERE reset_id = ?
+                """,
+                (now, matched_reset_id),
+            )
+            connection.commit()
+            updated = connection.execute(
+                """
+                SELECT shop_id, display_name, reach_plan, public_url, map_color, created_at, updated_at
+                FROM shops
+                WHERE shop_id = ?
+                """,
+                (shop_id,),
+            ).fetchone()
+        return self._row_to_dict(updated) if updated is not None else None
+
+    async def create_buyer_account(
+        self,
+        display_name: str,
+        contact: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(
+            self._create_buyer_account_threadsafe,
+            display_name,
+            contact,
+            password,
+            buyer_key,
+        )
+
+    def _create_buyer_account_threadsafe(
+        self,
+        display_name: str,
+        contact: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._create_buyer_account_sync(display_name, contact, password, buyer_key)
+
+    def _create_buyer_account_sync(
+        self,
+        display_name: str,
+        contact: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        safe_contact = str(contact or "").strip()[:255]
+        contact_key = self._normalize_account_contact_key(safe_contact)
+        if not contact_key:
+            return None
+        safe_name = str(display_name or "").strip()[:160] or safe_contact
+        safe_buyer_key = str(buyer_key or "").strip()[:160] or ("buyer-" + uuid.uuid4().hex[:12])
+        timestamp = self._utcnow()
+        account_id = "acct-" + uuid.uuid4().hex[:16]
+        account_token = secrets.token_urlsafe(24)
+        password_hash = self._hash_password(password)
+        with self._connect() as connection:
+            existing = connection.execute(
+                "SELECT account_id FROM buyer_accounts WHERE contact_key = ?",
+                (contact_key,),
+            ).fetchone()
+            if existing is not None:
+                return None
+            connection.execute(
+                """
+                INSERT INTO buyer_accounts (
+                    account_id,
+                    display_name,
+                    contact,
+                    contact_key,
+                    password_hash,
+                    buyer_key,
+                    account_token,
+                    created_at,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    account_id,
+                    safe_name,
+                    safe_contact,
+                    contact_key,
+                    password_hash,
+                    safe_buyer_key,
+                    account_token,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            connection.commit()
+            row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE account_id = ?
+                """,
+                (account_id,),
+            ).fetchone()
+        return self._buyer_account_row_to_dict(row) if row is not None else None
+
+    async def verify_buyer_account(
+        self,
+        contact: str,
+        password: str,
+        buyer_key: str = "",
+    ) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(self._verify_buyer_account_threadsafe, contact, password, buyer_key)
+
+    def _verify_buyer_account_threadsafe(
+        self,
+        contact: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._verify_buyer_account_sync(contact, password, buyer_key)
+
+    def _verify_buyer_account_sync(
+        self,
+        contact: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        contact_key = self._normalize_account_contact_key(contact)
+        if not contact_key:
+            return None
+        timestamp = self._utcnow()
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, password_hash, created_at, updated_at
+                FROM buyer_accounts
+                WHERE contact_key = ?
+                """,
+                (contact_key,),
+            ).fetchone()
+            if row is None:
+                return None
+            password_hash = str(row["password_hash"] or "").strip()
+            if not password_hash or not self._verify_password(password, password_hash):
+                return None
+            next_buyer_key = str(buyer_key or "").strip()[:160] or str(row["buyer_key"] or "").strip()
+            if next_buyer_key and next_buyer_key != str(row["buyer_key"] or "").strip():
+                connection.execute(
+                    """
+                    UPDATE buyer_accounts
+                    SET buyer_key = ?, updated_at = ?
+                    WHERE account_id = ?
+                    """,
+                    (next_buyer_key, timestamp, str(row["account_id"])),
+                )
+                connection.commit()
+                row = connection.execute(
+                    """
+                    SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                    FROM buyer_accounts
+                    WHERE account_id = ?
+                    """,
+                    (str(row["account_id"]),),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    """
+                    SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                    FROM buyer_accounts
+                    WHERE account_id = ?
+                    """,
+                    (str(row["account_id"]),),
+                ).fetchone()
+        return self._buyer_account_row_to_dict(row) if row is not None else None
+
+    async def create_buyer_password_reset(self, contact: str, ttl_seconds: int = 600) -> Dict[str, Any]:
+        safe_ttl = max(60, min(3600, int(ttl_seconds or 600)))
+        return await asyncio.to_thread(self._create_buyer_password_reset_threadsafe, contact, safe_ttl)
+
+    def _create_buyer_password_reset_threadsafe(self, contact: str, ttl_seconds: int) -> Dict[str, Any]:
+        with self._lock:
+            return self._create_buyer_password_reset_sync(contact, ttl_seconds)
+
+    def _create_buyer_password_reset_sync(self, contact: str, ttl_seconds: int) -> Dict[str, Any]:
+        now = int(time.time())
+        contact_key = self._normalize_account_contact_key(contact)
+        if not contact_key:
+            return {"ok": False, "error": "contact_required"}
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE contact_key = ?
+                """,
+                (contact_key,),
+            ).fetchone()
+            if row is None:
+                return {"ok": False, "error": "account_not_found"}
+            recent = connection.execute(
+                """
+                SELECT created_at
+                FROM buyer_password_resets
+                WHERE contact_key = ? AND used_at = 0 AND created_at >= ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (contact_key, now - 60),
+            ).fetchone()
+            if recent is not None:
+                return {"ok": False, "error": "reset_rate_limited", "retry_after": 60}
+            connection.execute(
+                """
+                DELETE FROM buyer_password_resets
+                WHERE expires_at < ? OR used_at > 0
+                """,
+                (now - 86400,),
+            )
+            reset_code = f"{secrets.randbelow(1000000):06d}"
+            reset_id = uuid.uuid4().hex
+            expires_at = now + ttl_seconds
+            connection.execute(
+                """
+                INSERT INTO buyer_password_resets (
+                    reset_id, contact_key, code_hash, created_at, expires_at, used_at, attempts
+                )
+                VALUES (?, ?, ?, ?, ?, 0, 0)
+                """,
+                (
+                    reset_id,
+                    contact_key,
+                    self._hash_password(f"{contact_key}:{reset_code}"),
+                    now,
+                    expires_at,
+                ),
+            )
+            connection.commit()
+        return {
+            "ok": True,
+            "reset_code": reset_code,
+            "expires_at": expires_at,
+            "expires_in": ttl_seconds,
+            "contact_hint": self._mask_contact(str(row["contact"] or "")),
+            "delivery_contact": str(row["contact"] or ""),
+            "delivery_method": self._recovery_contact_type(contact_key),
+        }
+
+    async def create_buyer_contact_verification(self, contact: str, ttl_seconds: int = 600) -> Dict[str, Any]:
+        safe_ttl = max(60, min(3600, int(ttl_seconds or 600)))
+        return await asyncio.to_thread(self._create_buyer_contact_verification_threadsafe, contact, safe_ttl)
+
+    def _create_buyer_contact_verification_threadsafe(self, contact: str, ttl_seconds: int) -> Dict[str, Any]:
+        with self._lock:
+            return self._create_buyer_contact_verification_sync(contact, ttl_seconds)
+
+    def _create_buyer_contact_verification_sync(self, contact: str, ttl_seconds: int) -> Dict[str, Any]:
+        now = int(time.time())
+        safe_contact = str(contact or "").strip()[:255]
+        contact_key = self._normalize_account_contact_key(safe_contact)
+        if not contact_key:
+            return {"ok": False, "error": "contact_required"}
+        with self._connect() as connection:
+            recent = connection.execute(
+                """
+                SELECT created_at
+                FROM buyer_contact_verifications
+                WHERE contact_key = ? AND used_at = 0 AND created_at >= ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (contact_key, now - 60),
+            ).fetchone()
+            if recent is not None:
+                return {"ok": False, "error": "verification_rate_limited", "retry_after": 60}
+            connection.execute(
+                """
+                DELETE FROM buyer_contact_verifications
+                WHERE expires_at < ? OR used_at > 0
+                """,
+                (now - 86400,),
+            )
+            verification_code = f"{secrets.randbelow(1000000):06d}"
+            verification_id = uuid.uuid4().hex
+            expires_at = now + ttl_seconds
+            connection.execute(
+                """
+                INSERT INTO buyer_contact_verifications (
+                    verification_id, contact, contact_key, code_hash, created_at, expires_at, used_at, attempts
+                )
+                VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+                """,
+                (
+                    verification_id,
+                    safe_contact,
+                    contact_key,
+                    self._hash_password(f"{contact_key}:{verification_code}"),
+                    now,
+                    expires_at,
+                ),
+            )
+            connection.commit()
+        return {
+            "ok": True,
+            "reset_code": verification_code,
+            "expires_at": expires_at,
+            "expires_in": ttl_seconds,
+            "contact_hint": self._mask_contact(safe_contact),
+            "delivery_contact": safe_contact,
+            "delivery_method": self._recovery_contact_type(contact_key),
+        }
+
+    async def verify_buyer_contact_code(self, contact: str, verification_code: str) -> Optional[Dict[str, Any]]:
+        return await asyncio.to_thread(self._verify_buyer_contact_code_threadsafe, contact, verification_code)
+
+    def _verify_buyer_contact_code_threadsafe(
+        self,
+        contact: str,
+        verification_code: str,
+    ) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            return self._verify_buyer_contact_code_sync(contact, verification_code)
+
+    def _verify_buyer_contact_code_sync(self, contact: str, verification_code: str) -> Optional[Dict[str, Any]]:
+        now = int(time.time())
+        safe_contact = str(contact or "").strip()[:255]
+        code = str(verification_code or "").strip()
+        contact_key = self._normalize_account_contact_key(safe_contact)
+        if not contact_key or not code:
+            return None
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT verification_id, contact, code_hash
+                FROM buyer_contact_verifications
+                WHERE contact_key = ? AND used_at = 0 AND expires_at >= ? AND attempts < 5
+                ORDER BY created_at DESC
+                LIMIT 5
+                """,
+                (contact_key, now),
+            ).fetchall()
+            matched_verification_id = ""
+            matched_contact = safe_contact
+            for row in rows:
+                if self._verify_password(f"{contact_key}:{code}", str(row["code_hash"] or "")):
+                    matched_verification_id = str(row["verification_id"] or "")
+                    matched_contact = str(row["contact"] or safe_contact)
+                    break
+            if not matched_verification_id:
+                connection.execute(
+                    """
+                    UPDATE buyer_contact_verifications
+                    SET attempts = attempts + 1
+                    WHERE contact_key = ? AND used_at = 0 AND expires_at >= ?
+                    """,
+                    (contact_key, now),
+                )
+                connection.commit()
+                return None
+            connection.execute(
+                """
+                UPDATE buyer_contact_verifications
+                SET used_at = ?
+                WHERE verification_id = ?
+                """,
+                (now, matched_verification_id),
+            )
+            connection.commit()
+        return {
+            "ok": True,
+            "contact": matched_contact,
+            "contact_key": contact_key,
+            "verified_at": now,
+        }
+
+    async def reset_buyer_password_with_code(
+        self,
+        contact: str,
+        reset_code: str,
+        password: str,
+        buyer_key: str = "",
+    ) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(
+            self._reset_buyer_password_with_code_threadsafe,
+            contact,
+            reset_code,
+            password,
+            buyer_key,
+        )
+
+    def _reset_buyer_password_with_code_threadsafe(
+        self,
+        contact: str,
+        reset_code: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._reset_buyer_password_with_code_sync(contact, reset_code, password, buyer_key)
+
+    def _reset_buyer_password_with_code_sync(
+        self,
+        contact: str,
+        reset_code: str,
+        password: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        now = int(time.time())
+        timestamp = self._utcnow()
+        contact_key = self._normalize_account_contact_key(contact)
+        if not contact_key:
+            return None
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT reset_id, code_hash
+                FROM buyer_password_resets
+                WHERE contact_key = ? AND used_at = 0 AND expires_at >= ? AND attempts < 5
+                ORDER BY created_at DESC
+                LIMIT 5
+                """,
+                (contact_key, now),
+            ).fetchall()
+            matched_reset_id = ""
+            for row in rows:
+                if self._verify_password(f"{contact_key}:{reset_code}", str(row["code_hash"] or "")):
+                    matched_reset_id = str(row["reset_id"] or "")
+                    break
+            if not matched_reset_id:
+                connection.execute(
+                    """
+                    UPDATE buyer_password_resets
+                    SET attempts = attempts + 1
+                    WHERE contact_key = ? AND used_at = 0 AND expires_at >= ?
+                    """,
+                    (contact_key, now),
+                )
+                connection.commit()
+                return None
+            account_row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE contact_key = ?
+                """,
+                (contact_key,),
+            ).fetchone()
+            if account_row is None:
+                return None
+            next_buyer_key = str(buyer_key or "").strip()[:160] or str(account_row["buyer_key"] or "").strip()
+            connection.execute(
+                """
+                UPDATE buyer_accounts
+                SET password_hash = ?, buyer_key = ?, updated_at = ?
+                WHERE account_id = ?
+                """,
+                (self._hash_password(password), next_buyer_key, timestamp, str(account_row["account_id"])),
+            )
+            connection.execute(
+                """
+                UPDATE buyer_password_resets
+                SET used_at = ?
+                WHERE reset_id = ?
+                """,
+                (now, matched_reset_id),
+            )
+            connection.commit()
+            updated = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE account_id = ?
+                """,
+                (str(account_row["account_id"]),),
+            ).fetchone()
+        return self._buyer_account_row_to_dict(updated) if updated is not None else None
+
+    async def verify_buyer_token(self, account_id: str, account_token: str) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(self._verify_buyer_token_threadsafe, account_id, account_token)
+
+    def _verify_buyer_token_threadsafe(self, account_id: str, account_token: str) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._verify_buyer_token_sync(account_id, account_token)
+
+    def _verify_buyer_token_sync(self, account_id: str, account_token: str) -> Optional[Dict[str, str]]:
+        safe_account_id = str(account_id or "").strip()[:64]
+        safe_token = str(account_token or "").strip()[:255]
+        if not safe_account_id or not safe_token:
+            return None
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE account_id = ?
+                """,
+                (safe_account_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        stored_token = str(row["account_token"] or "").strip()
+        if not hmac.compare_digest(stored_token, safe_token):
+            return None
+        return self._buyer_account_row_to_dict(row)
+
+    async def create_account_help_request(
+        self,
+        message: str,
+        buyer_key: str = "",
+        buyer_account_id: str = "",
+        name: str = "",
+        contact: str = "",
+        screen: str = "",
+        route: str = "",
+        build: str = "",
+        user_agent: str = "",
+        help_id: str = "",
+    ) -> Dict[str, str]:
+        return await asyncio.to_thread(
+            self._create_account_help_request_threadsafe,
+            message,
+            buyer_key,
+            buyer_account_id,
+            name,
+            contact,
+            screen,
+            route,
+            build,
+            user_agent,
+            help_id,
+        )
+
+    def _create_account_help_request_threadsafe(
+        self,
+        message: str,
+        buyer_key: str,
+        buyer_account_id: str,
+        name: str,
+        contact: str,
+        screen: str,
+        route: str,
+        build: str,
+        user_agent: str,
+        help_id: str,
+    ) -> Dict[str, str]:
+        with self._lock:
+            return self._create_account_help_request_sync(
+                message,
+                buyer_key,
+                buyer_account_id,
+                name,
+                contact,
+                screen,
+                route,
+                build,
+                user_agent,
+                help_id,
+            )
+
+    def _create_account_help_request_sync(
+        self,
+        message: str,
+        buyer_key: str,
+        buyer_account_id: str,
+        name: str,
+        contact: str,
+        screen: str,
+        route: str,
+        build: str,
+        user_agent: str,
+        help_id: str,
+    ) -> Dict[str, str]:
+        safe_message = str(message or "").strip()[:1200]
+        if not safe_message:
+            raise ValueError("message_required")
+        safe_help_id = re.sub(r"[^a-zA-Z0-9_.:-]+", "-", str(help_id or "").strip())[:80]
+        if not safe_help_id:
+            safe_help_id = "help-" + uuid.uuid4().hex[:16]
+        timestamp = self._utcnow()
+        record = {
+            "help_id": safe_help_id,
+            "buyer_key": str(buyer_key or "").strip()[:160],
+            "buyer_account_id": str(buyer_account_id or "").strip()[:64],
+            "name": str(name or "").strip()[:160],
+            "contact": str(contact or "").strip()[:255],
+            "message": safe_message,
+            "screen": str(screen or "").strip()[:80],
+            "route": str(route or "").strip()[:160],
+            "build": str(build or "").strip()[:80],
+            "user_agent": str(user_agent or "").strip()[:400],
+            "created_at": timestamp,
+        }
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO account_help_requests (
+                    help_id,
+                    buyer_key,
+                    buyer_account_id,
+                    name,
+                    contact,
+                    message,
+                    screen,
+                    route,
+                    build,
+                    user_agent,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(help_id) DO UPDATE SET
+                    buyer_key = excluded.buyer_key,
+                    buyer_account_id = excluded.buyer_account_id,
+                    name = excluded.name,
+                    contact = excluded.contact,
+                    message = excluded.message,
+                    screen = excluded.screen,
+                    route = excluded.route,
+                    build = excluded.build,
+                    user_agent = excluded.user_agent
+                """,
+                (
+                    record["help_id"],
+                    record["buyer_key"],
+                    record["buyer_account_id"],
+                    record["name"],
+                    record["contact"],
+                    record["message"],
+                    record["screen"],
+                    record["route"],
+                    record["build"],
+                    record["user_agent"],
+                    record["created_at"],
+                ),
+            )
+            connection.commit()
+        return record
+
     async def list_shops(self, limit: int = 100) -> List[Dict[str, str]]:
         safe_limit = max(1, min(limit, 500))
         return await asyncio.to_thread(self._list_shops_threadsafe, safe_limit)
@@ -522,18 +1759,39 @@ class ShopStore:
             row = connection.execute("SELECT COUNT(*) AS count FROM shops").fetchone()
         return int(row["count"]) if row is not None else 0
 
-    async def list_orders_for_buyer(self, buyer_key: str, limit: int = 50) -> List[Dict[str, Any]]:
+    async def list_orders_for_buyer(
+        self,
+        buyer_key: str = "",
+        buyer_account_id: str = "",
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
         safe_buyer_key = str(buyer_key or "").strip()[:160]
+        safe_buyer_account_id = str(buyer_account_id or "").strip()[:64]
         safe_limit = max(1, min(limit, 200))
-        if not safe_buyer_key:
+        if not safe_buyer_key and not safe_buyer_account_id:
             return []
-        return await asyncio.to_thread(self._list_orders_for_buyer_threadsafe, safe_buyer_key, safe_limit)
+        return await asyncio.to_thread(
+            self._list_orders_for_buyer_threadsafe,
+            safe_buyer_key,
+            safe_buyer_account_id,
+            safe_limit,
+        )
 
-    def _list_orders_for_buyer_threadsafe(self, buyer_key: str, limit: int) -> List[Dict[str, Any]]:
+    def _list_orders_for_buyer_threadsafe(
+        self,
+        buyer_key: str,
+        buyer_account_id: str,
+        limit: int,
+    ) -> List[Dict[str, Any]]:
         with self._lock:
-            return self._list_orders_for_buyer_sync(buyer_key, limit)
+            return self._list_orders_for_buyer_sync(buyer_key, buyer_account_id, limit)
 
-    def _list_orders_for_buyer_sync(self, buyer_key: str, limit: int) -> List[Dict[str, Any]]:
+    def _list_orders_for_buyer_sync(
+        self,
+        buyer_key: str,
+        buyer_account_id: str,
+        limit: int,
+    ) -> List[Dict[str, Any]]:
         matches: List[Dict[str, Any]] = []
         with self._connect() as connection:
             rows = connection.execute(
@@ -563,22 +1821,19 @@ class ShopStore:
             for order in orders:
                 if not isinstance(order, dict):
                     continue
-                if str(order.get("buyerKey") or "").strip() != buyer_key:
+                order_buyer_key = str(order.get("buyerKey") or "").strip()
+                order_buyer_account_id = str(order.get("buyerAccountId") or order.get("accountId") or "").strip()
+                buyer_key_matches = bool(buyer_key and order_buyer_key == buyer_key)
+                account_matches = bool(
+                    buyer_account_id
+                    and order_buyer_account_id
+                    and order_buyer_account_id == buyer_account_id
+                )
+                if not buyer_key_matches and not account_matches:
                     continue
-                items: List[Dict[str, Any]] = []
-                items_raw = order.get("items")
-                if isinstance(items_raw, list):
-                    for item in items_raw[:80]:
-                        if not isinstance(item, dict):
-                            continue
-                        items.append(
-                            {
-                                "id": str(item.get("id") or "").strip()[:64],
-                                "title": str(item.get("title") or "").strip()[:160],
-                                "quantity": self._safe_int(item.get("quantity"), minimum=0, maximum=999999),
-                                "price": str(item.get("price") or "").strip()[:80],
-                            }
-                        )
+                items = self._normalize_order_items(order.get("items"))
+                order_status = self._normalize_order_status(order.get("status"), order.get("paymentMode"), order)
+                status_flags = self._order_status_flags(order, order_status)
                 matches.append(
                     {
                         "id": str(order.get("id") or "").strip()[:64],
@@ -588,21 +1843,31 @@ class ShopStore:
                         "quantity": self._safe_int(order.get("quantity"), minimum=0, maximum=999999),
                         "price": str(order.get("price") or "").strip()[:80],
                         "total": str(order.get("total") or "").strip()[:80],
-                        "status": str(order.get("status") or "").strip()[:80],
-                        "paymentPaid": bool(order.get("paymentPaid")),
-                        "paymentReceived": bool(order.get("paymentReceived")),
-                        "orderSent": bool(order.get("orderSent")),
-                        "orderReceived": bool(order.get("orderReceived")),
+                        "status": order_status,
+                        "paymentPaid": status_flags["paymentPaid"],
+                        "paymentReceived": status_flags["paymentReceived"],
+                        "orderSent": status_flags["orderSent"],
+                        "orderReceived": status_flags["orderReceived"],
                         "clientNonce": str(order.get("clientNonce") or "").strip()[:160],
-                        "buyerKey": buyer_key,
+                        "buyerKey": order_buyer_key,
+                        "buyerAccountId": order_buyer_account_id[:64],
                         "buyerName": str(order.get("buyerName") or "").strip()[:160],
                         "buyerContact": str(order.get("buyerContact") or "").strip()[:255],
                         "paymentLabel": str(order.get("paymentLabel") or "").strip()[:80],
                         "paymentValue": str(order.get("paymentValue") or "").strip()[:255],
                         "paymentMode": str(order.get("paymentMode") or "").strip()[:80],
+                        "fulfillmentMode": str(order.get("fulfillmentMode") or order.get("fulfillment_mode") or "").strip()[:80],
+                        "fulfillmentLabel": str(order.get("fulfillmentLabel") or order.get("fulfillment_label") or "").strip()[:80],
+                        "deliveryAddress": str(order.get("deliveryAddress") or order.get("delivery_address") or "").strip()[:4000],
+                        "pickupAddress": str(order.get("pickupAddress") or order.get("pickup_address") or "").strip()[:4000],
+                        "deliveryLat": self._safe_float(order.get("deliveryLat") or order.get("delivery_lat"), minimum=-90, maximum=90),
+                        "deliveryLng": self._safe_float(order.get("deliveryLng") or order.get("delivery_lng"), minimum=-180, maximum=180),
+                        "pickupLat": self._safe_float(order.get("pickupLat") or order.get("pickup_lat"), minimum=-90, maximum=90),
+                        "pickupLng": self._safe_float(order.get("pickupLng") or order.get("pickup_lng"), minimum=-180, maximum=180),
                         "address": str(order.get("address") or "").strip()[:4000],
                         "notes": str(order.get("notes") or "").strip()[:4000],
                         "items": items,
+                        "statusUpdatedAt": self._safe_int(order.get("statusUpdatedAt"), minimum=0, maximum=9999999999999),
                         "shopId": shop_id,
                         "shopName": str(row["display_name"] or shop_id).strip()[:80] or shop_id,
                         "shopPublicUrl": str(row["public_url"] or "").strip()[:4000],
@@ -631,17 +1896,79 @@ class ShopStore:
         )
         return record
 
-    def _normalize_order_status(self, status: Any, payment_mode: Any) -> str:
+    def _legacy_order_status_from_flags(self, order: Any) -> str:
+        if not isinstance(order, dict):
+            return ""
+        if bool(order.get("orderReceived")):
+            return "completed"
+        if bool(order.get("paymentPaid")) or bool(order.get("paymentReceived")):
+            return "paid"
+        if bool(order.get("orderSent")):
+            return "ready"
+        return ""
+
+    def _normalize_order_status(self, status: Any, payment_mode: Any, order: Any = None) -> str:
         raw_status = str(status or "").strip().lower()
         raw_payment_mode = str(payment_mode or "").strip().lower()
         mode = "before_delivery" if raw_payment_mode == "before_delivery" else "on_receive"
+        if raw_status in self.ORDER_STATES:
+            return raw_status
+        legacy_status = self._legacy_order_status_from_flags(order)
+        if legacy_status:
+            return legacy_status
         if raw_status in {"", "new"}:
             return "payment_pending" if mode == "before_delivery" else "created"
         if raw_status == "pending":
             return "payment_pending" if mode == "before_delivery" else "created"
-        if raw_status in {"created", "payment_pending", "accepted", "ready", "paid", "completed", "cancelled"}:
-            return raw_status
         return "payment_pending" if mode == "before_delivery" else "created"
+
+    def _order_status_flags(self, order: Any, status: str) -> Dict[str, bool]:
+        source = order if isinstance(order, dict) else {}
+        payment_mode = str(source.get("paymentMode") or "").strip().lower()
+        on_receive = payment_mode != "before_delivery"
+        payment_done = bool(source.get("paymentPaid")) or bool(source.get("paymentReceived")) or status in {"paid", "completed"}
+        sent = (
+            bool(source.get("orderSent"))
+            or status in {"ready", "completed"}
+            or (on_receive and status == "paid")
+        )
+        received = bool(source.get("orderReceived")) or status == "completed"
+        return {
+            "paymentPaid": payment_done,
+            "paymentReceived": payment_done,
+            "orderSent": sent,
+            "orderReceived": received,
+        }
+
+    def _normalize_order_items(self, items_raw: Any) -> List[Dict[str, Any]]:
+        if not isinstance(items_raw, list):
+            return []
+        normalized_items: List[Dict[str, Any]] = []
+        for item in items_raw[:80]:
+            if not isinstance(item, dict):
+                continue
+            images_raw = item.get("imageFiles") or item.get("images") or []
+            image_files: List[str] = []
+            if isinstance(images_raw, list):
+                for image in images_raw[:8]:
+                    value = str(image).strip()[:255]
+                    if value:
+                        image_files.append(value)
+            primary_image = str(item.get("image") or "").strip()[:255]
+            if primary_image and primary_image not in image_files:
+                image_files.insert(0, primary_image)
+            normalized_items.append(
+                {
+                    "id": str(item.get("id") or "").strip()[:64],
+                    "title": str(item.get("title") or "").strip()[:160],
+                    "description": str(item.get("description") or "").strip()[:4000],
+                    "quantity": self._safe_int(item.get("quantity"), minimum=0, maximum=999999),
+                    "price": str(item.get("price") or "").strip()[:80],
+                    "image": image_files[0] if image_files else "",
+                    "imageFiles": image_files,
+                }
+            )
+        return normalized_items
 
     def _normalize_console(
         self,
@@ -730,20 +2057,9 @@ class ShopStore:
             for order in orders[:400]:
                 if not isinstance(order, dict):
                     continue
-                items_raw = order.get("items")
-                normalized_items: List[Dict[str, Any]] = []
-                if isinstance(items_raw, list):
-                    for item in items_raw[:80]:
-                        if not isinstance(item, dict):
-                            continue
-                        normalized_items.append(
-                            {
-                                "id": str(item.get("id") or "").strip()[:64],
-                                "title": str(item.get("title") or "").strip()[:160],
-                                "quantity": self._safe_int(item.get("quantity"), minimum=0, maximum=999999),
-                                "price": str(item.get("price") or "").strip()[:80],
-                            }
-                        )
+                normalized_items = self._normalize_order_items(order.get("items"))
+                order_status = self._normalize_order_status(order.get("status"), order.get("paymentMode"), order)
+                status_flags = self._order_status_flags(order, order_status)
                 normalized_orders.append(
                     {
                         "id": str(order.get("id") or uuid.uuid4().hex[:12]).strip()[:64],
@@ -753,13 +2069,14 @@ class ShopStore:
                         "quantity": self._safe_int(order.get("quantity"), minimum=0, maximum=999999),
                         "price": str(order.get("price") or "").strip()[:80],
                         "total": str(order.get("total") or "").strip()[:80],
-                        "status": self._normalize_order_status(order.get("status"), order.get("paymentMode")),
-                        "paymentPaid": bool(order.get("paymentPaid")),
-                        "paymentReceived": bool(order.get("paymentReceived")),
-                        "orderSent": bool(order.get("orderSent")),
-                        "orderReceived": bool(order.get("orderReceived")),
+                        "status": order_status,
+                        "paymentPaid": status_flags["paymentPaid"],
+                        "paymentReceived": status_flags["paymentReceived"],
+                        "orderSent": status_flags["orderSent"],
+                        "orderReceived": status_flags["orderReceived"],
                         "clientNonce": str(order.get("clientNonce") or "").strip()[:160],
                         "buyerKey": str(order.get("buyerKey") or "").strip()[:160],
+                        "buyerAccountId": str(order.get("buyerAccountId") or order.get("accountId") or "").strip()[:64],
                         "buyerName": str(order.get("buyerName") or "").strip()[:160],
                         "buyerContact": str(order.get("buyerContact") or "").strip()[:255],
                         "paymentLabel": str(order.get("paymentLabel") or "").strip()[:80],
@@ -768,6 +2085,7 @@ class ShopStore:
                         "address": str(order.get("address") or "").strip()[:4000],
                         "notes": str(order.get("notes") or "").strip()[:4000],
                         "items": normalized_items,
+                        "statusUpdatedAt": self._safe_int(order.get("statusUpdatedAt"), minimum=0, maximum=9999999999999),
                     }
                 )
             base["orders"] = normalized_orders
@@ -865,6 +2183,16 @@ class ShopStore:
             return minimum
         return max(minimum, min(maximum, parsed))
 
+    @staticmethod
+    def _safe_float(value: Any, minimum: float, maximum: float) -> Optional[float]:
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(parsed):
+            return None
+        return max(minimum, min(maximum, parsed))
+
     @classmethod
     def _extract_gps(cls, value: str) -> str:
         text = str(value or "").strip()
@@ -901,6 +2229,157 @@ class ShopStore:
             "created_at": str(row["created_at"]),
             "updated_at": str(row["updated_at"]),
         }
+
+    @staticmethod
+    def _buyer_account_row_to_dict(row: sqlite3.Row) -> Dict[str, str]:
+        return {
+            "account_id": str(row["account_id"]),
+            "display_name": str(row["display_name"]),
+            "contact": str(row["contact"]),
+            "buyer_key": str(row["buyer_key"]),
+            "account_token": str(row["account_token"]),
+            "created_at": str(row["created_at"]),
+            "updated_at": str(row["updated_at"]),
+        }
+
+    async def record_account_auth_attempt(
+        self,
+        scope: str,
+        contact: str = "",
+        client_key: str = "",
+        contact_limit: int = 0,
+        client_limit: int = 0,
+        window_seconds: int = 900,
+    ) -> Dict[str, Any]:
+        return await asyncio.to_thread(
+            self._record_account_auth_attempt_threadsafe,
+            scope,
+            contact,
+            client_key,
+            contact_limit,
+            client_limit,
+            window_seconds,
+        )
+
+    def _record_account_auth_attempt_threadsafe(
+        self,
+        scope: str,
+        contact: str,
+        client_key: str,
+        contact_limit: int,
+        client_limit: int,
+        window_seconds: int,
+    ) -> Dict[str, Any]:
+        with self._lock:
+            return self._record_account_auth_attempt_sync(
+                scope,
+                contact,
+                client_key,
+                contact_limit,
+                client_limit,
+                window_seconds,
+            )
+
+    def _record_account_auth_attempt_sync(
+        self,
+        scope: str,
+        contact: str,
+        client_key: str,
+        contact_limit: int,
+        client_limit: int,
+        window_seconds: int,
+    ) -> Dict[str, Any]:
+        safe_scope = re.sub(r"[^a-z0-9_.:-]+", "_", str(scope or "").strip().lower())[:64].strip("_")
+        if not safe_scope:
+            return {"ok": True}
+        safe_window = max(1, min(86400, int(window_seconds or 900)))
+        safe_contact_limit = max(0, int(contact_limit or 0))
+        safe_client_limit = max(0, int(client_limit or 0))
+        contact_key = self._normalize_account_contact_key(contact)
+        safe_client_key = self._normalize_rate_client_key(client_key)
+        now = int(time.time())
+        floor = now - safe_window
+
+        with self._connect() as connection:
+            connection.execute(
+                """
+                DELETE FROM account_auth_events
+                WHERE created_at < ?
+                """,
+                (now - 172800,),
+            )
+            if contact_key and safe_contact_limit:
+                contact_row = connection.execute(
+                    """
+                    SELECT COUNT(*) AS event_count, MIN(created_at) AS first_created
+                    FROM account_auth_events
+                    WHERE scope = ? AND contact_key = ? AND created_at >= ?
+                    """,
+                    (safe_scope, contact_key, floor),
+                ).fetchone()
+                contact_count = int(contact_row["event_count"] or 0) if contact_row is not None else 0
+                if contact_count >= safe_contact_limit:
+                    first_created = int(contact_row["first_created"] or now) if contact_row is not None else now
+                    return {
+                        "ok": False,
+                        "error": "auth_rate_limited",
+                        "scope": safe_scope,
+                        "limit": "contact",
+                        "retry_after": max(1, first_created + safe_window - now),
+                    }
+            if safe_client_key and safe_client_limit:
+                client_row = connection.execute(
+                    """
+                    SELECT COUNT(*) AS event_count, MIN(created_at) AS first_created
+                    FROM account_auth_events
+                    WHERE scope = ? AND client_key = ? AND created_at >= ?
+                    """,
+                    (safe_scope, safe_client_key, floor),
+                ).fetchone()
+                client_count = int(client_row["event_count"] or 0) if client_row is not None else 0
+                if client_count >= safe_client_limit:
+                    first_created = int(client_row["first_created"] or now) if client_row is not None else now
+                    return {
+                        "ok": False,
+                        "error": "auth_rate_limited",
+                        "scope": safe_scope,
+                        "limit": "client",
+                        "retry_after": max(1, first_created + safe_window - now),
+                    }
+            connection.execute(
+                """
+                INSERT INTO account_auth_events (
+                    event_id,
+                    scope,
+                    contact_key,
+                    client_key,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (uuid.uuid4().hex, safe_scope, contact_key, safe_client_key, now),
+            )
+            connection.commit()
+        return {"ok": True}
+
+    @staticmethod
+    def _normalize_account_contact_key(value: str) -> str:
+        text = re.sub(r"\s+", " ", str(value or "").strip().lower())[:255]
+        if not text:
+            return ""
+        if "@" in text:
+            return "email:" + re.sub(r"\s+", "", text)[:255]
+        digits = re.sub(r"\D+", "", text)
+        if len(digits) >= 6:
+            return "phone:" + digits[:32]
+        return "text:" + text
+
+    @staticmethod
+    def _normalize_rate_client_key(value: str) -> str:
+        text = str(value or "").strip().lower()[:160]
+        if not text:
+            return ""
+        return re.sub(r"[^a-z0-9:._-]+", "_", text)[:120].strip("_")
 
     @classmethod
     def _normalize_map_color(cls, value: str) -> str:
@@ -990,6 +2469,35 @@ class ShopStore:
         )
         return hmac.compare_digest(actual, expected)
 
+    @staticmethod
+    def _reset_contact_key(contact: str) -> str:
+        value = str(contact or "").strip().lower()
+        if not value:
+            return ""
+        if "@" in value:
+            return "email:" + re.sub(r"\s+", "", value)[:255]
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) >= 6:
+            return "phone:" + digits[-10:]
+        return "text:" + re.sub(r"\s+", "", value)
+
+    @staticmethod
+    def _mask_contact(contact: str) -> str:
+        value = str(contact or "").strip()
+        if not value:
+            return ""
+        if "@" in value:
+            local, _, domain = value.partition("@")
+            visible = local[:2] if len(local) > 2 else local[:1]
+            return f"{visible}••@{domain}" if domain else f"{visible}••"
+        digits = re.sub(r"\D+", "", value)
+        if len(digits) >= 6:
+            visible = digits[-4:]
+            return "••••" + visible
+        if len(value) <= 4:
+            return value[0] + "••" if value else ""
+        return value[:2] + "•••" + value[-2:]
+
 
 class HashopHub:
     SHOP_ID_PATTERN = re.compile(r"[^a-z0-9]+")
@@ -1007,6 +2515,7 @@ class HashopHub:
         "login",
         "login-debug",
         "orders",
+        "setup",
         "shop",
         "shop-debug",
         "site",
@@ -1043,6 +2552,9 @@ class HashopHub:
         store: ShopStore,
         uploads_dir: Path,
         public_shop_create_enabled: bool = True,
+        owner_reset_code: str = "",
+        smtp_config: Optional[SmtpConfig] = None,
+        expose_reset_codes: Optional[bool] = None,
     ) -> None:
         self.public_base_url = public_base_url.rstrip("/")
         if self.public_base_url.startswith("https://"):
@@ -1056,6 +2568,15 @@ class HashopHub:
         self.store = store
         self.uploads_dir = uploads_dir
         self.public_shop_create_enabled = bool(public_shop_create_enabled)
+        self.owner_reset_code = str(owner_reset_code or "").strip()
+        self.smtp_config = smtp_config or SmtpConfig.from_env()
+        self.expose_reset_codes = (
+            bool(expose_reset_codes)
+            if expose_reset_codes is not None
+            else env_flag("HASHOP_EXPOSE_RESET_CODES", not self.smtp_config.configured)
+        )
+        self.debug_codex_bridge_url = str(os.environ.get("HASHOP_DEBUG_CODEX_BRIDGE_URL") or "").strip().rstrip("/")
+        self.debug_codex_token = str(os.environ.get("HASHOP_DEBUG_CODEX_TOKEN") or "").strip()
         self.uploads_dir.mkdir(parents=True, exist_ok=True)
         self.sessions: Dict[str, TunnelSession] = {}
         self.pending: Dict[str, asyncio.Future] = {}
@@ -1070,6 +2591,47 @@ class HashopHub:
             "connected_shops": sorted(self.sessions.keys()),
             "shop_count": len(self.sessions),
         }
+
+    @staticmethod
+    def _request_client_key(request: web.Request) -> str:
+        for header_name in ("CF-Connecting-IP", "X-Real-IP", "X-Forwarded-For"):
+            raw_value = str(request.headers.get(header_name) or "").strip()
+            if not raw_value:
+                continue
+            return raw_value.split(",", 1)[0].strip()[:160]
+        remote = str(request.remote or "").strip()
+        if remote:
+            return remote[:160]
+        peername = request.transport.get_extra_info("peername") if request.transport else None
+        if isinstance(peername, tuple) and peername:
+            return str(peername[0] or "").strip()[:160]
+        return "unknown"
+
+    async def _auth_guard_response(
+        self,
+        request: web.Request,
+        *,
+        scope: str,
+        contact: str = "",
+        contact_limit: int = 0,
+        client_limit: int = 0,
+        window_seconds: int = 900,
+    ) -> Optional[web.Response]:
+        guard = await self.store.record_account_auth_attempt(
+            scope=scope,
+            contact=contact,
+            client_key=self._request_client_key(request),
+            contact_limit=contact_limit,
+            client_limit=client_limit,
+            window_seconds=window_seconds,
+        )
+        if guard.get("ok"):
+            return None
+        return web.json_response(
+            guard,
+            status=429,
+            headers={"Cache-Control": "no-store"},
+        )
 
     @staticmethod
     def _wallet_candidate_paths(site_dir: Path) -> List[Path]:
@@ -1152,6 +2714,260 @@ class HashopHub:
             "pricing": "one_time",
             "available": bool(methods),
             "methods": methods,
+        }
+
+    def _reset_email_subject(self, purpose: str) -> str:
+        if purpose == "verify":
+            return "Hashop verification code"
+        if purpose == "buyer":
+            return "Hashop account reset code"
+        return "Hashop shop reset code"
+
+    def _reset_email_body(
+        self,
+        purpose: str,
+        reset_code: str,
+        expires_in: int,
+        shop_id: str = "",
+        shop_name: str = "",
+    ) -> str:
+        minutes = max(1, int(expires_in or 600) // 60)
+        if purpose == "verify":
+            return "\n".join([
+                f"Your Hashop verification code is {reset_code}.",
+                f"It expires in {minutes} minutes.",
+                "",
+                "If you did not request this, ignore this email.",
+                "Hashop",
+            ])
+        lines = [
+            f"Your Hashop reset code is {reset_code}.",
+            f"It expires in {minutes} minutes.",
+        ]
+        if purpose == "shop":
+            lines.insert(1, f"Shop: {shop_name or shop_id or 'Hashop shop'}")
+        lines.extend([
+            "",
+            "If you did not request this, ignore this email.",
+            "Hashop",
+        ])
+        return "\n".join(lines)
+
+    async def _send_reset_email(
+        self,
+        *,
+        to_address: str,
+        purpose: str,
+        reset_code: str,
+        expires_in: int,
+        shop_id: str = "",
+        shop_name: str = "",
+    ) -> None:
+        await asyncio.to_thread(
+            self._send_reset_email_sync,
+            to_address,
+            purpose,
+            reset_code,
+            expires_in,
+            shop_id,
+            shop_name,
+        )
+
+    def _send_reset_email_sync(
+        self,
+        to_address: str,
+        purpose: str,
+        reset_code: str,
+        expires_in: int,
+        shop_id: str,
+        shop_name: str,
+    ) -> None:
+        config = self.smtp_config
+        if not config.configured:
+            raise RuntimeError("smtp_not_configured")
+        message = EmailMessage()
+        message["Subject"] = self._reset_email_subject(purpose)
+        message["From"] = formataddr((config.sender_name, config.sender))
+        message["To"] = to_address
+        message.set_content(
+            self._reset_email_body(
+                purpose=purpose,
+                reset_code=reset_code,
+                expires_in=expires_in,
+                shop_id=shop_id,
+                shop_name=shop_name,
+            )
+        )
+        security = str(config.security or "starttls").strip().lower()
+        context = ssl.create_default_context()
+        if security in {"ssl", "tls", "smtps"}:
+            with smtplib.SMTP_SSL(config.host, config.port, timeout=config.timeout, context=context) as smtp:
+                smtp.login(config.username, config.password)
+                smtp.send_message(message)
+            return
+        with smtplib.SMTP(config.host, config.port, timeout=config.timeout) as smtp:
+            if security not in {"none", "plain", "off"}:
+                smtp.starttls(context=context)
+            smtp.login(config.username, config.password)
+            smtp.send_message(message)
+
+    @staticmethod
+    def _email_address_from_contact(value: str) -> str:
+        text = str(value or "").strip()
+        if "@" not in text:
+            return ""
+        return re.sub(r"\s+", "", text)[:255]
+
+    @staticmethod
+    def _order_email_subject(order: Dict[str, Any], target: str) -> str:
+        mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        if target == "seller":
+            return "Hashop delivery order"
+        if mode == "pickup":
+            return "Hashop pickup order"
+        return "Hashop order update"
+
+    @staticmethod
+    def _order_email_body(order: Dict[str, Any], target: str, shop_name: str) -> str:
+        mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        title = str(order.get("title") or "Order").strip()
+        total = str(order.get("total") or order.get("price") or "").strip()
+        buyer = str(order.get("buyerName") or order.get("buyerContact") or "Buyer").strip()
+        if target == "seller":
+            destination = str(order.get("deliveryAddress") or order.get("address") or "").strip()
+            return "\n".join([
+                f"New delivery order for {shop_name or 'your Hashop shop'}.",
+                f"Order: {title}",
+                f"Buyer: {buyer}",
+                f"Total: {total or '-'}",
+                f"Deliver to: {destination or 'Delivery address not set'}",
+                "",
+                "Use the Hashop map frame for the delivery cue when available.",
+                "Hashop",
+            ])
+        if mode == "pickup":
+            pickup = str(order.get("pickupAddress") or order.get("address") or "").strip()
+            return "\n".join([
+                f"Your pickup order at {shop_name or 'Hashop'} is saved.",
+                f"Order: {title}",
+                f"Total: {total or '-'}",
+                f"Pickup: {pickup or 'Shop pickup point'}",
+                "",
+                "Use the Hashop map frame for the pickup cue when available.",
+                "Hashop",
+            ])
+        return "\n".join([
+            f"Your Hashop order at {shop_name or 'the shop'} is saved.",
+            f"Order: {title}",
+            f"Total: {total or '-'}",
+            "",
+            "Hashop",
+        ])
+
+    async def _send_order_email(
+        self,
+        *,
+        to_address: str,
+        order: Dict[str, Any],
+        target: str,
+        shop_name: str,
+    ) -> bool:
+        if not self.smtp_config.configured:
+            return False
+        safe_to = self._email_address_from_contact(to_address)
+        if not safe_to:
+            return False
+        await asyncio.to_thread(self._send_order_email_sync, safe_to, order, target, shop_name)
+        return True
+
+    def _send_order_email_sync(
+        self,
+        to_address: str,
+        order: Dict[str, Any],
+        target: str,
+        shop_name: str,
+    ) -> None:
+        config = self.smtp_config
+        if not config.configured:
+            raise RuntimeError("smtp_not_configured")
+        message = EmailMessage()
+        message["Subject"] = self._order_email_subject(order, target)
+        message["From"] = formataddr((config.sender_name, config.sender))
+        message["To"] = to_address
+        message.set_content(self._order_email_body(order, target, shop_name))
+        security = str(config.security or "starttls").strip().lower()
+        context = ssl.create_default_context()
+        if security in {"ssl", "tls", "smtps"}:
+            with smtplib.SMTP_SSL(config.host, config.port, timeout=config.timeout, context=context) as smtp:
+                smtp.login(config.username, config.password)
+                smtp.send_message(message)
+            return
+        with smtplib.SMTP(config.host, config.port, timeout=config.timeout) as smtp:
+            if security not in {"none", "plain", "off"}:
+                smtp.starttls(context=context)
+            smtp.login(config.username, config.password)
+            smtp.send_message(message)
+
+    async def _password_reset_response(
+        self,
+        result: Dict[str, Any],
+        *,
+        purpose: str,
+    ) -> web.Response:
+        payload = dict(result)
+        reset_code = str(payload.pop("reset_code", "")).strip()
+        delivery_contact = str(payload.pop("delivery_contact", "")).strip()
+        delivery_method = str(payload.pop("delivery_method", "")).strip()
+        sent = False
+        if delivery_method == "email" and delivery_contact:
+            if self.smtp_config.configured:
+                try:
+                    shop = payload.get("shop") if isinstance(payload.get("shop"), dict) else {}
+                    await self._send_reset_email(
+                        to_address=delivery_contact,
+                        purpose=purpose,
+                        reset_code=reset_code,
+                        expires_in=int(payload.get("expires_in") or 600),
+                        shop_id=str(shop.get("shop_id") or ""),
+                        shop_name=str(shop.get("display_name") or ""),
+                    )
+                    sent = True
+                except Exception:
+                    return web.json_response(
+                        {"ok": False, "error": "email_delivery_failed"},
+                        status=502,
+                        headers={"Cache-Control": "no-store"},
+                    )
+            elif not self.expose_reset_codes:
+                return web.json_response(
+                    {"ok": False, "error": "smtp_not_configured"},
+                    status=503,
+                    headers={"Cache-Control": "no-store"},
+                )
+        elif not self.expose_reset_codes:
+            return web.json_response(
+                {"ok": False, "error": "delivery_not_configured"},
+                status=503,
+                headers={"Cache-Control": "no-store"},
+            )
+        if self.expose_reset_codes:
+            payload["reset_code"] = reset_code
+        payload["delivery"] = {
+            "method": delivery_method or "manual",
+            "sent": sent,
+            "hint": str(payload.get("contact_hint") or ""),
+        }
+        return web.json_response(payload, headers={"Cache-Control": "no-store"})
+
+    @staticmethod
+    def _buyer_account_payload(account: Dict[str, str]) -> Dict[str, object]:
+        return {
+            "accountId": str(account.get("account_id") or "").strip(),
+            "displayName": str(account.get("display_name") or "").strip(),
+            "contact": str(account.get("contact") or "").strip(),
+            "buyerKey": str(account.get("buyer_key") or "").strip(),
+            "accountToken": str(account.get("account_token") or "").strip(),
+            "roles": ["buyer"],
         }
 
     @staticmethod
@@ -1301,6 +3117,8 @@ class HashopHub:
         return {
             "stored_shop_count": len(shops),
             "map_shops": map_shops,
+            "google_maps_api_key": os.environ.get("HASHOP_GOOGLE_MAPS_API_KEY", "").strip()
+            or os.environ.get("GOOGLE_MAPS_API_KEY", "").strip(),
         }
 
     def debug_discovery_bootstrap(self) -> Dict[str, object]:
@@ -1530,6 +3348,16 @@ class HashopHub:
         shop_id = self.normalize_shop_id(str(payload.get("shop_id", "")).strip())
         if not shop_id:
             return web.json_response({"error": "shop_id_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="shop_register",
+            contact=shop_id,
+            contact_limit=5,
+            client_limit=30,
+            window_seconds=3600,
+        )
+        if auth_guard is not None:
+            return auth_guard
         register_payload = self.register_payload(shop_id)
         await self.store.ensure_shop(shop_id, register_payload["public_url"])
         return web.json_response(register_payload)
@@ -1579,6 +3407,21 @@ class HashopHub:
     async def handle_orders_page(self, request: web.Request) -> web.Response:
         return await self._serve_discovery_index()
 
+    async def handle_setup_page(self, request: web.Request) -> web.Response:
+        return await self._serve_discovery_index()
+
+    async def handle_concept_page(self, request: web.Request) -> web.Response:
+        return await self._serve_discovery_index()
+
+    async def handle_about_page(self, request: web.Request) -> web.Response:
+        return self._serve_site_html("about.html")
+
+    async def handle_exp_page(self, request: web.Request) -> web.Response:
+        return self._serve_site_html("exp.html")
+
+    async def handle_privacy_page(self, request: web.Request) -> web.Response:
+        return self._serve_site_html("privacy.html")
+
     async def handle_index_debug(self, request: web.Request) -> web.Response:
         return await self._serve_discovery_index(
             debug_page="home",
@@ -1593,6 +3436,82 @@ class HashopHub:
 
     async def handle_debug_dropdown_removed(self, request: web.Request) -> web.Response:
         raise web.HTTPNotFound()
+
+    async def handle_debug_codex_status(self, request: web.Request) -> web.Response:
+        return web.json_response(
+            {
+                "ok": True,
+                "enabled": bool(self.debug_codex_bridge_url and self.debug_codex_token),
+                "mode": "bridge" if self.debug_codex_bridge_url else "local-copy",
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
+    async def handle_debug_codex_process(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"ok": False, "error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"ok": False, "error": "invalid_payload"}, status=400)
+
+        if not self.debug_codex_bridge_url or not self.debug_codex_token:
+            return web.json_response(
+                {
+                    "ok": False,
+                    "error": "processor_not_configured",
+                    "message": "Codex processor is not connected on this server.",
+                },
+                status=503,
+                headers={"Cache-Control": "no-store"},
+            )
+
+        token = str(request.headers.get("X-Hashop-Debug-Token") or "").strip()
+        if not hmac.compare_digest(token, self.debug_codex_token):
+            return web.json_response(
+                {"ok": False, "error": "debug_token_required", "message": "Debug token required."},
+                status=403,
+                headers={"Cache-Control": "no-store"},
+            )
+
+        task = str(payload.get("task") or "").strip()[:8000]
+        if not task:
+            return web.json_response({"ok": False, "error": "task_required"}, status=400)
+
+        bridge_payload = {
+            "task": task,
+            "context": payload.get("context") if isinstance(payload.get("context"), dict) else {},
+            "prompt": str(payload.get("prompt") or "").strip()[:20000],
+            "source": "hashop-debug",
+        }
+        bridge_url = self.debug_codex_bridge_url + "/api/debug/codex/process"
+        try:
+            async with ClientSession(timeout=ClientTimeout(total=90)) as session:
+                async with session.post(
+                    bridge_url,
+                    json=bridge_payload,
+                    headers={"X-Hashop-Debug-Token": self.debug_codex_token},
+                ) as response:
+                    response_text = await response.text()
+                    try:
+                        response_payload = json.loads(response_text) if response_text else {}
+                    except json.JSONDecodeError:
+                        response_payload = {"ok": response.status < 400, "result": response_text}
+                    return web.json_response(
+                        response_payload if isinstance(response_payload, dict) else {"ok": response.status < 400},
+                        status=response.status,
+                        headers={"Cache-Control": "no-store"},
+                    )
+        except Exception as error:
+            return web.json_response(
+                {
+                    "ok": False,
+                    "error": "processor_unavailable",
+                    "message": str(error)[:240] or "Codex processor unavailable.",
+                },
+                status=502,
+                headers={"Cache-Control": "no-store"},
+            )
 
     async def handle_hashop_debug(self, request: web.Request) -> web.Response:
         return self._serve_site_html("hashop.html", debug_page="hashop")
@@ -1656,7 +3575,42 @@ class HashopHub:
         raw_password = str(payload.get("password") or "").strip()
         if raw_password and len(raw_password) < 6:
             return web.json_response({"error": "password_too_short"}, status=400)
+        owner_contact = str(payload.get("owner_contact") or payload.get("contact") or "").strip()[:255]
+        verification_code = str(
+            payload.get("verification_code")
+            or payload.get("code")
+            or payload.get("reset_code")
+            or ""
+        ).strip()
+        shop_location = str(
+            payload.get("location")
+            or payload.get("address")
+            or payload.get("shop_address")
+            or ""
+        ).strip()[:240]
         existing_console_record = await self.store.get_shop_console(shop_id)
+        verified_contact = ""
+        if raw_password:
+            if existing_console_record is not None:
+                return web.json_response({"error": "shop_exists"}, status=409)
+            if not owner_contact:
+                return web.json_response({"error": "contact_required"}, status=400)
+            if not verification_code:
+                return web.json_response({"error": "verification_code_required"}, status=400)
+            auth_guard = await self._auth_guard_response(
+                request,
+                scope="shop_create",
+                contact=f"{shop_id}:{owner_contact}",
+                contact_limit=3,
+                client_limit=20,
+                window_seconds=3600,
+            )
+            if auth_guard is not None:
+                return auth_guard
+            verification = await self.store.verify_buyer_contact_code(owner_contact, verification_code)
+            if verification is None:
+                return web.json_response({"error": "invalid_verification_code"}, status=401)
+            verified_contact = str(verification.get("contact") or owner_contact).strip()[:255]
         map_unlock = self._resolve_map_unlock(
             existing_console_record.get("console") if existing_console_record else None,
             raw_reach_plan,
@@ -1674,11 +3628,27 @@ class HashopHub:
             updated = await self.store.set_shop_password(shop_id, raw_password)
             if updated is not None:
                 record = updated
+            if verified_contact:
+                await self.store.link_shop_recovery_contact(
+                    shop_id=shop_id,
+                    contact=verified_contact,
+                    source="shop_signup",
+                    is_primary=True,
+                )
         console_record = await self.store.get_shop_console(shop_id)
         if console_record is not None:
             console_payload = console_record.get("console", {})
             if not isinstance(console_payload, dict):
                 console_payload = {}
+            profile_payload = console_payload.get("profile")
+            if not isinstance(profile_payload, dict):
+                profile_payload = {}
+                console_payload["profile"] = profile_payload
+            profile_payload["name"] = display_name
+            if shop_location:
+                profile_payload["location"] = shop_location
+            if verified_contact:
+                profile_payload["contact"] = verified_contact
             console_payload.setdefault("billing", {})["mapUnlock"] = map_unlock
             updated_console = await self.store.save_shop_console(shop_id, console_payload)
             if updated_console is not None:
@@ -1750,6 +3720,16 @@ class HashopHub:
             return web.json_response({"error": "shop_id_required"}, status=400)
         if not password:
             return web.json_response({"error": "password_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="shop_login",
+            contact=shop_id,
+            contact_limit=15,
+            client_limit=80,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
         record = await self.store.verify_shop_password(shop_id, password)
         if record is None:
             return web.json_response({"error": "invalid_login"}, status=401)
@@ -1758,6 +3738,378 @@ class HashopHub:
                 "shop": self._normalized_shop_record(record),
                 "launch_url": f"/hashop?shop={quote(shop_id, safe='')}",
             }
+        )
+
+    async def handle_link_shop_recovery_contact(self, request: web.Request) -> web.Response:
+        shop_id = self.normalize_shop_id(request.match_info["shop_id"])
+        if not shop_id:
+            raise web.HTTPNotFound()
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        password = str(payload.get("password") or "")
+        contact = str(payload.get("contact") or "").strip()[:255]
+        if not password:
+            return web.json_response({"error": "password_required"}, status=400)
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if await self.store.verify_shop_password(shop_id, password) is None:
+            return web.json_response({"error": "invalid_login"}, status=401)
+        linked = await self.store.link_shop_recovery_contact(
+            shop_id=shop_id,
+            contact=contact,
+            source="owner_password",
+            is_primary=True,
+        )
+        if linked is None:
+            return web.json_response({"error": "contact_invalid"}, status=400)
+        return web.json_response(
+            {
+                "ok": True,
+                "shop_id": shop_id,
+                "contact": {
+                    "type": linked.get("contact_type") or "text",
+                    "hint": self.store._mask_contact(contact),
+                    "primary": bool(linked.get("is_primary")),
+                    "verified": bool(int(linked.get("verified_at") or 0)),
+                },
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
+    async def handle_request_shop_password_reset(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        shop_id = self.normalize_shop_id(str(payload.get("shop_id") or "").strip())
+        contact = str(payload.get("contact") or "").strip()
+        if not shop_id:
+            return web.json_response({"error": "shop_id_required"}, status=400)
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="shop_password_reset",
+            contact=f"{shop_id}:{contact}",
+            contact_limit=5,
+            client_limit=20,
+            window_seconds=3600,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        result = await self.store.create_shop_password_reset(shop_id, contact)
+        if not result.get("ok"):
+            error = str(result.get("error") or "reset_request_failed")
+            status = 400
+            if error == "shop_not_found":
+                status = 404
+            elif error == "reset_rate_limited":
+                status = 429
+            return web.json_response(result, status=status, headers={"Cache-Control": "no-store"})
+        return await self._password_reset_response(result, purpose="shop")
+
+    async def handle_reset_shop_password(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        shop_id = self.normalize_shop_id(str(payload.get("shop_id") or "").strip())
+        reset_code = str(payload.get("reset_code") or "").strip()
+        password = str(payload.get("password") or "")
+        if not shop_id:
+            return web.json_response({"error": "shop_id_required"}, status=400)
+        if not reset_code:
+            return web.json_response({"error": "reset_code_required"}, status=400)
+        if not password:
+            return web.json_response({"error": "password_required"}, status=400)
+        if len(password) < 6:
+            return web.json_response({"error": "password_too_short"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="shop_password_reset_submit",
+            contact=shop_id,
+            contact_limit=8,
+            client_limit=40,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        if self.owner_reset_code and hmac.compare_digest(reset_code, self.owner_reset_code):
+            record = await self.store.set_shop_password(shop_id, password)
+        else:
+            record = await self.store.reset_shop_password_with_code(shop_id, reset_code, password)
+        if record is None:
+            return web.json_response({"error": "invalid_reset_code"}, status=401)
+        return web.json_response(
+            {
+                "shop": self._normalized_shop_record(record),
+                "launch_url": f"/hashop?shop={quote(shop_id, safe='')}",
+            }
+        )
+
+    async def handle_buyer_signup(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        display_name = str(payload.get("display_name") or payload.get("name") or "").strip()[:160]
+        contact = str(payload.get("contact") or "").strip()[:255]
+        password = str(payload.get("password") or "")
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if not password:
+            return web.json_response({"error": "password_required"}, status=400)
+        if len(password) < 6:
+            return web.json_response({"error": "password_too_short"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_signup",
+            contact=contact,
+            contact_limit=3,
+            client_limit=20,
+            window_seconds=3600,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        account = await self.store.create_buyer_account(display_name, contact, password, buyer_key)
+        if account is None:
+            return web.json_response({"error": "account_exists"}, status=409)
+        return web.json_response(
+            {
+                "created": True,
+                "account": self._buyer_account_payload(account),
+                "buyer_key": str(account.get("buyer_key") or "").strip(),
+            },
+            status=201,
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    async def handle_buyer_login(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        password = str(payload.get("password") or "")
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if not password:
+            return web.json_response({"error": "password_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_login",
+            contact=contact,
+            contact_limit=12,
+            client_limit=80,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        account = await self.store.verify_buyer_account(contact, password, buyer_key)
+        if account is None:
+            return web.json_response({"error": "invalid_login"}, status=401)
+        return web.json_response(
+            {
+                "account": self._buyer_account_payload(account),
+                "buyer_key": str(account.get("buyer_key") or "").strip(),
+            },
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    async def handle_buyer_request_contact_verification(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_contact_verification",
+            contact=contact,
+            contact_limit=5,
+            client_limit=25,
+            window_seconds=3600,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        result = await self.store.create_buyer_contact_verification(contact)
+        if not result.get("ok"):
+            error = str(result.get("error") or "verification_request_failed")
+            status = 429 if error == "verification_rate_limited" else 400
+            return web.json_response(result, status=status, headers={"Cache-Control": "no-store"})
+        return await self._password_reset_response(result, purpose="verify")
+
+    async def handle_buyer_verify_contact(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        verification_code = str(
+            payload.get("verification_code")
+            or payload.get("code")
+            or payload.get("reset_code")
+            or ""
+        ).strip()
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if not verification_code:
+            return web.json_response({"error": "verification_code_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_contact_verify",
+            contact=contact,
+            contact_limit=8,
+            client_limit=40,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        verification = await self.store.verify_buyer_contact_code(contact, verification_code)
+        if verification is None:
+            return web.json_response({"error": "invalid_verification_code"}, status=401)
+        return web.json_response(
+            {
+                "verified": True,
+                "contact": str(verification.get("contact") or contact).strip(),
+                "contact_key": str(verification.get("contact_key") or "").strip(),
+                "verified_at": int(verification.get("verified_at") or 0),
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
+    async def handle_account_help_request(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        message = str(payload.get("message") or "").strip()[:1200]
+        if not message:
+            return web.json_response({"error": "message_required"}, status=400)
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        buyer_account_id = str(payload.get("buyer_account_id") or payload.get("account_id") or "").strip()[:64]
+        buyer_account_token = str(payload.get("buyer_account_token") or payload.get("account_token") or "").strip()[:255]
+        buyer_account: Optional[Dict[str, str]] = None
+        if buyer_account_id or buyer_account_token:
+            buyer_account = await self.store.verify_buyer_token(buyer_account_id, buyer_account_token)
+            if buyer_account is None:
+                return web.json_response({"error": "invalid_buyer_account"}, status=401)
+            buyer_key = buyer_key or str(buyer_account.get("buyer_key") or "").strip()[:160]
+        name = str(payload.get("name") or "").strip()[:160]
+        contact = str(payload.get("contact") or "").strip()[:255]
+        if buyer_account is not None:
+            name = name or str(buyer_account.get("display_name") or "").strip()[:160]
+            contact = contact or str(buyer_account.get("contact") or "").strip()[:255]
+        try:
+            record = await self.store.create_account_help_request(
+                message=message,
+                buyer_key=buyer_key,
+                buyer_account_id=buyer_account_id,
+                name=name,
+                contact=contact,
+                screen=str(payload.get("screen") or "").strip()[:80],
+                route=str(payload.get("route") or "").strip()[:160],
+                build=str(payload.get("build") or "").strip()[:80],
+                user_agent=str(request.headers.get("User-Agent") or "").strip()[:400],
+                help_id=str(payload.get("help_id") or payload.get("id") or "").strip()[:80],
+            )
+        except ValueError:
+            return web.json_response({"error": "message_required"}, status=400)
+        return web.json_response(
+            {"ok": True, "request": record},
+            status=201,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    async def handle_buyer_request_password_reset(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_password_reset",
+            contact=contact,
+            contact_limit=5,
+            client_limit=25,
+            window_seconds=3600,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        result = await self.store.create_buyer_password_reset(contact)
+        if not result.get("ok"):
+            error = str(result.get("error") or "reset_request_failed")
+            status = 404 if error == "account_not_found" else 400
+            if error == "reset_rate_limited":
+                status = 429
+            return web.json_response(result, status=status, headers={"Cache-Control": "no-store"})
+        return await self._password_reset_response(result, purpose="buyer")
+
+    async def handle_buyer_reset_password(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        reset_code = str(payload.get("reset_code") or "").strip()
+        password = str(payload.get("password") or "")
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if not reset_code:
+            return web.json_response({"error": "reset_code_required"}, status=400)
+        if not password:
+            return web.json_response({"error": "password_required"}, status=400)
+        if len(password) < 6:
+            return web.json_response({"error": "password_too_short"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_password_reset_submit",
+            contact=contact,
+            contact_limit=8,
+            client_limit=40,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        account = await self.store.reset_buyer_password_with_code(contact, reset_code, password, buyer_key)
+        if account is None:
+            return web.json_response({"error": "invalid_reset_code"}, status=401)
+        return web.json_response(
+            {
+                "account": self._buyer_account_payload(account),
+                "buyer_key": str(account.get("buyer_key") or "").strip(),
+            },
+            headers={"Cache-Control": "no-store"},
         )
 
     async def handle_get_shop(self, request: web.Request) -> web.Response:
@@ -1798,12 +4150,25 @@ class HashopHub:
 
     async def handle_list_buyer_orders(self, request: web.Request) -> web.Response:
         buyer_key = str(request.query.get("buyer_key") or "").strip()[:160]
-        if not buyer_key:
+        buyer_account_id = str(request.query.get("buyer_account_id") or request.query.get("account_id") or "").strip()[:64]
+        buyer_account_token = str(request.query.get("buyer_account_token") or request.query.get("account_token") or "").strip()[:255]
+        buyer_account: Optional[Dict[str, str]] = None
+        if buyer_account_id or buyer_account_token:
+            buyer_account = await self.store.verify_buyer_token(buyer_account_id, buyer_account_token)
+            if buyer_account is None:
+                return web.json_response({"error": "invalid_buyer_account"}, status=401)
+            buyer_account_id = str(buyer_account.get("account_id") or "").strip()[:64]
+            buyer_key = buyer_key or str(buyer_account.get("buyer_key") or "").strip()[:160]
+        if not buyer_key and not buyer_account_id:
             return web.json_response({"error": "buyer_key_required"}, status=400)
         limit = self.store._safe_int(request.query.get("limit"), minimum=1, maximum=100)
-        orders = await self.store.list_orders_for_buyer(buyer_key, limit=limit)
+        orders = await self.store.list_orders_for_buyer(
+            buyer_key=buyer_key,
+            buyer_account_id=buyer_account_id,
+            limit=limit,
+        )
         return web.json_response(
-            {"buyer_key": buyer_key, "orders": orders},
+            {"buyer_key": buyer_key, "buyer_account_id": buyer_account_id, "orders": orders},
             headers={"Cache-Control": "no-cache"},
         )
 
@@ -1835,15 +4200,40 @@ class HashopHub:
                 console_payload = {}
 
         buyer_key = str(payload.get("buyer_key") or "").strip()[:160] or ("buyer-" + uuid.uuid4().hex[:12])
+        buyer_account_id = str(payload.get("buyer_account_id") or payload.get("account_id") or "").strip()[:64]
+        buyer_account_token = str(payload.get("buyer_account_token") or payload.get("account_token") or "").strip()[:255]
+        buyer_account: Optional[Dict[str, str]] = None
+        if buyer_account_id or buyer_account_token:
+            buyer_account = await self.store.verify_buyer_token(buyer_account_id, buyer_account_token)
+            if buyer_account is None:
+                return web.json_response({"error": "invalid_buyer_account"}, status=401)
+            buyer_key = str(buyer_account.get("buyer_key") or buyer_key).strip()[:160] or buyer_key
         buyer_name = str(payload.get("buyer_name") or "").strip()[:160]
         buyer_contact = str(payload.get("buyer_contact") or "").strip()[:255]
+        if buyer_account is not None:
+            buyer_name = buyer_name or str(buyer_account.get("display_name") or "").strip()[:160]
+            buyer_contact = buyer_contact or str(buyer_account.get("contact") or "").strip()[:255]
         payment_label = str(payload.get("payment_label") or "").strip()[:80]
         payment_value = str(payload.get("payment_value") or "").strip()[:255]
         payment_mode = str(payload.get("payment_mode") or "").strip().lower()
         if payment_mode not in {"on_receive", "before_delivery"}:
             payment_mode = "on_receive"
+        fulfillment_mode = str(payload.get("fulfillment_mode") or payload.get("fulfillmentMode") or "").strip().lower()
+        if fulfillment_mode not in {"pickup", "delivery"}:
+            fulfillment_mode = "delivery"
+        fulfillment_label = "Pickup" if fulfillment_mode == "pickup" else "Delivery"
         notes = str(payload.get("notes") or "").strip()[:4000]
+        delivery_address = str(payload.get("delivery_address") or payload.get("deliveryAddress") or "").strip()[:4000]
+        pickup_address = str(payload.get("pickup_address") or payload.get("pickupAddress") or "").strip()[:4000]
         address = str(payload.get("address") or "").strip()[:4000]
+        if fulfillment_mode == "pickup":
+            address = pickup_address or address
+        else:
+            address = delivery_address or address
+        delivery_lat = self.store._safe_float(payload.get("delivery_lat") or payload.get("deliveryLat"), minimum=-90, maximum=90)
+        delivery_lng = self.store._safe_float(payload.get("delivery_lng") or payload.get("deliveryLng"), minimum=-180, maximum=180)
+        pickup_lat = self.store._safe_float(payload.get("pickup_lat") or payload.get("pickupLat"), minimum=-90, maximum=90)
+        pickup_lng = self.store._safe_float(payload.get("pickup_lng") or payload.get("pickupLng"), minimum=-180, maximum=180)
         item_id = str(payload.get("item_id") or "").strip()[:64]
         title = str(payload.get("title") or "").strip()[:160]
         total = str(payload.get("total") or "").strip()[:80]
@@ -1851,20 +4241,7 @@ class HashopHub:
         quantity = self.store._safe_int(payload.get("quantity"), minimum=0, maximum=999999)
         client_nonce = str(payload.get("client_nonce") or "").strip()[:160]
 
-        items_raw = payload.get("items")
-        items: List[Dict[str, Any]] = []
-        if isinstance(items_raw, list):
-            for item in items_raw[:80]:
-                if not isinstance(item, dict):
-                    continue
-                items.append(
-                    {
-                        "id": str(item.get("id") or "").strip()[:64],
-                        "title": str(item.get("title") or "").strip()[:160],
-                        "quantity": self.store._safe_int(item.get("quantity"), minimum=0, maximum=999999),
-                        "price": str(item.get("price") or "").strip()[:80],
-                    }
-                )
+        items = self.store._normalize_order_items(payload.get("items"))
 
         if not title and items:
             first_title = str(items[0].get("title") or "").strip()
@@ -1890,24 +4267,34 @@ class HashopHub:
             "price": price,
             "total": total,
             "status": "payment_pending" if payment_mode == "before_delivery" else "created",
+            "statusUpdatedAt": int(time.time() * 1000),
             "paymentPaid": False,
             "paymentReceived": False,
             "orderSent": False,
             "orderReceived": False,
             "clientNonce": client_nonce,
             "buyerKey": buyer_key,
+            "buyerAccountId": str(buyer_account.get("account_id") or "").strip()[:64] if buyer_account else "",
             "buyerName": buyer_name,
             "buyerContact": buyer_contact,
             "paymentLabel": payment_label,
             "paymentValue": payment_value,
             "paymentMode": payment_mode,
+            "fulfillmentMode": fulfillment_mode,
+            "fulfillmentLabel": fulfillment_label,
+            "deliveryAddress": delivery_address,
+            "pickupAddress": pickup_address,
+            "deliveryLat": delivery_lat,
+            "deliveryLng": delivery_lng,
+            "pickupLat": pickup_lat,
+            "pickupLng": pickup_lng,
             "address": address,
             "notes": notes,
             "items": items,
         }
         if debug_order_only:
             return web.json_response(
-                {"ok": True, "order": created_order, "buyer_key": buyer_key, "debug": True},
+                {"ok": True, "order": created_order, "buyer_key": buyer_key, "debug": True, "mailDelivery": {"sent": False, "target": ""}},
                 headers={"Cache-Control": "no-cache"},
             )
 
@@ -1919,8 +4306,100 @@ class HashopHub:
         saved = await self.store.save_shop_console(shop_id, console_payload)
         if saved is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        profile = console_payload.get("profile") if isinstance(console_payload.get("profile"), dict) else {}
+        shop_name = str(profile.get("name") or shop_id).strip()[:160]
+        mail_delivery: Dict[str, Any] = {"sent": False, "target": "", "configured": bool(self.smtp_config.configured)}
+        if fulfillment_mode == "pickup":
+            to_address = self._email_address_from_contact(buyer_contact)
+            mail_delivery["target"] = "buyer" if to_address else ""
+        else:
+            to_address = self._email_address_from_contact(str(profile.get("contact") or ""))
+            mail_delivery["target"] = "seller" if to_address else ""
+        if to_address and self.smtp_config.configured:
+            try:
+                mail_delivery["sent"] = await self._send_order_email(
+                    to_address=to_address,
+                    order=created_order,
+                    target=str(mail_delivery["target"] or ""),
+                    shop_name=shop_name,
+                )
+            except Exception:
+                mail_delivery["error"] = "email_delivery_failed"
         return web.json_response(
-            {"ok": True, "order": created_order, "buyer_key": buyer_key},
+            {"ok": True, "order": created_order, "buyer_key": buyer_key, "mailDelivery": mail_delivery},
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    async def handle_cancel_shop_order(self, request: web.Request) -> web.Response:
+        shop_id = self.normalize_shop_id(request.match_info["shop_id"])
+        order_id = str(request.match_info.get("order_id") or "").strip()[:64]
+        if not shop_id or not order_id:
+            raise web.HTTPNotFound()
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            payload = {}
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        buyer_account_id = str(payload.get("buyer_account_id") or payload.get("account_id") or "").strip()[:64]
+        buyer_account_token = str(payload.get("buyer_account_token") or payload.get("account_token") or "").strip()[:255]
+        buyer_account: Optional[Dict[str, str]] = None
+        if buyer_account_id or buyer_account_token:
+            buyer_account = await self.store.verify_buyer_token(buyer_account_id, buyer_account_token)
+            if buyer_account is None:
+                return web.json_response({"error": "invalid_buyer_account"}, status=401)
+            buyer_key = buyer_key or str(buyer_account.get("buyer_key") or "").strip()[:160]
+        if not buyer_key and buyer_account is None:
+            return web.json_response({"error": "buyer_key_required"}, status=400)
+
+        record = await self.store.get_shop_console(shop_id)
+        if record is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        console_payload = record.get("console", {})
+        if not isinstance(console_payload, dict):
+            console_payload = {}
+        orders = console_payload.get("orders")
+        if not isinstance(orders, list):
+            orders = []
+
+        order_index = -1
+        for index, order in enumerate(orders):
+            if isinstance(order, dict) and str(order.get("id") or "").strip() == order_id:
+                order_index = index
+                break
+        if order_index < 0:
+            return web.json_response({"error": "order_not_found"}, status=404)
+
+        current_order = orders[order_index] if isinstance(orders[order_index], dict) else {}
+        order_buyer_key = str(current_order.get("buyerKey") or "").strip()
+        order_account_id = str(current_order.get("buyerAccountId") or current_order.get("accountId") or "").strip()
+        account_matches = bool(
+            buyer_account
+            and order_account_id
+            and order_account_id == str(buyer_account.get("account_id") or "").strip()
+        )
+        if order_buyer_key != buyer_key and not account_matches:
+            return web.json_response({"error": "order_not_found"}, status=404)
+        current_status = self.store._normalize_order_status(
+            current_order.get("status"),
+            current_order.get("paymentMode"),
+            current_order,
+        )
+        if current_status in {"ready", "paid", "completed", "cancelled"}:
+            return web.json_response({"error": "order_cannot_cancel", "status": current_status}, status=409)
+
+        cancelled_order = dict(current_order)
+        cancelled_order["status"] = "cancelled"
+        cancelled_order["cancelledAt"] = int(time.time() * 1000)
+        cancelled_order["statusUpdatedAt"] = int(time.time() * 1000)
+        orders[order_index] = cancelled_order
+        console_payload["orders"] = orders
+        saved = await self.store.save_shop_console(shop_id, console_payload)
+        if saved is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        return web.json_response(
+            {"ok": True, "order": {**cancelled_order, "shopId": shop_id}},
             headers={"Cache-Control": "no-cache"},
         )
 
@@ -2310,13 +4789,26 @@ class HashopHub:
             headers={"Cache-Control": "no-cache"},
         )
 
+    def _serve_site_asset(self, file_name: str, content_type: str = "") -> web.FileResponse:
+        asset_file = self.site_dir / Path(file_name).name
+        if not asset_file.exists() or not asset_file.is_file():
+            raise web.HTTPNotFound()
+        headers = {"Cache-Control": "public, max-age=86400"}
+        response = web.FileResponse(asset_file, headers=headers)
+        if content_type:
+            response.content_type = content_type
+        return response
+
+    async def handle_favicon(self, request: web.Request) -> web.FileResponse:
+        return self._serve_site_asset("favicon.ico", "image/x-icon")
+
     @staticmethod
     def _inject_debug_overlay(html: str, debug_page: str) -> str:
         head_snippet = (
-            '\n  <link rel="stylesheet" href="/site/debug.css?v=debug-20260402y">'
+            '\n  <link rel="stylesheet" href="/site/debug.css?v=debug-20260506a">'
             f'\n  <script>window.__HASHOP_DEBUG_PAGE__ = {json.dumps(debug_page)};</script>'
         )
-        body_snippet = '\n  <script src="/site/debug.js?v=debug-20260402y" defer></script>'
+        body_snippet = '\n  <script src="/site/debug.js?v=debug-20260506a" defer></script>'
         if "</head>" in html:
             html = html.replace("</head>", head_snippet + "\n</head>", 1)
         if "</body>" in html:
@@ -2349,6 +4841,9 @@ def build_app(
     shop_db: Path,
     uploads_dir: Path,
     public_shop_create_enabled: bool = True,
+    owner_reset_code: str = "",
+    smtp_config: Optional[SmtpConfig] = None,
+    expose_reset_codes: Optional[bool] = None,
 ) -> web.Application:
     store = ShopStore(db_path=shop_db)
     hub = HashopHub(
@@ -2358,6 +4853,9 @@ def build_app(
         store=store,
         uploads_dir=uploads_dir,
         public_shop_create_enabled=public_shop_create_enabled,
+        owner_reset_code=owner_reset_code,
+        smtp_config=smtp_config,
+        expose_reset_codes=expose_reset_codes,
     )
     app = web.Application()
     app.on_startup.append(lambda _app: store.initialize())
@@ -2365,14 +4863,32 @@ def build_app(
     app.router.add_get("/home-debug", hub.handle_index_debug)
     app.router.add_get("/login", hub.handle_login_page)
     app.router.add_get("/account", hub.handle_account_page)
+    app.router.add_get("/account/{tail:.*}", hub.handle_account_page)
     app.router.add_get("/orders", hub.handle_orders_page)
+    app.router.add_get("/cart", hub.handle_orders_page)
+    app.router.add_get("/home", hub.handle_index)
+    app.router.add_get("/shops", hub.handle_index)
+    app.router.add_get("/items", hub.handle_index)
+    app.router.add_get("/search", hub.handle_index)
+    app.router.add_get("/contact", hub.handle_index)
+    app.router.add_get("/call", hub.handle_index)
+    app.router.add_get("/setup", hub.handle_setup_page)
+    app.router.add_get("/concept", hub.handle_concept_page)
+    app.router.add_get("/concept/{tail:.*}", hub.handle_concept_page)
+    app.router.add_get("/exp", hub.handle_exp_page)
+    app.router.add_get("/about", hub.handle_about_page)
+    app.router.add_get("/privacy", hub.handle_privacy_page)
+    app.router.add_get("/policies", hub.handle_privacy_page)
     app.router.add_get("/login-debug", hub.handle_login_page_debug)
     app.router.add_get("/cloud", hub.handle_cloud)
     app.router.add_get("/cloud-debug", hub.handle_cloud_debug)
     app.router.add_get("/debug-dropdown", hub.handle_debug_dropdown_removed)
+    app.router.add_get("/api/debug/codex/status", hub.handle_debug_codex_status)
+    app.router.add_post("/api/debug/codex/process", hub.handle_debug_codex_process)
     app.router.add_get("/hashop", hub.handle_hashop)
     app.router.add_get("/hashop-debug", hub.handle_hashop_debug)
     app.router.add_get("/healthz", hub.handle_health)
+    app.router.add_get("/favicon.ico", hub.handle_favicon)
     app.router.add_get("/api/meta", hub.handle_meta)
     app.router.add_get("/api/orders", hub.handle_list_buyer_orders)
     app.router.add_get("/api/items/library", hub.handle_list_item_library)
@@ -2380,11 +4896,22 @@ def build_app(
     app.router.add_get("/api/shops", hub.handle_list_shops)
     app.router.add_post("/api/shops", hub.handle_create_shop)
     app.router.add_post("/api/auth/login", hub.handle_login)
+    app.router.add_post("/api/shops/{shop_id}/recovery-contacts", hub.handle_link_shop_recovery_contact)
+    app.router.add_post("/api/auth/request-password-reset", hub.handle_request_shop_password_reset)
+    app.router.add_post("/api/auth/reset-password", hub.handle_reset_shop_password)
+    app.router.add_post("/api/buyer/signup", hub.handle_buyer_signup)
+    app.router.add_post("/api/buyer/login", hub.handle_buyer_login)
+    app.router.add_post("/api/buyer/request-contact-verification", hub.handle_buyer_request_contact_verification)
+    app.router.add_post("/api/buyer/verify-contact", hub.handle_buyer_verify_contact)
+    app.router.add_post("/api/account/help", hub.handle_account_help_request)
+    app.router.add_post("/api/buyer/request-password-reset", hub.handle_buyer_request_password_reset)
+    app.router.add_post("/api/buyer/reset-password", hub.handle_buyer_reset_password)
     app.router.add_post("/api/shops/register", hub.handle_register)
     app.router.add_get("/api/shops/{shop_id}", hub.handle_get_shop)
     app.router.add_get("/api/shops/{shop_id}/console", hub.handle_get_shop_console)
     app.router.add_put("/api/shops/{shop_id}/console", hub.handle_put_shop_console)
     app.router.add_post("/api/shops/{shop_id}/orders", hub.handle_create_shop_order)
+    app.router.add_post("/api/shops/{shop_id}/orders/{order_id}/cancel", hub.handle_cancel_shop_order)
     app.router.add_post("/api/shops/{shop_id}/billing/map", hub.handle_update_map_unlock)
     app.router.add_post("/api/shops/{shop_id}/items/{item_id}/image", hub.handle_upload_item_image)
     app.router.add_post("/api/shops/{shop_id}/logo", hub.handle_upload_shop_logo)
@@ -2415,6 +4942,7 @@ def main() -> None:
     parser.set_defaults(public_shop_create_enabled=True)
     parser.add_argument("--allow-public-shop-create", dest="public_shop_create_enabled", action="store_true")
     parser.add_argument("--restrict-public-shop-create", dest="public_shop_create_enabled", action="store_false")
+    parser.add_argument("--owner-reset-code", default=os.environ.get("HASHOP_OWNER_RESET_CODE", ""))
     args = parser.parse_args()
 
     app = build_app(
@@ -2424,6 +4952,7 @@ def main() -> None:
         shop_db=Path(args.shop_db).resolve(),
         uploads_dir=Path(args.uploads_dir).resolve(),
         public_shop_create_enabled=args.public_shop_create_enabled,
+        owner_reset_code=args.owner_reset_code,
     )
     web.run_app(app, host=args.host, port=args.port, access_log=None)
 

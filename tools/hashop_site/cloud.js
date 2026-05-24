@@ -1,11 +1,11 @@
 (function () {
-  var shopNameInput = document.getElementById("cloudShopNameInput");
-  var passwordInput = document.getElementById("cloudPasswordInput");
-  var submitButton = document.getElementById("cloudSubmitBtn");
-  var statusNode = document.getElementById("cloudStatus");
-  var mapNode = document.getElementById("cloudMap");
+  const shopNameInput = document.getElementById("cloudShopNameInput");
+  const passwordInput = document.getElementById("cloudPasswordInput");
+  const submitButton = document.getElementById("cloudSubmitBtn");
+  const statusNode = document.getElementById("cloudStatus");
+  const mapNode = document.getElementById("cloudMap");
 
-  var state = {
+  const state = {
     isSubmitting: false,
     map: null,
     userMarker: null,
@@ -53,9 +53,9 @@
 
   function loadLastLocation() {
     try {
-      var raw = window.localStorage.getItem("hashop_last_location");
+      const raw = window.localStorage.getItem("hashop_last_location");
       if (!raw) return null;
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (!parsed || !isFinite(parsed.lat) || !isFinite(parsed.lng)) return null;
       return {
         lat: Number(parsed.lat),
@@ -76,14 +76,14 @@
   }
 
   async function shopExists(shopId) {
-    var response = await fetch("/api/shops/" + encodeURIComponent(shopId), {
+    const response = await fetch("/api/shops/" + encodeURIComponent(shopId), {
       cache: "no-store"
     });
     return response.ok;
   }
 
   async function attemptLogin(shopId, password) {
-    var response = await fetch("/api/auth/login", {
+    const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -101,7 +101,7 @@
   }
 
   async function attemptCreate(shopId, shopName, password) {
-    var response = await fetch("/api/shops", {
+    const response = await fetch("/api/shops", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -127,9 +127,9 @@
   async function submit() {
     if (state.isSubmitting) return;
 
-    var rawShopName = String(shopNameInput ? shopNameInput.value : "").trim();
-    var password = String(passwordInput ? passwordInput.value : "");
-    var shopId = slugify(rawShopName);
+    const rawShopName = String(shopNameInput ? shopNameInput.value : "").trim();
+    const password = String(passwordInput ? passwordInput.value : "");
+    const shopId = slugify(rawShopName);
 
     if (!rawShopName) {
       setStatus("Enter your username.", "error");
@@ -149,7 +149,7 @@
     setStatus("Opening your profile...", "pending");
 
     try {
-      var loginResult = await attemptLogin(shopId, password);
+      const loginResult = await attemptLogin(shopId, password);
       if (loginResult.ok) {
         saveShopIdentity(rawShopName, shopId);
         setStatus("Opening your profile...", "success");
@@ -159,12 +159,12 @@
         return;
       }
 
-      if (loginResult.status === 401 && await shopExists(shopId)) {
+      if (loginResult.status === 401 && (await shopExists(shopId))) {
         throw new Error("wrong_password");
       }
 
       setStatus("Creating your profile...", "pending");
-      var createResult = await attemptCreate(shopId, rawShopName, password);
+      const createResult = await attemptCreate(shopId, rawShopName, password);
       if (!createResult.ok) {
         throw new Error((createResult.payload && createResult.payload.error) || "create_failed");
       }
@@ -200,7 +200,7 @@
       state.userMarker.setLatLng([lat, lng]);
     }
 
-    var safeAccuracy = Math.max(Number(accuracy) || 0, 40);
+    const safeAccuracy = Math.max(Number(accuracy) || 0, 40);
     if (!state.userAccuracy) {
       state.userAccuracy = window.L.circle([lat, lng], {
         radius: safeAccuracy,
@@ -239,7 +239,7 @@
       attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }).addTo(state.map);
 
-    var savedLocation = loadLastLocation();
+    const savedLocation = loadLastLocation();
     if (savedLocation) {
       setMapView(savedLocation.lat, savedLocation.lng, savedLocation.accuracy);
     } else {

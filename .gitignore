@@ -3,6 +3,11 @@
 *.iml
 /jants/
 __pycache__/
+**/__pycache__/
 *.pyc
 *.sqlite3
 tools/hashop_uploads/
+.env
+.tmp/
+tmp_*.png
+tmp_hashop_*/
