@@ -104,6 +104,26 @@ class AuthGuardrailTests(unittest.TestCase):
 
         self.assertIsNotNone(first)
         self.assertIsNone(duplicate)
+        self.assertTrue(asyncio.run(self.store.buyer_account_exists("buyer@example.com")))
+
+    def test_buyer_contact_validation_rejects_fake_numbers(self) -> None:
+        self.assertEqual(self.store._normalize_account_contact_key("123456"), "")
+        self.assertEqual(self.store._normalize_account_contact_key("1111111111"), "")
+        self.assertEqual(self.store._normalize_account_contact_key("1234567890"), "")
+        self.assertEqual(self.store._normalize_account_contact_key("buyer@example"), "")
+        self.assertEqual(self.store._normalize_account_contact_key("Buyer@Example.com"), "email:buyer@example.com")
+        self.assertEqual(self.store._normalize_account_contact_key("+91 99887 76655"), "phone:9988776655")
+
+        account = asyncio.run(
+            self.store.create_buyer_account(
+                display_name="Fake",
+                contact="123456",
+                password="secret1",
+                buyer_key="buyer-fake",
+            )
+        )
+
+        self.assertIsNone(account)
 
     def test_console_normalization_keeps_payment_qr_and_fulfillment(self) -> None:
         console = self.store._normalize_console(

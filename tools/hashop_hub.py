@@ -1122,6 +1122,24 @@ class ShopStore:
             ).fetchone()
         return self._buyer_account_row_to_dict(row) if row is not None else None
 
+    async def buyer_account_exists(self, contact: str) -> bool:
+        return await asyncio.to_thread(self._buyer_account_exists_threadsafe, contact)
+
+    def _buyer_account_exists_threadsafe(self, contact: str) -> bool:
+        with self._lock:
+            return self._buyer_account_exists_sync(contact)
+
+    def _buyer_account_exists_sync(self, contact: str) -> bool:
+        contact_key = self._normalize_account_contact_key(contact)
+        if not contact_key:
+            return False
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT account_id FROM buyer_accounts WHERE contact_key = ? LIMIT 1",
+                (contact_key,),
+            ).fetchone()
+        return row is not None
+
     async def verify_buyer_account(
         self,
         contact: str,
@@ -2385,11 +2403,22 @@ class ShopStore:
         if not text:
             return ""
         if "@" in text:
-            return "email:" + re.sub(r"\s+", "", text)[:255]
+            email_value = re.sub(r"\s+", "", text)[:255]
+            if re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email_value):
+                return "email:" + email_value
+            return ""
         digits = re.sub(r"\D+", "", text)
-        if len(digits) >= 6:
-            return "phone:" + digits[:32]
-        return "text:" + text
+        if len(digits) == 11 and digits.startswith("0"):
+            digits = digits[-10:]
+        elif len(digits) == 12 and digits.startswith("91"):
+            digits = digits[-10:]
+        if 10 <= len(digits) <= 15:
+            if len(set(digits)) <= 1:
+                return ""
+            if digits in {"0123456789", "1234567890", "9876543210"}:
+                return ""
+            return "phone:" + digits
+        return ""
 
     @staticmethod
     def _normalize_rate_client_key(value: str) -> str:
@@ -3989,12 +4018,24 @@ class HashopHub:
         contact = str(payload.get("contact") or "").strip()[:255]
         password = str(payload.get("password") or "")
         buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        verification_code = str(
+            payload.get("verification_code")
+            or payload.get("code")
+            or payload.get("reset_code")
+            or ""
+        ).strip()
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
         if not password:
             return web.json_response({"error": "password_required"}, status=400)
         if len(password) < 6:
             return web.json_response({"error": "password_too_short"}, status=400)
+        if await self.store.buyer_account_exists(contact):
+            return web.json_response({"error": "account_exists"}, status=409)
+        if not verification_code:
+            return web.json_response({"error": "verification_code_required"}, status=400)
         auth_guard = await self._auth_guard_response(
             request,
             scope="buyer_signup",
@@ -4005,7 +4046,11 @@ class HashopHub:
         )
         if auth_guard is not None:
             return auth_guard
-        account = await self.store.create_buyer_account(display_name, contact, password, buyer_key)
+        verification = await self.store.verify_buyer_contact_code(contact, verification_code)
+        if verification is None:
+            return web.json_response({"error": "invalid_verification_code"}, status=401)
+        verified_contact = str(verification.get("contact") or contact).strip()[:255]
+        account = await self.store.create_buyer_account(display_name, verified_contact or contact, password, buyer_key)
         if account is None:
             return web.json_response({"error": "account_exists"}, status=409)
         return web.json_response(
@@ -4030,6 +4075,8 @@ class HashopHub:
         buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
         if not password:
             return web.json_response({"error": "password_required"}, status=400)
         auth_guard = await self._auth_guard_response(
@@ -4061,8 +4108,13 @@ class HashopHub:
         if not isinstance(payload, dict):
             return web.json_response({"error": "invalid_payload"}, status=400)
         contact = str(payload.get("contact") or "").strip()[:255]
+        purpose = str(payload.get("purpose") or "").strip().lower()[:80]
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
+        if purpose == "buyer_signup" and await self.store.buyer_account_exists(contact):
+            return web.json_response({"error": "account_exists"}, status=409, headers={"Cache-Control": "no-store"})
         auth_guard = await self._auth_guard_response(
             request,
             scope="buyer_contact_verification",
@@ -4096,6 +4148,8 @@ class HashopHub:
         ).strip()
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
         if not verification_code:
             return web.json_response({"error": "verification_code_required"}, status=400)
         auth_guard = await self._auth_guard_response(
@@ -4176,6 +4230,8 @@ class HashopHub:
         contact = str(payload.get("contact") or "").strip()[:255]
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
         auth_guard = await self._auth_guard_response(
             request,
             scope="buyer_password_reset",
@@ -4208,6 +4264,8 @@ class HashopHub:
         buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
         if not contact:
             return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
         if not reset_code:
             return web.json_response({"error": "reset_code_required"}, status=400)
         if not password:

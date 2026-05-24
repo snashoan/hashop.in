@@ -1686,13 +1686,26 @@
     const text = String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
     if (!text) return "";
     if (text.indexOf("@") !== -1) {
-      return "email:" + text.replace(/\s+/g, "").slice(0, 255);
+      const emailValue = text.replace(/\s+/g, "").slice(0, 255);
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailValue) ? ("email:" + emailValue) : "";
     }
-    const digits = text.replace(/\D+/g, "");
-    if (digits.length >= 6) {
-      return "phone:" + digits.slice(0, 32);
+    let digits = text.replace(/\D+/g, "");
+    if (digits.length === 11 && digits.indexOf("0") === 0) {
+      digits = digits.slice(-10);
+    } else if (digits.length === 12 && digits.indexOf("91") === 0) {
+      digits = digits.slice(-10);
     }
-    return "text:" + text.slice(0, 255);
+    if (digits.length >= 10 && digits.length <= 15) {
+      if (/^(\d)\1+$/.test(digits)) return "";
+      if (digits === "0123456789" || digits === "1234567890" || digits === "9876543210") return "";
+      return "phone:" + digits;
+    }
+    return "";
+  }
+
+  function accountContactErrorMessage(value) {
+    if (!String(value || "").trim()) return "Enter phone or email.";
+    return normalizeAccountContactKey(value) ? "" : "Use a real email or phone number.";
   }
 
   function loadSetupContactVerification() {
@@ -2326,14 +2339,15 @@
     });
   }
 
-  function requestBuyerContactVerification(contact) {
+  function requestBuyerContactVerification(contact, purpose) {
     return window.fetch("/api/buyer/request-contact-verification", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        contact: contact
+        contact: contact,
+        purpose: String(purpose || "").trim()
       })
     }).then(function (response) {
       return parseJson(response).then(function (body) {
@@ -5453,7 +5467,8 @@
     const resetMode = !!draft.resetMode;
     const resetStep = resetMode && String(draft.resetStep || "").trim() === "code" ? "code" : "address";
     const createMode = !resetMode && !!draft.createMode;
-    const createStep = createMode && String(draft.createStep || "").trim() === "password" ? "password" : "contact";
+    const rawCreateStep = String(draft.createStep || "").trim();
+    const createStep = createMode && rawCreateStep === "verify" ? "verify" : (createMode && rawCreateStep === "password" ? "password" : "contact");
     const pendingCheckout = !!String(state && state.pendingCheckoutShopId || "").trim();
     const authFieldsMarkup = resetMode ? (resetStep === "code" ? (
       '<label class="shop-login-field">' +
@@ -5482,10 +5497,27 @@
       '<div class="shop-account-auth-links">' +
         '<button type="button" data-buyer-password-reset-toggle="close">Back</button>' +
       '</div>'
-    )) : createMode ? (createStep === "password" ? (
+    )) : createMode ? (createStep === "verify" ? (
       '<label class="shop-login-field">' +
         '<span>Phone or email</span>' +
-        '<input class="shop-login-input" type="text" data-buyer-auth-field="contact" value="' + escapeHtml(draft.contact || "") + '" autocomplete="username" spellcheck="false">' +
+        '<input class="shop-login-input" type="text" data-buyer-auth-field="contact" value="' + escapeHtml(draft.contact || "") + '" autocomplete="username" spellcheck="false" readonly aria-readonly="true">' +
+      '</label>' +
+      '<label class="shop-login-field">' +
+        '<span>Code</span>' +
+        '<input class="shop-login-input" type="text" inputmode="numeric" data-buyer-auth-field="verificationCode" value="' + escapeHtml(draft.verificationCode || "") + '" autocomplete="one-time-code" spellcheck="false">' +
+      '</label>' +
+      '<div class="shop-account-actions shop-account-auth-actions">' +
+        '<button class="shop-login-submit" type="button" data-buyer-create-verify="true"' + (draft.submitting ? ' disabled' : '') + '>Continue</button>' +
+      '</div>' +
+      '<div class="shop-account-auth-links">' +
+        '<button type="button" data-buyer-create-resend="true"' + (draft.submitting ? ' disabled' : '') + '>Send again</button>' +
+        '<button type="button" data-buyer-create-step="contact">Change contact</button>' +
+        '<button type="button" data-buyer-create-toggle="close">Sign in</button>' +
+      '</div>'
+    ) : createStep === "password" ? (
+      '<label class="shop-login-field">' +
+        '<span>Phone or email</span>' +
+        '<input class="shop-login-input" type="text" data-buyer-auth-field="contact" value="' + escapeHtml(draft.contact || "") + '" autocomplete="username" spellcheck="false" readonly aria-readonly="true">' +
       '</label>' +
       '<label class="shop-login-field">' +
         '<span>Password</span>' +
@@ -5764,6 +5796,13 @@
     }
     if (!contact) {
       draft.message = "Add contact.";
+      draft.tone = "error";
+      renderShopList(state);
+      return;
+    }
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
+      draft.message = contactError;
       draft.tone = "error";
       renderShopList(state);
       return;
@@ -8688,6 +8727,7 @@
       state.buyerAuthDraft.resetStep = "address";
       state.buyerAuthDraft.resetCode = "";
       state.buyerAuthDraft.resetPassword = "";
+      state.buyerAuthDraft.verificationCode = "";
       state.buyerAuthDraft.name = "";
       state.buyerAuthDraft.contact = "";
       state.buyerAuthDraft.status = "Signed out.";
@@ -9208,6 +9248,7 @@
     state.buyerAuthDraft.createStep = "contact";
     state.buyerAuthDraft.resetMode = false;
     state.buyerAuthDraft.resetStep = "address";
+    state.buyerAuthDraft.verificationCode = "";
     state.buyerAuthDraft.status = "Sign in to place order.";
     state.buyerAuthDraft.tone = "";
     state.buyerAuthDraft.contact = String(state.buyerAuthDraft.contact || state.buyerProfile && state.buyerProfile.contact || "");
@@ -9501,6 +9542,7 @@
     if (code === "shop_id_required") return "Enter shop name.";
     if (code === "password_too_short") return "Use at least 6 characters.";
     if (code === "contact_required") return "Enter owner email.";
+    if (code === "invalid_contact") return "Use a real email or phone number.";
     if (code === "verification_code_required") return "Enter code.";
     if (code === "invalid_verification_code") return "Wrong code.";
     if (code === "verification_rate_limited") return "Try again in a minute.";
@@ -9530,6 +9572,13 @@
     if (!contact) {
       draft.tone = "error";
       draft.status = "Enter owner email.";
+      renderShopList(state);
+      return;
+    }
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
+      draft.tone = "error";
+      draft.status = contactError;
       renderShopList(state);
       return;
     }
@@ -10038,9 +10087,81 @@
     const draft = state.buyerAuthDraft || {};
     if (draft.submitting) return;
     const contact = String(draft.contact || "").trim();
-    if (!contact) {
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
       draft.tone = "error";
-      draft.status = "Enter phone or email.";
+      draft.status = contactError;
+      renderShopList(state);
+      return;
+    }
+    draft.submitting = true;
+    draft.createMode = true;
+    draft.createStep = "contact";
+    draft.password = "";
+    draft.verificationCode = "";
+    draft.tone = "";
+    draft.status = "Sending code...";
+    expandSignInPortal(state);
+    renderShopList(state);
+    requestBuyerContactVerification(contact, "buyer_signup")
+      .then(function (result) {
+        draft.submitting = false;
+        if (!result || !result.ok) {
+          const error = String(result && result.payload && result.payload.error || "").trim();
+          let message = "Could not send code.";
+          if (error === "account_exists") {
+            message = "Account exists. Use Sign in.";
+          } else if (error === "invalid_contact") {
+            message = "Use a real email or phone number.";
+          } else if (error === "verification_rate_limited") {
+            message = "Try again in a minute.";
+          } else if (error === "auth_rate_limited") {
+            message = "Too many tries. Wait a bit.";
+          } else if (error === "email_delivery_failed") {
+            message = "Email could not be sent.";
+          } else if (error === "smtp_not_configured") {
+            message = "Email is not configured.";
+          } else if (error === "delivery_not_configured") {
+            message = "Delivery is not configured.";
+          }
+          draft.tone = "error";
+          draft.status = message;
+          renderShopList(state);
+          return;
+        }
+        const code = String(result.payload && (result.payload.verification_code || result.payload.reset_code) || "").trim();
+        const delivery = result.payload && result.payload.delivery;
+        if (code) draft.verificationCode = code;
+        draft.createStep = "verify";
+        draft.tone = code || delivery && delivery.sent ? "success" : "";
+        draft.status = code ? "Code ready." : (delivery && delivery.sent ? "Check email." : "Enter code.");
+        renderShopList(state);
+        resetPaneScroll(state);
+      })
+      .catch(function () {
+        draft.submitting = false;
+        draft.tone = "error";
+        draft.status = "Could not send code.";
+        renderShopList(state);
+      });
+  }
+
+  function continueBuyerCreatePassword(state) {
+    if (!state || state.debugPaneView !== "account") return;
+    const draft = state.buyerAuthDraft || {};
+    if (draft.submitting) return;
+    const contact = String(draft.contact || "").trim();
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
+      draft.tone = "error";
+      draft.status = contactError;
+      renderShopList(state);
+      return;
+    }
+    const verificationCode = String(draft.verificationCode || "").trim();
+    if (!verificationCode) {
+      draft.tone = "error";
+      draft.status = "Enter code.";
       renderShopList(state);
       return;
     }
@@ -10062,14 +10183,29 @@
     const contact = String(draft.contact || "").trim();
     const name = actionMode === "signup" ? contact : String(draft.name || "").trim();
     const password = String(draft.password || "");
-    if (!contact) {
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
       draft.tone = "error";
-      draft.status = actionMode === "signup" ? "Enter phone or email." : "Enter contact.";
+      draft.status = contactError;
       renderShopList(state);
       return;
     }
-    if (actionMode === "signup" && String(draft.createStep || "").trim() !== "password") {
-      continueBuyerCreateAccount(state);
+    if (actionMode === "signup") {
+      const createStep = String(draft.createStep || "").trim();
+      if (createStep === "verify") {
+        continueBuyerCreatePassword(state);
+        return;
+      }
+      if (createStep !== "password") {
+        continueBuyerCreateAccount(state);
+        return;
+      }
+    }
+    const verificationCode = actionMode === "signup" ? String(draft.verificationCode || "").trim() : "";
+    if (actionMode === "signup" && !verificationCode) {
+      draft.tone = "error";
+      draft.status = "Enter code.";
+      renderShopList(state);
       return;
     }
     if (!password) {
@@ -10092,6 +10228,7 @@
       display_name: name,
       contact: contact,
       password: password,
+      verification_code: verificationCode,
       buyer_key: ensureBuyerKey()
     }).then(function (result) {
       if (!result || !result.ok) {
@@ -10101,6 +10238,12 @@
           message = "Account exists. Use Sign in.";
         } else if (error === "invalid_login") {
           message = "Wrong contact or password.";
+        } else if (error === "invalid_contact") {
+          message = "Use a real email or phone number.";
+        } else if (error === "verification_code_required") {
+          message = "Enter code.";
+        } else if (error === "invalid_verification_code") {
+          message = "Wrong code.";
         } else if (error === "password_too_short") {
           message = "Use at least 6 characters.";
         } else if (error === "contact_required") {
@@ -10123,6 +10266,7 @@
         resetStep: "address",
         resetCode: "",
         resetPassword: "",
+        verificationCode: "",
         status: actionMode === "login" ? "Opened." : "Saved.",
         tone: "success",
         submitting: false
@@ -10152,6 +10296,13 @@
       renderShopList(state);
       return;
     }
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
+      draft.tone = "error";
+      draft.status = contactError;
+      renderShopList(state);
+      return;
+    }
     draft.submitting = true;
     draft.tone = "";
     draft.status = "Checking...";
@@ -10163,6 +10314,8 @@
         let message = "Could not get code.";
         if (error === "account_not_found") {
           message = "No buyer account for this contact.";
+        } else if (error === "invalid_contact") {
+          message = "Use a real email or phone number.";
         } else if (error === "reset_rate_limited") {
           message = "Try again in a minute.";
         } else if (error === "auth_rate_limited") {
@@ -10207,6 +10360,13 @@
       renderShopList(state);
       return;
     }
+    const contactError = accountContactErrorMessage(contact);
+    if (contactError) {
+      draft.tone = "error";
+      draft.status = contactError;
+      renderShopList(state);
+      return;
+    }
     if (!resetCode) {
       draft.tone = "error";
       draft.status = "Enter code.";
@@ -10235,6 +10395,8 @@
         let message = "Could not change password.";
         if (error === "invalid_reset_code") {
           message = "Wrong code.";
+        } else if (error === "invalid_contact") {
+          message = "Use a real email or phone number.";
         } else if (error === "password_too_short") {
           message = "Use at least 6 characters.";
         } else if (error === "contact_required") {
@@ -10257,6 +10419,7 @@
         resetStep: "address",
         resetCode: "",
         resetPassword: "",
+        verificationCode: "",
         status: "Password changed.",
         tone: "success",
         submitting: false
@@ -11094,6 +11257,7 @@
       resetStep: "address",
       resetCode: "",
       resetPassword: "",
+      verificationCode: "",
       status: "",
       tone: "",
       submitting: false
@@ -11186,7 +11350,7 @@
     button.addEventListener("click", function () {
       const mode = normalizeRootMode(button.getAttribute("data-home-mode"));
       openRootBrowseMode(state, mode, {
-        focusSearch: mode === "items"
+        focusSearch: false
       });
     });
   });
@@ -11206,7 +11370,7 @@
           openRootBrowseMode(state, "shops");
           return;
         }
-        openRootBrowseMode(state, "items", { focusSearch: true });
+        openRootBrowseMode(state, "items", { focusSearch: false });
         return;
       }
       if (nav === "cart") {
@@ -11509,7 +11673,10 @@
             submitBuyerPasswordReset(state);
           }
         } else if (state.buyerAuthDraft && state.buyerAuthDraft.createMode) {
-          if (String(state.buyerAuthDraft.createStep || "").trim() !== "password") {
+          const buyerCreateStep = String(state.buyerAuthDraft.createStep || "").trim();
+          if (buyerCreateStep === "verify") {
+            continueBuyerCreatePassword(state);
+          } else if (buyerCreateStep !== "password") {
             continueBuyerCreateAccount(state);
           } else {
             submitBuyerAccount(state, "signup");
@@ -11866,6 +12033,7 @@
 	          state.buyerAuthDraft.resetStep = "address";
 	          state.buyerAuthDraft.resetCode = "";
 	          state.buyerAuthDraft.resetPassword = "";
+	          state.buyerAuthDraft.verificationCode = "";
 	          state.buyerAuthDraft.contact = String(state.buyerAuthDraft.contact || state.buyerProfile && state.buyerProfile.contact || "");
 	          state.buyerAuthDraft.status = "";
 	          state.buyerAuthDraft.tone = "";
@@ -11955,6 +12123,7 @@
 	        state.buyerAuthDraft.createStep = "contact";
 	        state.buyerAuthDraft.resetMode = false;
 	        state.buyerAuthDraft.resetStep = "address";
+	        state.buyerAuthDraft.verificationCode = "";
 	        state.buyerAuthDraft.status = "";
 	        state.buyerAuthDraft.tone = "";
 	        openAccountSubPane(state, "buyer-login");
@@ -11968,6 +12137,7 @@
 	        state.buyerAuthDraft.resetMode = false;
 	        state.buyerAuthDraft.resetStep = "address";
 	        state.buyerAuthDraft.password = "";
+	        state.buyerAuthDraft.verificationCode = "";
 	        state.buyerAuthDraft.status = "";
 	        state.buyerAuthDraft.tone = "";
 	        openAccountSubPane(state, "buyer-login");
@@ -11982,6 +12152,7 @@
 	        state.buyerAuthDraft.resetStep = "address";
 	        state.buyerAuthDraft.resetCode = "";
 	        state.buyerAuthDraft.resetPassword = "";
+	        state.buyerAuthDraft.verificationCode = "";
 	        state.buyerAuthDraft.contact = String(state.buyerAuthDraft.contact || state.buyerProfile && state.buyerProfile.contact || "");
 	        state.buyerAuthDraft.status = "";
 	        state.buyerAuthDraft.tone = "";
@@ -12103,6 +12274,7 @@
         state.buyerAuthDraft.resetStep = "address";
         state.buyerAuthDraft.resetCode = "";
         state.buyerAuthDraft.resetPassword = "";
+        state.buyerAuthDraft.verificationCode = "";
         state.buyerAuthDraft.status = "";
         state.buyerAuthDraft.tone = "";
         expandSignInPortal(state);
@@ -12121,6 +12293,7 @@
         state.buyerAuthDraft.resetStep = "address";
         state.buyerAuthDraft.resetCode = "";
         state.buyerAuthDraft.resetPassword = "";
+        state.buyerAuthDraft.verificationCode = "";
         state.buyerAuthDraft.status = "";
         state.buyerAuthDraft.tone = "";
         expandSignInPortal(state);
@@ -12134,6 +12307,9 @@
         state.buyerAuthDraft.createMode = true;
         state.buyerAuthDraft.createStep = String(buyerCreateStepButton.getAttribute("data-buyer-create-step") || "").trim() === "password" ? "password" : "contact";
         state.buyerAuthDraft.password = "";
+        if (state.buyerAuthDraft.createStep === "contact") {
+          state.buyerAuthDraft.verificationCode = "";
+        }
         state.buyerAuthDraft.status = "";
         state.buyerAuthDraft.tone = "";
         expandSignInPortal(state);
@@ -12143,6 +12319,18 @@
       }
       const buyerCreateNextButton = target.closest("[data-buyer-create-next]");
       if (buyerCreateNextButton) {
+        event.preventDefault();
+        continueBuyerCreateAccount(state);
+        return;
+      }
+      const buyerCreateVerifyButton = target.closest("[data-buyer-create-verify]");
+      if (buyerCreateVerifyButton) {
+        event.preventDefault();
+        continueBuyerCreatePassword(state);
+        return;
+      }
+      const buyerCreateResendButton = target.closest("[data-buyer-create-resend]");
+      if (buyerCreateResendButton) {
         event.preventDefault();
         continueBuyerCreateAccount(state);
         return;

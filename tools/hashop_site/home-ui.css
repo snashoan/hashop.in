@@ -24422,3 +24422,39 @@ html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-own
   font-size: 0.72rem !important;
   font-weight: 820 !important;
 }
+
+/* Iteration 086: auth links use one clean divider, not boxed top/bottom outlines. */
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-links,
+html body .shell.shell-home[data-hashop-screen="login"] .shop-account-auth-links {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  width: 100% !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-screen="login"] .shop-account-auth-links button {
+  width: 100% !important;
+  min-height: 2.46rem !important;
+  padding: 0.42rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-feed-line) !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  box-shadow: none !important;
+  font-size: 0.84rem !important;
+  font-weight: 850 !important;
+  text-align: left !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-links button::before,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-links button::after,
+html body .shell.shell-home[data-hashop-screen="login"] .shop-account-auth-links button::before,
+html body .shell.shell-home[data-hashop-screen="login"] .shop-account-auth-links button::after {
+  content: none !important;
+  display: none !important;
+}
