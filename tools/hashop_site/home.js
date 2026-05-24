@@ -984,6 +984,8 @@
       if (state.ownerPanel.tab === "history") {
         return appPath(state, state.ownerPanel.section === "items"
           ? (shopPath + "/history/items")
+          : state.ownerPanel.section === "sales"
+          ? (shopPath + "/history/sales")
           : (shopPath + "/history"));
       }
     }
@@ -1287,7 +1289,7 @@
     return saveAccountSession({
       displayName: String(current.displayName || shopName || safeShopId).trim(),
       roles: roles,
-      activeRole: current.buyerAccount ? "buyer" : "owner",
+      activeRole: "owner",
       ownerShops: ownerShops,
       preferredOwnerShopId: safeShopId,
       buyerAccount: current.buyerAccount || null
@@ -1932,6 +1934,7 @@
   function normalizeOwnerHistorySection(value) {
     const section = String(value || "").trim().toLowerCase();
     if (section === "items") return section;
+    if (section === "sales" || section === "accounting") return "sales";
     return "orders";
   }
 
@@ -2008,12 +2011,22 @@
       if (status === "created" || status === "payment_pending") stats.pendingOrders += 1;
       if (status === "accepted") stats.acceptedOrders += 1;
       if (status === "ready") stats.readyOrders += 1;
+      if (status === "cancelled") {
+        stats.cancelledOrders += 1;
+        stats.cancelledValue += amount;
+      } else {
+        stats.grossValue += amount;
+      }
       if (status === "paid" || status === "completed") {
         stats.settledOrders += 1;
         stats.revenue += amount;
+      } else if (status !== "cancelled") {
+        stats.openValue += amount;
       }
       if (timestamp >= dayStart.getTime()) {
         stats.todayOrders += 1;
+        if (status !== "cancelled") stats.todayValue += amount;
+        if (status === "paid" || status === "completed") stats.todayRevenue += amount;
       }
       return stats;
     }, {
@@ -2023,7 +2036,84 @@
       readyOrders: 0,
       settledOrders: 0,
       todayOrders: 0,
-      revenue: 0
+      cancelledOrders: 0,
+      revenue: 0,
+      grossValue: 0,
+      openValue: 0,
+      cancelledValue: 0,
+      todayValue: 0,
+      todayRevenue: 0
+    });
+  }
+
+  function ownerAccountingAmount(value, detail) {
+    const amount = Number(value || 0);
+    return formatTotalAmount(amount, detail && detail.pricing) || String(amount || 0);
+  }
+
+  function ownerPaymentLabel(order) {
+    const explicit = String(order && (order.paymentLabel || order.payment_label) || "").trim();
+    if (explicit) return explicit;
+    const mode = orderPaymentMode(order);
+    if (mode === "before_delivery") return "Prepaid";
+    if (mode === "on_receive") return "On receive";
+    return "Payment";
+  }
+
+  function ownerSalesBreakdown(orders) {
+    const rows = {};
+    (Array.isArray(orders) ? orders : []).forEach(function (order) {
+      const status = normalizedOrderStatus(order);
+      if (status === "cancelled") return;
+      const label = ownerPaymentLabel(order);
+      const key = label.toLowerCase();
+      if (!rows[key]) {
+        rows[key] = {
+          label: label,
+          orders: 0,
+          amount: 0
+        };
+      }
+      rows[key].orders += 1;
+      rows[key].amount += orderAmountValue(order);
+    });
+    return Object.keys(rows).map(function (key) {
+      return rows[key];
+    }).sort(function (left, right) {
+      return right.amount - left.amount || right.orders - left.orders || left.label.localeCompare(right.label);
+    });
+  }
+
+  function ownerItemSalesRows(orders) {
+    const rows = {};
+    (Array.isArray(orders) ? orders : []).forEach(function (order) {
+      const status = normalizedOrderStatus(order);
+      if (status === "cancelled") return;
+      const orderItems = Array.isArray(order && order.items) && order.items.length ? order.items : [{
+        title: String(order && order.title || "Order").trim(),
+        quantity: Math.max(0, Number(order && order.quantity || 0)),
+        price: String(order && (order.price || order.total) || "").trim()
+      }];
+      orderItems.forEach(function (item) {
+        const title = String(item && item.title || "Item").trim() || "Item";
+        const key = title.toLowerCase();
+        const quantity = Math.max(0, Number(item && item.quantity || 0));
+        const amount = priceNumber(item && item.total) || (priceNumber(item && item.price) * quantity);
+        if (!rows[key]) {
+          rows[key] = {
+            title: title,
+            quantity: 0,
+            amount: 0
+          };
+        }
+        rows[key].quantity += quantity;
+        rows[key].amount += amount;
+      });
+    });
+    return Object.keys(rows).map(function (key) {
+      return rows[key];
+    }).sort(function (left, right) {
+      return right.amount - left.amount || right.quantity - left.quantity || left.title.localeCompare(right.title);
     });
   }
 
@@ -3866,6 +3956,13 @@
       state.ownerPanel.itemId = String(selectedItem.id || "").trim();
     }
     let bodyMarkup = "";
+    const sectionLabel = section === "items" ? "Inventory" : section === "sales" ? "Sales" : "Orders";
+    const historyTabsMarkup = '' +
+      '<div class="shop-owner-tab-row shop-owner-history-tabs">' +
+        '<button class="shop-owner-tab' + (section === "orders" ? ' is-active' : '') + '" type="button" data-owner-history-section="orders">Orders</button>' +
+        '<button class="shop-owner-tab' + (section === "items" ? ' is-active' : '') + '" type="button" data-owner-history-section="items">Items</button>' +
+        '<button class="shop-owner-tab' + (section === "sales" ? ' is-active' : '') + '" type="button" data-owner-history-section="sales">Sales</button>' +
+      '</div>';
 
     if (section === "orders") {
       const draft = ownerOrderDraft(state, state.activeShopId);
@@ -3955,6 +4052,110 @@
 	              }).join('') +
 	            '</div>'
           ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No orders match this search." : "No orders yet.") + '</div>') +
+        '</section>';
+    } else if (section === "sales") {
+      const accountingOrders = orderedOwnerOrders(orders).filter(function (order) {
+        return matchesSearch([
+          order.title,
+          order.id,
+          order.status,
+          order.paymentLabel,
+          order.total,
+          order.notes,
+          order.address,
+          order.buyerName,
+          order.buyerContact
+        ], query);
+      });
+      const stats = ownerSalesStats(accountingOrders);
+      const paymentRows = ownerSalesBreakdown(accountingOrders);
+      const itemRows = ownerItemSalesRows(accountingOrders).slice(0, 8);
+      const settledOrders = accountingOrders.filter(function (order) {
+        const status = normalizedOrderStatus(order);
+        return status === "paid" || status === "completed";
+      }).slice(0, 8);
+      bodyMarkup = '' +
+        '<section class="shop-owner-form shop-owner-accounting">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Sales accounting</strong>' +
+            '<span>' + escapeHtml(accountingOrders.length ? (accountingOrders.length + " orders counted") : "No orders counted") + '</span>' +
+          '</div>' +
+          '<div class="shop-owner-accounting-grid">' +
+            '<article class="shop-owner-accounting-card is-wide">' +
+              '<span>Collected</span>' +
+              '<strong>' + escapeHtml(ownerAccountingAmount(stats.revenue, detail)) + '</strong>' +
+            '</article>' +
+            '<article class="shop-owner-accounting-card">' +
+              '<span>Open</span>' +
+              '<strong>' + escapeHtml(ownerAccountingAmount(stats.openValue, detail)) + '</strong>' +
+            '</article>' +
+            '<article class="shop-owner-accounting-card">' +
+              '<span>Today</span>' +
+              '<strong>' + escapeHtml(ownerAccountingAmount(stats.todayValue, detail)) + '</strong>' +
+            '</article>' +
+            '<article class="shop-owner-accounting-card">' +
+              '<span>Settled</span>' +
+              '<strong>' + escapeHtml(String(stats.settledOrders)) + '</strong>' +
+            '</article>' +
+            '<article class="shop-owner-accounting-card">' +
+              '<span>Pending</span>' +
+              '<strong>' + escapeHtml(String(stats.pendingOrders + stats.acceptedOrders + stats.readyOrders)) + '</strong>' +
+            '</article>' +
+          '</div>' +
+        '</section>' +
+        '<section class="shop-owner-form shop-owner-accounting">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Payment split</strong>' +
+            '<span>' + escapeHtml(paymentRows.length ? "By collection method" : "No payments yet") + '</span>' +
+          '</div>' +
+          (paymentRows.length ? (
+            '<div class="shop-owner-accounting-list">' +
+              paymentRows.map(function (row) {
+                return '' +
+                  '<div class="shop-owner-accounting-row">' +
+                    '<span>' + escapeHtml(row.label) + '</span>' +
+                    '<strong>' + escapeHtml(ownerAccountingAmount(row.amount, detail)) + '</strong>' +
+                    '<em>' + escapeHtml(row.orders + " order" + (row.orders === 1 ? "" : "s")) + '</em>' +
+                  '</div>';
+              }).join('') +
+            '</div>'
+          ) : '<div class="shop-list-empty">Payments will show here after orders are saved.</div>') +
+        '</section>' +
+        '<section class="shop-owner-form shop-owner-accounting">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Item movement</strong>' +
+            '<span>' + escapeHtml(itemRows.length ? "Top sold items" : "No items sold yet") + '</span>' +
+          '</div>' +
+          (itemRows.length ? (
+            '<div class="shop-owner-accounting-list">' +
+              itemRows.map(function (row) {
+                return '' +
+                  '<div class="shop-owner-accounting-row">' +
+                    '<span>' + escapeHtml(row.title) + '</span>' +
+                    '<strong>' + escapeHtml(ownerAccountingAmount(row.amount, detail)) + '</strong>' +
+                    '<em>' + escapeHtml("x" + row.quantity) + '</em>' +
+                  '</div>';
+              }).join('') +
+            '</div>'
+          ) : '<div class="shop-list-empty">Sold item totals will appear here.</div>') +
+        '</section>' +
+        '<section class="shop-owner-form shop-owner-accounting">' +
+          '<div class="shop-owner-form-head">' +
+            '<strong>Settled orders</strong>' +
+            '<span>' + escapeHtml(settledOrders.length ? (settledOrders.length + " recent") : "None settled yet") + '</span>' +
+          '</div>' +
+          (settledOrders.length ? (
+            '<div class="shop-owner-accounting-list">' +
+              settledOrders.map(function (order) {
+                return '' +
+                  '<button class="shop-owner-accounting-row is-button" type="button" data-owner-history-section="orders">' +
+                    '<span>' + escapeHtml(String(order.title || order.id || "Order")) + '</span>' +
+                    '<strong>' + escapeHtml(ownerAccountingAmount(orderAmountValue(order), detail)) + '</strong>' +
+                    '<em>' + escapeHtml(formatOrderTimestamp(order.timestamp || 0)) + '</em>' +
+                  '</button>';
+              }).join('') +
+            '</div>'
+          ) : '<div class="shop-list-empty">Complete or mark orders paid to settle them.</div>') +
         '</section>';
     } else if (section === "items") {
       const visibleItems = listings.filter(function (item) {
@@ -4047,6 +4248,8 @@
     return '' +
       '<section class="shop-owner-stack">' +
         ownerStatusMarkup(state) +
+        ownerManageSummaryMarkup(state, detail, consoleData, sectionLabel) +
+        historyTabsMarkup +
         bodyMarkup +
       '</section>';
   }
@@ -4937,6 +5140,7 @@
           '<button class="shop-owner-tab" type="button" data-owner-main-open-history="orders">' +
             escapeHtml(ownerPendingCount ? (ownerPendingCount + " pending") : "Orders") +
           '</button>' +
+          '<button class="shop-owner-tab" type="button" data-owner-main-open-history="sales">Sales</button>' +
         '</div>' +
         (ownerAddOpen ? (
           '<div class="shop-owner-add-sheet" data-owner-add-sheet="true">' +
@@ -5267,7 +5471,11 @@
     const draft = state.loginDraft || {};
     const statusTone = String(draft.tone || "").trim();
     const existingAccount = state.accountSession || loadAccountSession();
-    const ownerShopCount = accountOwnerShops(existingAccount).length;
+    const ownerShops = accountOwnerShops(existingAccount);
+    const ownerShopCount = ownerShops.length;
+    const savedOwnerShop = preferredOwnerShop(existingAccount, state.ownerShopId);
+    const savedOwnerShopId = String(savedOwnerShop && savedOwnerShop.shopId || "").trim();
+    const savedOwnerShopName = String(savedOwnerShop && (savedOwnerShop.shopName || savedOwnerShop.shopId) || "").trim();
     const addShopMode = !isSetup && String(draft.flow || "").trim() === "add-shop";
     const shopSetupStep = addShopMode && String(draft.shopSetupStep || "").trim() === "verify" ? "verify" : "details";
     const loginTitle = addShopMode
@@ -5276,6 +5484,20 @@
     const loginSubmitLabel = addShopMode ? (shopSetupStep === "verify" ? "Create shop" : "Send code") : (isSetup ? "Create shop" : "Open shop");
     const resetMode = !addShopMode && !!draft.resetMode;
     const resetStep = resetMode && String(draft.resetStep || "").trim() === "code" ? "code" : "address";
+    const savedOwnerMarkup = !isSetup && !addShopMode && !resetMode && savedOwnerShopId ? (
+      '<div class="shop-login-form shop-login-saved-form">' +
+        '<div class="shop-state-card is-success" role="status">' +
+          '<span class="shop-state-mark" aria-hidden="true"></span>' +
+          '<strong>' + escapeHtml(savedOwnerShopName || savedOwnerShopId) + '</strong>' +
+          '<span>' + escapeHtml(ownerShopCount > 1 ? (ownerShopCount + " shops saved") : "Shop session saved") + '</span>' +
+        '</div>' +
+        '<button class="shop-login-submit" type="button" data-account-open-shop="' + escapeHtml(savedOwnerShopId) + '">Continue</button>' +
+        '<div class="shop-account-auth-links">' +
+          '<button type="button" data-owner-logout="true">Use another shop</button>' +
+        '</div>' +
+        '<p class="shop-login-status' + (statusTone ? (' is-' + escapeHtml(statusTone)) : '') + '">' + escapeHtml(draft.status || "") + '</p>' +
+      '</div>'
+    ) : "";
     const formMarkup = addShopMode ? (shopSetupStep === "verify" ? (
       '<div class="shop-login-form shop-add-form">' +
         '<div class="shop-state-card is-success" role="status">' +
@@ -5351,7 +5573,7 @@
         '</div>' +
         '<p class="shop-login-status' + (statusTone ? (' is-' + escapeHtml(statusTone)) : '') + '">' + escapeHtml(draft.status || "") + '</p>' +
       '</div>'
-    )) : (
+    )) : (savedOwnerMarkup || (
       '<div class="shop-login-form">' +
         '<label class="shop-login-field">' +
           '<span>Shop name</span>' +
@@ -5367,7 +5589,7 @@
         '</div>' +
         '<p class="shop-login-status' + (statusTone ? (' is-' + escapeHtml(statusTone)) : '') + '">' + escapeHtml(draft.status || "") + '</p>' +
       '</div>'
-    );
+    ));
     state.listNode.innerHTML = '' +
       '<section class="shop-pane-detail shop-login-pane' + (isSetup ? ' shop-setup-pane' : '') + '">' +
         '<div class="shop-pane-hero shop-login-hero">' +
@@ -8243,7 +8465,11 @@
       placeholder = "Search history";
     } else if (state.activeShopId) {
       if (isOwnerViewingShop(state) && state.ownerPanel.tab === "history") {
-        placeholder = state.ownerPanel.section === "items" ? "Search items" : "Search orders";
+        placeholder = state.ownerPanel.section === "items"
+          ? "Search items"
+          : state.ownerPanel.section === "sales"
+          ? "Search sales"
+          : "Search orders";
       } else {
         placeholder = state.activeShopView === "cart" ? "Search cart" : "Search items";
       }

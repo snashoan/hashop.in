@@ -25708,3 +25708,383 @@ html body .shell.shell-home .shop-item-qty {
   line-height: 1 !important;
   text-align: center !important;
 }
+
+/* Iteration 092: text grid pass, restored state symbols, owner sales accounting. */
+html,
+body {
+  height: 100% !important;
+  min-height: 100% !important;
+  overscroll-behavior: none !important;
+  overscroll-behavior-y: none !important;
+  background: #fff !important;
+}
+
+html body .shell.shell-home,
+html body .shell.shell-home .home-stage,
+html body .shell.shell-home .shop-list-panel,
+html body .shell.shell-home .shop-list-grid {
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+}
+
+html body .shell.shell-home .shop-list-grid::after,
+html body .shell.shell-home[data-hashop-screen] .shop-list-grid::after,
+html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-list-grid::after {
+  min-height: max(0.18rem, env(safe-area-inset-bottom, 0px)) !important;
+  height: max(0.18rem, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html body .shell.shell-home .shop-card,
+html body .shell.shell-home .shop-discovery-card,
+html body .shell.shell-home .shop-item-discovery-card,
+html body .shell.shell-home .shop-account-menu-row,
+html body .shell.shell-home .shop-account-link-row,
+html body .shell.shell-home .shop-account-record-row,
+html body .shell.shell-home .shop-owner-order-card,
+html body .shell.shell-home .shop-cart-row,
+html body .shell.shell-home .shop-owner-accounting-card,
+html body .shell.shell-home .shop-owner-accounting-row {
+  text-align: left !important;
+  letter-spacing: 0 !important;
+  text-wrap: pretty !important;
+}
+
+html body .shell.shell-home .shop-card-topline,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-topline,
+html body .shell.shell-home .shop-owner-order-headline,
+html body .shell.shell-home .shop-owner-order-head,
+html body .shell.shell-home .shop-owner-accounting-row {
+  grid-template-columns: minmax(0, 1fr) max-content !important;
+  align-items: start !important;
+  column-gap: 0.64rem !important;
+}
+
+html body .shell.shell-home .shop-card-title-block,
+html body .shell.shell-home .shop-card-main,
+html body .shell.shell-home .shop-cart-copy,
+html body .shell.shell-home .shop-account-menu-copy,
+html body .shell.shell-home .shop-owner-order-title,
+html body .shell.shell-home .shop-owner-summary-copy,
+html body .shell.shell-home .shop-owner-accounting-row span {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home .shop-card-title-block strong,
+html body .shell.shell-home .shop-card-subtitle,
+html body .shell.shell-home .shop-card-item,
+html body .shell.shell-home .shop-cart-copy strong,
+html body .shell.shell-home .shop-cart-copy span,
+html body .shell.shell-home .shop-account-menu-copy strong,
+html body .shell.shell-home .shop-account-menu-copy span,
+html body .shell.shell-home .shop-owner-summary-copy strong,
+html body .shell.shell-home .shop-owner-summary-copy span,
+html body .shell.shell-home .shop-owner-order-title strong,
+html body .shell.shell-home .shop-owner-order-title span,
+html body .shell.shell-home .shop-owner-accounting-row span {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .shop-card-open,
+html body .shell.shell-home .shop-card-add,
+html body .shell.shell-home .shop-item-selection,
+html body .shell.shell-home .shop-owner-order-status,
+html body .shell.shell-home .shop-owner-accounting-row strong,
+html body .shell.shell-home .shop-owner-accounting-row em,
+html body .shell.shell-home .shop-owner-accounting-card strong {
+  justify-self: end !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+html body .shell.shell-home .shop-login-field,
+html body .shell.shell-home .shop-account-field,
+html body .shell.shell-home .shop-owner-field,
+html body .shell.shell-home .shop-owner-field-wide {
+  align-items: stretch !important;
+  gap: 0.34rem !important;
+}
+
+html body .shell.shell-home .shop-login-field > span,
+html body .shell.shell-home .shop-account-field > span,
+html body .shell.shell-home .shop-owner-field > span,
+html body .shell.shell-home .shop-owner-field-wide > span {
+  display: block !important;
+  margin: 0 !important;
+  color: #6f6f6f !important;
+  -webkit-text-fill-color: #6f6f6f !important;
+  font-size: 0.68rem !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: left !important;
+  text-transform: none !important;
+}
+
+html body .shell.shell-home .shop-login-input,
+html body .shell.shell-home .shop-account-textarea,
+html body .shell.shell-home .shop-owner-input,
+html body .shell.shell-home .shop-owner-textarea {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.28 !important;
+  text-align: left !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.58rem !important;
+  width: 100% !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-card {
+  display: grid !important;
+  gap: 0.22rem !important;
+  min-width: 0 !important;
+  min-height: 4.4rem !important;
+  padding: 0.72rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell, #f7f5ee) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-card.is-wide {
+  grid-column: 1 / -1 !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-card span {
+  color: #6f6f6f !important;
+  -webkit-text-fill-color: #6f6f6f !important;
+  font-size: 0.72rem !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-card strong {
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  font-size: 1.1rem !important;
+  font-weight: 950 !important;
+  line-height: 1.05 !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-list {
+  display: grid !important;
+  gap: 0.18rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) max-content max-content !important;
+  align-items: center !important;
+  gap: 0.58rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 2.62rem !important;
+  padding: 0.5rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.08) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  box-shadow: none !important;
+  font: inherit !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-row strong {
+  font-size: 0.9rem !important;
+  font-weight: 920 !important;
+}
+
+html body .shell.shell-home .shop-owner-accounting-row em {
+  color: #6f6f6f !important;
+  -webkit-text-fill-color: #6f6f6f !important;
+  font-size: 0.72rem !important;
+  font-style: normal !important;
+  font-weight: 820 !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon,
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active > span.home-bottom-link-icon {
+  display: block !important;
+  width: 1.24rem !important;
+  height: 1.24rem !important;
+  min-width: 1.24rem !important;
+  min-height: 1.24rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: currentColor !important;
+  background-color: currentColor !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-position: center !important;
+  mask-position: center !important;
+  -webkit-mask-size: contain !important;
+  mask-size: contain !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon::before,
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-shops {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M4%2010h16l-1.2-5.2A1%201%200%200%200%2017.82%204H6.18a1%201%200%200%200-.98.8L4%2010Zm1%202v7a1%201%200%200%200%201%201h4v-5h4v5h4a1%201%200%200%200%201-1v-7h-3v3h-3v-3h-2v3H8v-3H5Z%27/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M4%2010h16l-1.2-5.2A1%201%200%200%200%2017.82%204H6.18a1%201%200%200%200-.98.8L4%2010Zm1%202v7a1%201%200%200%200%201%201h4v-5h4v5h4a1%201%200%200%200%201-1v-7h-3v3h-3v-3h-2v3H8v-3H5Z%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-items {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M5%205a2%202%200%200%201%202-2h10a2%202%200%200%201%202%202v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V5Zm3%203h8V6H8v2Zm0%205h8v-2H8v2Zm0%205h6v-2H8v2Z%27/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M5%205a2%202%200%200%201%202-2h10a2%202%200%200%201%202%202v14a2%202%200%200%201-2%202H7a2%202%200%200%201-2-2V5Zm3%203h8V6H8v2Zm0%205h8v-2H8v2Zm0%205h6v-2H8v2Z%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-cart {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M4%204h2.4l1.1%2011.1A2%202%200%200%200%209.5%2017h7.8a2%202%200%200%200%201.9-1.38L21%208H8.2L8%206H4V4Zm6%2016a1.7%201.7%200%201%200%200-3.4A1.7%201.7%200%200%200%2010%2020Zm7%200a1.7%201.7%200%201%200%200-3.4A1.7%201.7%200%200%200%2017%2020Z%27/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M4%204h2.4l1.1%2011.1A2%202%200%200%200%209.5%2017h7.8a2%202%200%200%200%201.9-1.38L21%208H8.2L8%206H4V4Zm6%2016a1.7%201.7%200%201%200%200-3.4A1.7%201.7%200%200%200%2010%2020Zm7%200a1.7%201.7%200%201%200%200-3.4A1.7%201.7%200%200%200%2017%2020Z%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-orders {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M6%203h12a1%201%200%200%201%201%201v16l-3-1.5-2%201-2-1-2%201-2-1L5%2020V4a1%201%200%200%201%201-1Zm3%205h6V6H9v2Zm0%204h8v-2H9v2Zm0%204h8v-2H9v2Z%27/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M6%203h12a1%201%200%200%201%201%201v16l-3-1.5-2%201-2-1-2%201-2-1L5%2020V4a1%201%200%200%201%201-1Zm3%205h6V6H9v2Zm0%204h8v-2H9v2Zm0%204h8v-2H9v2Z%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-account {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M12%2012a4%204%200%201%200%200-8%204%204%200%200%200%200%208Zm0%202c-4.2%200-7%202.1-7%205v1h14v-1c0-2.9-2.8-5-7-5Z%27/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27%23000%27%20d%3D%27M12%2012a4%204%200%201%200%200-8%204%204%200%200%200%200%208Zm0%202c-4.2%200-7%202.1-7%205v1h14v-1c0-2.9-2.8-5-7-5Z%27/%3E%3C/svg%3E") !important;
+}
+
+@media (max-width: 420px) {
+  html body .shell.shell-home .shop-owner-accounting-row {
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+  }
+
+  html body .shell.shell-home .shop-owner-accounting-row em {
+    grid-column: 1 / -1 !important;
+    justify-self: start !important;
+    text-align: left !important;
+  }
+}
+
+/* Iteration 093: browser-stable outline state symbols. */
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon {
+  width: 1.32rem !important;
+  height: 1.32rem !important;
+  min-width: 1.32rem !important;
+  min-height: 1.32rem !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-shops {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%204h16l1%205H3l1-5Z%27/%3E%3Cpath%20d%3D%27M5%209v10h14V9%27/%3E%3Cpath%20d%3D%27M9%2019v-6h6v6%27/%3E%3Cpath%20d%3D%27M3%209h18%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-shops {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%204h16l1%205H3l1-5Z%27/%3E%3Cpath%20d%3D%27M5%209v10h14V9%27/%3E%3Cpath%20d%3D%27M9%2019v-6h6v6%27/%3E%3Cpath%20d%3D%27M3%209h18%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-items {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Crect%20x%3D%275%27%20y%3D%273%27%20width%3D%2714%27%20height%3D%2718%27%20rx%3D%272%27/%3E%3Cpath%20d%3D%27M8%208h8M8%2012h8M8%2016h5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-items {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Crect%20x%3D%275%27%20y%3D%273%27%20width%3D%2714%27%20height%3D%2718%27%20rx%3D%272%27/%3E%3Cpath%20d%3D%27M8%208h8M8%2012h8M8%2016h5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-cart {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%205h2l2%2010h9l2-7H7%27/%3E%3Ccircle%20cx%3D%2710%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3Ccircle%20cx%3D%2717%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-cart {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%205h2l2%2010h9l2-7H7%27/%3E%3Ccircle%20cx%3D%2710%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3Ccircle%20cx%3D%2717%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-orders {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M7%203h10v18l-3-2-2%201-2-1-3%202V3Z%27/%3E%3Cpath%20d%3D%27M10%208h4M10%2012h4M10%2016h3%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-orders {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M7%203h10v18l-3-2-2%201-2-1-3%202V3Z%27/%3E%3Cpath%20d%3D%27M10%208h4M10%2012h4M10%2016h3%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-account {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%278%27%20r%3D%274%27/%3E%3Cpath%20d%3D%27M5%2021c1.3-4%204-6%207-6s5.7%202%207%206%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-account {
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%278%27%20r%3D%274%27/%3E%3Cpath%20d%3D%27M5%2021c1.3-4%204-6%207-6s5.7%202%207%206%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon {
+  background-color: transparent !important;
+  background-image: var(--hashop-bottom-icon, none) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active > span.home-bottom-link-icon {
+  background-color: transparent !important;
+  background-image: var(--hashop-bottom-icon, none) !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-shops {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%204h16l1%205H3l1-5Z%27/%3E%3Cpath%20d%3D%27M5%209v10h14V9%27/%3E%3Cpath%20d%3D%27M9%2019v-6h6v6%27/%3E%3Cpath%20d%3D%27M3%209h18%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-shops {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%204h16l1%205H3l1-5Z%27/%3E%3Cpath%20d%3D%27M5%209v10h14V9%27/%3E%3Cpath%20d%3D%27M9%2019v-6h6v6%27/%3E%3Cpath%20d%3D%27M3%209h18%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-items {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Crect%20x%3D%275%27%20y%3D%273%27%20width%3D%2714%27%20height%3D%2718%27%20rx%3D%272%27/%3E%3Cpath%20d%3D%27M8%208h8M8%2012h8M8%2016h5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-items {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Crect%20x%3D%275%27%20y%3D%273%27%20width%3D%2714%27%20height%3D%2718%27%20rx%3D%272%27/%3E%3Cpath%20d%3D%27M8%208h8M8%2012h8M8%2016h5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-cart {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%205h2l2%2010h9l2-7H7%27/%3E%3Ccircle%20cx%3D%2710%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3Ccircle%20cx%3D%2717%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-cart {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M4%205h2l2%2010h9l2-7H7%27/%3E%3Ccircle%20cx%3D%2710%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3Ccircle%20cx%3D%2717%27%20cy%3D%2719%27%20r%3D%271.5%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-orders {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M7%203h10v18l-3-2-2%201-2-1-3%202V3Z%27/%3E%3Cpath%20d%3D%27M10%208h4M10%2012h4M10%2016h3%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-orders {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20d%3D%27M7%203h10v18l-3-2-2%201-2-1-3%202V3Z%27/%3E%3Cpath%20d%3D%27M10%208h4M10%2012h4M10%2016h3%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon.is-account {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23111111%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%278%27%20r%3D%274%27/%3E%3Cpath%20d%3D%27M5%2021c1.3-4%204-6%207-6s5.7%202%207%206%27/%3E%3C/svg%3E") !important;
+}
+
+html body .shell.shell-home .home-bottom-nav button.home-bottom-link.is-active > span.home-bottom-link-icon.is-account {
+  --hashop-bottom-icon: url("data:image/svg+xml,%3Csvg%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%238d7b4a%27%20stroke-width%3D%272%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%278%27%20r%3D%274%27/%3E%3Cpath%20d%3D%27M5%2021c1.3-4%204-6%207-6s5.7%202%207%206%27/%3E%3C/svg%3E") !important;
+}

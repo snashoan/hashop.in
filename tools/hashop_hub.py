@@ -3681,7 +3681,7 @@ class HashopHub:
                 return await self._serve_discovery_index()
             if parts[0] == "settings" and len(parts) <= 2 and (len(parts) == 1 or parts[1] in {"profile", "payments"}):
                 return await self._serve_discovery_index()
-            if parts[0] == "history" and len(parts) <= 2 and (len(parts) == 1 or parts[1] in {"orders", "items", "stats"}):
+            if parts[0] == "history" and len(parts) <= 2 and (len(parts) == 1 or parts[1] in {"orders", "items", "sales", "accounting", "stats"}):
                 return await self._serve_discovery_index()
             raise web.HTTPNotFound()
         return await self._serve_discovery_index()

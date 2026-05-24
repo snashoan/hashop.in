@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from aiohttp import web
+
 
 TOOLS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS_DIR))
@@ -194,6 +196,43 @@ class AuthGuardrailTests(unittest.TestCase):
         self.assertIn("Product pictures:", text_body)
         self.assertIn("https://hashop.test/api/assets/coke.png", text_body)
         self.assertIn('<img src="https://hashop.test/api/assets/coke.png"', html_body)
+
+    def test_discovery_shop_page_serves_owner_sales_history_route(self) -> None:
+        class FakeRequest:
+            match_info = {
+                "shop_id": "demo-shop",
+                "tail": "history/sales",
+            }
+
+        hub = HashopHub(
+            public_base_url="https://hashop.test",
+            request_timeout=30,
+            site_dir=Path(self.temp_dir.name),
+            store=self.store,
+            uploads_dir=Path(self.temp_dir.name) / "uploads",
+        )
+
+        response = asyncio.run(hub.handle_discovery_shop_page(FakeRequest()))
+
+        self.assertEqual(response.status, 200)
+
+    def test_discovery_shop_page_rejects_unknown_nested_routes(self) -> None:
+        class FakeRequest:
+            match_info = {
+                "shop_id": "demo-shop",
+                "tail": "history/sales/deep",
+            }
+
+        hub = HashopHub(
+            public_base_url="https://hashop.test",
+            request_timeout=30,
+            site_dir=Path(self.temp_dir.name),
+            store=self.store,
+            uploads_dir=Path(self.temp_dir.name) / "uploads",
+        )
+
+        with self.assertRaises(web.HTTPNotFound):
+            asyncio.run(hub.handle_discovery_shop_page(FakeRequest()))
 
 
 if __name__ == "__main__":
