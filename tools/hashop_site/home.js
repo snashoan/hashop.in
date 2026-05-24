@@ -5074,36 +5074,28 @@
     const filteredItems = Array.isArray(detail.items) ? detail.items.filter(function (item) {
       return matchesSearch([item.title, item.description, item.price], query);
     }) : [];
-    const itemsMarkup = filteredItems.length ? filteredItems.map(function (item) {
-      const selectedQty = Math.max(0, Number(cart[item.id] || 0));
-      const imageFiles = Array.isArray(item.imageFiles) ? item.imageFiles : [];
-      const itemMediaMarkup = imageFiles.length
-        ? '<span class="shop-pane-item-mark is-image"><img class="shop-pane-item-image" src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(item.title || "Item") + '"></span>'
-        : '<span class="shop-pane-item-mark" aria-hidden="true"></span>';
-      const itemMetaMarkup = ownerMode
-        ? '<span>' + escapeHtml(item.quantity > 0 ? ("Qty " + item.quantity) : "Available") + '</span>'
-        : '<span>' + escapeHtml(item.quantity > 0 ? ("Qty " + item.quantity) : "Available") + '</span>' +
-            '<span class="shop-item-qty-chip' + (selectedQty ? ' is-selected' : '') + '">' + escapeHtml(selectedQty ? (selectedQty + " selected") : "Add") + '</span>';
-      const itemAddAttributes = ownerMode
-        ? ''
-        : ' role="button" tabindex="0" data-pane-add-item="' + escapeHtml(item.id) + '" aria-label="Add ' + escapeHtml(item.title || "item") + ' to cart"';
-      return '' +
-        '<article class="shop-pane-item' + (ownerMode ? '' : ' is-touch-add') + '"' + itemAddAttributes + '>' +
-          '<div class="shop-pane-item-row">' +
-            itemMediaMarkup +
-            '<div class="shop-pane-item-copy">' +
-              '<div class="shop-pane-item-head">' +
-                '<strong>' + escapeHtml(item.title) + '</strong>' +
-                '<span>' + escapeHtml(formatPrice(item.price, detail.pricing) || "-") + '</span>' +
-              '</div>' +
-              '<p>' + escapeHtml(item.description || "Available now.") + '</p>' +
-              '<div class="shop-pane-item-meta">' +
-                itemMetaMarkup +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</article>';
-    }).join('') : emptyItemsStateMarkup(query ? {
+    const shopItemRows = sortItemLibraryRows(state, filteredItems.map(function (item) {
+      return Object.assign({}, item, {
+        shopId: state.activeShopId,
+        shopName: shopName
+      });
+    }));
+    const itemsMarkup = shopItemRows.length ? (
+      listingViewControlsMarkup(state, shopItemRows.length, "Items") +
+      '<div class="shop-pane-items shop-pane-shop-feed" data-list-view="' + escapeHtml(normalizeListingViewMode(state.listingViewMode)) + '">' +
+        shopItemRows.map(function (item) {
+          return shopItemCardMarkup(state, detail, item, shop, {
+            shopId: state.activeShopId,
+            itemId: String(item && item.id || "").trim(),
+            shopName: shopName,
+            showShopName: false,
+            openShop: false,
+            ownerMode: ownerMode,
+            color: shopColor(shop)
+          });
+        }).join('') +
+      '</div>'
+    ) : emptyItemsStateMarkup(query ? {
       scope: "shop",
       query: true,
       actions: [{ label: "Clear search", attribute: 'data-clear-search="true"', tone: "primary" }]
@@ -5625,8 +5617,30 @@
     return "dot";
   }
 
+  function accountLucideName(symbol) {
+    const name = String(symbol || "").trim();
+    const names = {
+      address: "map-pin",
+      back: "chevron-left",
+      dot: "circle",
+      hash: "hash",
+      help: "circle-help",
+      location: "locate-fixed",
+      logout: "log-out",
+      orders: "receipt-text",
+      payment: "indian-rupee",
+      plus: "plus",
+      privacy: "shield-check",
+      profile: "user",
+      shop: "store",
+      signin: "log-in"
+    };
+    return names[name] || names.dot;
+  }
+
   function accountIconMarkup(icon, title) {
-    return '<span class="shop-account-menu-icon" aria-hidden="true" data-account-symbol="' + escapeHtml(accountSymbolName(icon, title)) + '"></span>';
+    const symbol = accountSymbolName(icon, title);
+    return '<span class="shop-account-menu-icon" aria-hidden="true" data-account-symbol="' + escapeHtml(symbol) + '" data-lucide="' + escapeHtml(accountLucideName(symbol)) + '"></span>';
   }
 
   function accountMenuRowMarkup(options) {
@@ -7681,6 +7695,72 @@
     });
   }
 
+  function itemSelectionControlMarkup(settings) {
+    const options = settings && typeof settings === "object" ? settings : {};
+    const shopId = String(options.shopId || "").trim();
+    const itemId = String(options.itemId || "").trim();
+    const quantity = Math.max(0, Number(options.quantity || 0));
+    const title = String(options.title || "item").trim() || "item";
+    if (!shopId || !itemId) return '<span class="shop-card-open">Open</span>';
+    if (!quantity) {
+      return '<button class="shop-card-add shop-item-add" type="button" data-cart-shop-id="' + escapeHtml(shopId) + '" data-item-id="' + escapeHtml(itemId) + '" data-cart-step="1" aria-label="Add ' + escapeHtml(title) + '">Add</button>';
+    }
+    return '' +
+      '<div class="shop-item-selection" role="group" aria-label="' + escapeHtml(title + " quantity") + '">' +
+        '<button class="shop-item-step" type="button" data-cart-shop-id="' + escapeHtml(shopId) + '" data-item-id="' + escapeHtml(itemId) + '" data-cart-step="-1" aria-label="Remove one ' + escapeHtml(title) + '">-</button>' +
+        '<span class="shop-item-qty" aria-label="' + escapeHtml(String(quantity) + " selected") + '">' + escapeHtml(quantity) + '</span>' +
+        '<button class="shop-item-step" type="button" data-cart-shop-id="' + escapeHtml(shopId) + '" data-item-id="' + escapeHtml(itemId) + '" data-cart-step="1" aria-label="Add one more ' + escapeHtml(title) + '">+</button>' +
+      '</div>';
+  }
+
+  function shopItemCardMarkup(state, detail, item, shop, options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const shopId = String(settings.shopId || item && item.shopId || shop && shop.shop_id || state && state.activeShopId || "").trim();
+    const itemId = String(settings.itemId || item && (item.id || item.libraryId) || "").trim();
+    const shopName = String(settings.shopName || item && item.shopName || detail && detail.name || shop && (shop.display_name || shop.shop_id) || shopId || "Shop").trim();
+    const title = String(item && item.title || "Item").trim();
+    const quantity = Math.max(0, Number(item && item.quantity || 0));
+    const selectedQty = settings.ownerMode ? 0 : Math.max(0, Number(getShopCart(state, shopId)[itemId] || 0));
+    const priceLabel = formatPrice(item && item.price, detail && detail.pricing) || "Open";
+    const stockLabel = quantity > 0 ? (quantity + " left") : "Available";
+    const description = String(item && item.description || "").trim();
+    const imageFiles = Array.isArray(item && item.imageFiles) ? item.imageFiles : [];
+    const imageMarkup = imageFiles.length
+      ? '<img src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(title) + '">'
+      : '<span>' + escapeHtml((title.charAt(0) || "#").toUpperCase()) + '</span>';
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(String(settings.color || "")) ? String(settings.color) : shopColor(shop || {});
+    const actionMarkup = settings.ownerMode
+      ? '<span class="shop-card-open">' + escapeHtml(stockLabel) + '</span>'
+      : itemSelectionControlMarkup({
+          shopId: shopId,
+          itemId: itemId,
+          quantity: selectedQty,
+          title: title
+        });
+    const openAttr = settings.openShop === false ? '' : ' data-open-shop-card="' + escapeHtml(shopId) + '"';
+    const addAttr = !settings.ownerMode && settings.openShop === false && itemId
+      ? ' role="button" tabindex="0" data-pane-add-item="' + escapeHtml(itemId) + '" aria-label="Add ' + escapeHtml(title) + ' to cart"'
+      : '';
+    return '' +
+      '<article class="shop-card shop-discovery-card shop-item-discovery-card' + (settings.openShop === false && !settings.ownerMode ? ' is-touch-add' : '') + '"' + openAttr + addAttr + ' style="--shop-color:' + escapeHtml(safeColor) + ';">' +
+        '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
+        '<div class="shop-card-main">' +
+          '<div class="shop-card-topline">' +
+            '<div class="shop-card-title-block">' +
+              '<strong>' + escapeHtml(title) + '</strong>' +
+              '<span class="shop-card-subtitle">' + escapeHtml(settings.showShopName === false ? stockLabel : shopName) + '</span>' +
+            '</div>' +
+            actionMarkup +
+          '</div>' +
+          '<div class="shop-card-items">' +
+            '<span class="shop-card-item">' + escapeHtml(priceLabel) + '</span>' +
+            '<span class="shop-card-item">' + escapeHtml(stockLabel) + '</span>' +
+            (description ? '<span class="shop-card-item">' + escapeHtml(clampText(description, 34)) + '</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</article>';
+  }
+
   function itemSortControlsMarkup(state, count, ownerMode) {
     const activeMode = normalizeItemSortMode(state && state.itemSortMode);
     const viewMode = normalizeListingViewMode(state && state.listingViewMode);
@@ -7764,46 +7844,23 @@
       const shop = state.shopById[shopId] || null;
       const detail = state.shopDetails[shopId] || shopDetailFromPreview(shop);
       const shopName = String(item && item.shopName || shop && (shop.display_name || shop.shop_id) || shopId || "Shop").trim();
-      const title = String(item && item.title || "Item").trim();
       const color = String(item && item.shopMapColor || shopColor(shop || {})).trim();
       const safeColor = /^#[0-9a-fA-F]{6}$/.test(color) ? color : HASHOP_DEFAULT_SHOP_COLOR;
-      const priceLabel = formatPrice(item && item.price, detail && detail.pricing) || "Open";
-      const quantity = Math.max(0, Number(item && item.quantity || 0));
-      const stockLabel = quantity > 0 ? (quantity + " left") : "Available";
-      const description = String(item && item.description || "").trim();
       const cartItemId = libraryItemCartId(item);
-      const cartQty = cartItemId ? Math.max(0, Number(getShopCart(state, shopId)[cartItemId] || 0)) : 0;
       const locationLabel = clampText(
         (detail && detail.location)
           || (shop && shop.location_label)
           || statusLabel(shop, state.userPoint),
         34
       );
-      const imageFiles = Array.isArray(item && item.imageFiles) ? item.imageFiles : [];
-      const imageMarkup = imageFiles.length
-        ? '<img src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(title) + '">'
-        : '<span>' + escapeHtml((title.charAt(0) || "#").toUpperCase()) + '</span>';
-      const addMarkup = cartItemId
-        ? '<button class="shop-card-add" type="button" data-root-add-shop="' + escapeHtml(shopId) + '" data-root-add-item="' + escapeHtml(cartItemId) + '">' + escapeHtml(cartQty ? ("Added " + cartQty) : "Add") + '</button>'
-        : '<span class="shop-card-open">Open</span>';
-      return '' +
-        '<article class="shop-card shop-discovery-card shop-item-discovery-card" data-open-shop-card="' + escapeHtml(shopId) + '" style="--shop-color:' + escapeHtml(safeColor) + ';">' +
-          '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
-          '<div class="shop-card-main">' +
-            '<div class="shop-card-topline">' +
-              '<div class="shop-card-title-block">' +
-                '<strong>' + escapeHtml(title) + '</strong>' +
-                '<span class="shop-card-subtitle">' + escapeHtml(shopName + (locationLabel ? (" · " + locationLabel) : "")) + '</span>' +
-              '</div>' +
-              addMarkup +
-            '</div>' +
-            '<div class="shop-card-items">' +
-              '<span class="shop-card-item">' + escapeHtml(priceLabel) + '</span>' +
-              '<span class="shop-card-item">' + escapeHtml(stockLabel) + '</span>' +
-              (description ? '<span class="shop-card-item">' + escapeHtml(clampText(description, 28)) + '</span>' : '') +
-            '</div>' +
-          '</div>' +
-        '</article>';
+      return shopItemCardMarkup(state, detail, Object.assign({}, item, {
+        id: cartItemId || libraryItemCartId(item)
+      }), shop, {
+        shopId: shopId,
+        itemId: cartItemId,
+        shopName: shopName + (locationLabel ? (" · " + locationLabel) : ""),
+        color: safeColor
+      });
     }).join("");
   }
 
@@ -11627,6 +11684,7 @@
 	    state.listNode.addEventListener("keydown", function (event) {
 	      const target = event.target;
 	      if (!(target instanceof Element)) return;
+      if (target.closest("button, a, input, textarea, select")) return;
       const paneAddKeyboardItem = target.closest("[data-pane-add-item]");
       if (paneAddKeyboardItem) {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -12390,6 +12448,23 @@
       if (externalActionLink) {
         return;
       }
+      const cartStep = target.closest(".shop-cart-step, .shop-item-step, [data-cart-step][data-item-id]");
+      if (cartStep) {
+        event.preventDefault();
+        const stepShopId = String(cartStep.getAttribute("data-cart-shop-id") || state.activeShopId || "").trim();
+        let stepItemId = String(cartStep.getAttribute("data-item-id") || "").trim();
+        const stepLibraryItem = findLibraryItem(state, stepShopId, stepItemId);
+        if (stepLibraryItem) {
+          stepItemId = ensureShopDetailItemFromLibrary(state, stepLibraryItem) || stepItemId;
+        }
+        addToCart(
+          state,
+          stepShopId,
+          stepItemId,
+          Number(cartStep.getAttribute("data-cart-step") || 0)
+        );
+        return;
+      }
       const rootAddItemButton = target.closest("[data-root-add-item]");
       if (rootAddItemButton) {
         event.preventDefault();
@@ -12407,17 +12482,6 @@
       if (openShopCardButton) {
         event.preventDefault();
         openShopInPane(state, String(openShopCardButton.getAttribute("data-open-shop-card") || "").trim());
-        return;
-      }
-      const cartStep = target.closest(".shop-cart-step, .shop-item-step");
-      if (cartStep) {
-        event.preventDefault();
-        addToCart(
-          state,
-          state.activeShopId,
-          String(cartStep.getAttribute("data-item-id") || "").trim(),
-          Number(cartStep.getAttribute("data-cart-step") || 0)
-        );
         return;
       }
       const paneAddItem = target.closest("[data-pane-add-item]");

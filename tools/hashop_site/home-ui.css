@@ -25011,3 +25011,700 @@ html body .shell.shell-home .shop-state-card strong {
     gap: 0.62rem !important;
   }
 }
+
+/* Iteration 088: replace divider/outline styling with filled, quiet Hashop surfaces. */
+html body .shell.shell-home {
+  --hashop-soft-cell: #f7f5ee;
+  --hashop-soft-cell-strong: #f1eee4;
+  --hashop-soft-shadow: 0 10px 28px rgba(17, 17, 17, 0.045);
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] {
+  --hashop-soft-cell: #101010;
+  --hashop-soft-cell-strong: #161616;
+  --hashop-soft-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+html body .shell.shell-home .shop-login-form,
+html body .shell.shell-home .shop-buyer-auth-form,
+html body .shell.shell-home .shop-add-form,
+html body .shell.shell-home .shop-account-form-card,
+html body .shell.shell-home .shop-account-state-body {
+  gap: 0.72rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-login-hero,
+html body .shell.shell-home .shop-login-field,
+html body .shell.shell-home .shop-account-field,
+html body .shell.shell-home .shop-login-status,
+html body .shell.shell-home .shop-account-status,
+html body .shell.shell-home .shop-state-card {
+  border: 0 !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-login-field,
+html body .shell.shell-home .shop-account-field {
+  gap: 0.4rem !important;
+  padding: 0.78rem 0.86rem !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+}
+
+html body .shell.shell-home .shop-login-field:focus-within,
+html body .shell.shell-home .shop-account-field:focus-within {
+  background: var(--hashop-soft-cell-strong) !important;
+  box-shadow: inset 0 0 0 1px rgba(141, 123, 74, 0.18) !important;
+}
+
+html body .shell.shell-home .shop-login-input,
+html body .shell.shell-home .shop-account-textarea,
+html body .shell.shell-home .shop-login-input:focus,
+html body .shell.shell-home .shop-account-textarea:focus {
+  min-height: 1.86rem !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-account-auth-links,
+html body .shell.shell-home .shop-account-auth-public-links {
+  gap: 0.48rem !important;
+  padding-top: 0.14rem !important;
+}
+
+html body .shell.shell-home .shop-account-auth-links button,
+html body .shell.shell-home .shop-account-auth-public-links a,
+html body .shell.shell-home .shop-account-form-actions .shop-owner-chip-button,
+html body .shell.shell-home .shop-account-state-actions .shop-owner-chip-button,
+html body .shell.shell-home .shop-account-mini-button {
+  min-height: 2.44rem !important;
+  padding: 0.5rem 0.72rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+  color: var(--hashop-auth-ink) !important;
+  -webkit-text-fill-color: var(--hashop-auth-ink) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-account-auth-links button:active,
+html body .shell.shell-home .shop-account-auth-public-links a:active,
+html body .shell.shell-home .shop-account-form-actions .shop-owner-chip-button:active,
+html body .shell.shell-home .shop-account-state-actions .shop-owner-chip-button:active,
+html body .shell.shell-home .shop-account-mini-button:active {
+  background: var(--hashop-soft-cell-strong) !important;
+}
+
+html body .shell.shell-home .shop-login-submit,
+html body .shell.shell-home .shop-account-auth-actions .shop-login-submit,
+html body .shell.shell-home .shop-account-form-actions .shop-owner-save,
+html body .shell.shell-home .shop-account-state-actions .shop-owner-save {
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-auth-ink) !important;
+  box-shadow: var(--hashop-soft-shadow) !important;
+}
+
+html body .shell.shell-home .shop-login-status,
+html body .shell.shell-home .shop-account-status {
+  padding: 0.62rem 0.76rem !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+}
+
+html body .shell.shell-home .shop-login-status.is-error,
+html body .shell.shell-home .shop-account-status.is-error {
+  background: rgba(156, 52, 52, 0.08) !important;
+}
+
+html body .shell.shell-home .shop-login-status.is-success,
+html body .shell.shell-home .shop-account-status.is-success {
+  background: rgba(141, 123, 74, 0.12) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-card,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-form-card,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-section,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-form-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-section {
+  gap: 0.5rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-link-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-record-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-back-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-profile-card,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-location-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-link-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-record-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-back-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-profile-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-location-card {
+  min-height: 3.64rem !important;
+  padding: 0.72rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-row:active,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-link-row:active,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-row:active,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-link-row:active {
+  background: var(--hashop-soft-cell-strong) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-stack,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-stack {
+  gap: 0.72rem !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-form,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-summary-card,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-editor,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-list,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-list,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-picker,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-draft-list,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-library-grid,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-form,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-summary-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-editor,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-list,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-list,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-picker,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-draft-list,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-library-grid {
+  gap: 0.62rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-field,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-field-wide,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field-wide {
+  padding: 0.78rem 0.86rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-input,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-textarea,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-input,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-textarea {
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-select,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-card,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-card,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-draft-card,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-library-card,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-add-option,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-select,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-draft-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-library-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-add-option {
+  padding: 0.72rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-fact,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-card .shop-cart-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card .shop-cart-row {
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 7px !important;
+  background: rgba(255, 255, 255, 0.58) !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-fact,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-card .shop-cart-row,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card .shop-cart-row {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-action-row > button,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-item-actions > button,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-actions > button,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-actions > button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-action-row > button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-item-actions > button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-actions > button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-actions > button {
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-save,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-save {
+  background: var(--hashop-auth-ink) !important;
+  color: var(--hashop-auth-bg) !important;
+  -webkit-text-fill-color: var(--hashop-auth-bg) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-chip-button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-chip-button {
+  background: var(--hashop-soft-cell) !important;
+  color: var(--hashop-auth-ink) !important;
+  -webkit-text-fill-color: var(--hashop-auth-ink) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-tab-row .shop-owner-tab,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row .shop-owner-tab {
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-tab-row .shop-owner-tab.is-active,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row .shop-owner-tab.is-active {
+  background: var(--hashop-auth-ink) !important;
+  color: var(--hashop-auth-bg) !important;
+  -webkit-text-fill-color: var(--hashop-auth-bg) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-screen="login"] .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-screen="setup"] .shop-account-auth-links button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-auth-links button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-links button,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="setup"] .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-auth-public-links a,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-auth-public-links a {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  min-height: 2.44rem !important;
+  padding: 0.5rem 0.72rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  border-radius: 8px !important;
+  outline: 0 !important;
+  background: var(--hashop-soft-cell) !important;
+  background-image: none !important;
+  color: var(--hashop-auth-ink) !important;
+  -webkit-text-fill-color: var(--hashop-auth-ink) !important;
+  box-shadow: none !important;
+  text-align: center !important;
+}
+
+/* Iteration 090: plain larger outline icons, no filled icon boxes. */
+html body .shell.shell-home {
+  --hashop-plain-icon-size: 1.42rem;
+  --hashop-account-icon-size: 1.58rem;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link,
+html body .shell.shell-home .home-bottom-nav .home-bottom-link.is-active,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav],
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active {
+  gap: 0.18rem !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon,
+html body .shell.shell-home .home-bottom-nav .home-bottom-link.is-active > span.home-bottom-link-icon,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active > span.home-bottom-link-icon {
+  position: relative !important;
+  display: block !important;
+  width: var(--hashop-plain-icon-size) !important;
+  height: var(--hashop-plain-icon-size) !important;
+  min-width: var(--hashop-plain-icon-size) !important;
+  min-height: var(--hashop-plain-icon-size) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon::before,
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon::after,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon::before,
+html body .shell.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon::after {
+  content: "" !important;
+  position: absolute !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  border-color: currentColor !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-shops::before {
+  left: 0.2rem !important;
+  right: 0.2rem !important;
+  top: 0.48rem !important;
+  bottom: 0.14rem !important;
+  border: 2px solid currentColor !important;
+  border-radius: 0.16rem !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-shops::after {
+  left: 0.12rem !important;
+  right: 0.12rem !important;
+  top: 0.2rem !important;
+  height: 0.42rem !important;
+  border: 2px solid currentColor !important;
+  border-bottom: 0 !important;
+  border-radius: 0.22rem 0.22rem 0 0 !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-items::before,
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-orders::before {
+  inset: 0.14rem 0.22rem !important;
+  border: 2px solid currentColor !important;
+  border-radius: 0.16rem !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-items::after,
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-orders::after {
+  left: 0.42rem !important;
+  right: 0.42rem !important;
+  top: 0.44rem !important;
+  height: 0.46rem !important;
+  border-top: 2px solid currentColor !important;
+  border-bottom: 2px solid currentColor !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-cart::before {
+  left: 0.2rem !important;
+  right: 0.2rem !important;
+  top: 0.32rem !important;
+  bottom: 0.42rem !important;
+  border: 2px solid currentColor !important;
+  border-top-width: 2px !important;
+  border-radius: 0.12rem 0.12rem 0.22rem 0.22rem !important;
+  transform: skewX(-8deg) !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-cart::after {
+  left: 0.36rem !important;
+  bottom: 0.16rem !important;
+  width: 0.2rem !important;
+  height: 0.2rem !important;
+  border: 2px solid currentColor !important;
+  border-radius: 50% !important;
+  box-shadow: 0.52rem 0 0 -1px transparent, 0.52rem 0 0 0 currentColor !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-account::before {
+  left: 0.45rem !important;
+  top: 0.14rem !important;
+  width: 0.52rem !important;
+  height: 0.52rem !important;
+  border: 2px solid currentColor !important;
+  border-radius: 50% !important;
+}
+
+html body .shell.shell-home .home-bottom-nav .home-bottom-link > span.home-bottom-link-icon.is-account::after {
+  left: 0.24rem !important;
+  right: 0.24rem !important;
+  bottom: 0.16rem !important;
+  height: 0.5rem !important;
+  border: 2px solid currentColor !important;
+  border-bottom: 0 !important;
+  border-radius: 0.48rem 0.48rem 0 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-link-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-record-row,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-back-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-link-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-record-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-back-row {
+  grid-template-columns: 1.9rem minmax(0, 1fr) auto auto !important;
+  gap: 0.66rem !important;
+}
+
+html body .shell.shell-home .shop-account-menu-icon,
+html body .shell.shell-home svg.shop-account-menu-icon,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-icon,
+html body .shell.shell-home[data-hashop-screen="account"] svg.shop-account-menu-icon,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-icon,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] svg.shop-account-menu-icon {
+  width: var(--hashop-account-icon-size) !important;
+  height: var(--hashop-account-icon-size) !important;
+  min-width: var(--hashop-account-icon-size) !important;
+  min-height: var(--hashop-account-icon-size) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--hashop-auth-accent) !important;
+  -webkit-text-fill-color: var(--hashop-auth-accent) !important;
+  stroke: currentColor !important;
+  stroke-width: 2.25 !important;
+  fill: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home .shop-account-menu-icon::before,
+html body .shell.shell-home .shop-account-menu-icon::after,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-icon::before,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-account-menu-icon::after,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-icon::before,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="account"] .shop-account-menu-icon::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Iteration 091: shop pages use the same feed cards, with real quantity controls. */
+html body .shell.shell-home .shop-pane-shop-feed {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  align-content: start !important;
+  align-items: start !important;
+  gap: 0.92rem 0.82rem !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="feed"] {
+  grid-template-columns: repeat(auto-fit, minmax(min(10.75rem, 100%), 1fr)) !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="list"] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed > .shop-card,
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view] > .shop-card,
+html body .shell.shell-home .shop-pane-shop-feed > .shop-item-discovery-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  align-items: start !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 0 0.72rem !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  background-color: #fff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="list"] > .shop-card,
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="list"] > .shop-item-discovery-card {
+  grid-template-columns: 2.7rem minmax(0, 1fr) !important;
+  gap: 0.78rem !important;
+  padding-bottom: 0.78rem !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-thumb {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: var(--hashop-soft-cell, #f7f5ee) !important;
+  color: var(--hashop-auth-accent, #8d7b4a) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-thumb {
+  width: 2.7rem !important;
+  height: 2.7rem !important;
+  aspect-ratio: auto !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-main,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-title-block,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-items {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-topline {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 0.56rem !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-title-block strong,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-subtitle,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-item {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-title-block strong {
+  font-size: 0.98rem !important;
+  font-weight: 900 !important;
+  line-height: 1.16 !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-subtitle,
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-item {
+  color: #5f5f5f !important;
+  -webkit-text-fill-color: #5f5f5f !important;
+  font-size: 0.74rem !important;
+  line-height: 1.22 !important;
+}
+
+html body .shell.shell-home .shop-pane-shop-feed .shop-card-item:first-child {
+  color: #171717 !important;
+  -webkit-text-fill-color: #171717 !important;
+  font-size: 0.88rem !important;
+  font-weight: 850 !important;
+}
+
+html body .shell.shell-home .shop-item-selection {
+  justify-self: end !important;
+  display: inline-grid !important;
+  grid-template-columns: 1.58rem minmax(1.18rem, auto) 1.58rem !important;
+  align-items: center !important;
+  gap: 0.14rem !important;
+  min-width: 4.58rem !important;
+  max-width: 5.2rem !important;
+  min-height: 1.58rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-item-step,
+html body .shell.shell-home .shop-card-add.shop-item-add {
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 1.58rem !important;
+  height: 1.58rem !important;
+  min-height: 1.58rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  outline: 0 !important;
+  background: #111 !important;
+  background-image: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  box-shadow: none !important;
+  font: inherit !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+html body .shell.shell-home .shop-card-add.shop-item-add {
+  min-width: 3.2rem !important;
+  padding: 0 0.72rem !important;
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+}
+
+html body .shell.shell-home .shop-item-step:active,
+html body .shell.shell-home .shop-card-add.shop-item-add:active {
+  transform: translateY(1px) !important;
+  background: var(--hashop-auth-accent, #8d7b4a) !important;
+}
+
+html body .shell.shell-home .shop-item-qty {
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 1.18rem !important;
+  height: 1.58rem !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  font-size: 0.86rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
