@@ -108,6 +108,42 @@ class AuthGuardrailTests(unittest.TestCase):
         self.assertIsNone(duplicate)
         self.assertTrue(asyncio.run(self.store.buyer_account_exists("buyer@example.com")))
 
+    def test_buyer_account_payload_restores_verified_owner_shops(self) -> None:
+        asyncio.run(
+            self.store.upsert_shop(
+                shop_id="demo-shop",
+                display_name="Demo Shop",
+                reach_plan="free",
+                public_url="https://hashop.test/demo-shop",
+            )
+        )
+        linked = asyncio.run(
+            self.store.link_shop_recovery_contact(
+                "demo-shop",
+                "buyer@example.com",
+                source="shop_signup",
+                is_primary=True,
+            )
+        )
+
+        self.assertIsNotNone(linked)
+        owner_shops = asyncio.run(self.store.list_shops_for_recovery_contact("BUYER@example.com"))
+        account = asyncio.run(
+            self.store.create_buyer_account(
+                display_name="Buyer",
+                contact="buyer@example.com",
+                password="secret1",
+                buyer_key="buyer-key",
+            )
+        )
+        self.assertIsNotNone(account)
+        payload = HashopHub._buyer_account_payload(account, owner_shops)
+
+        self.assertEqual([shop["shop_id"] for shop in owner_shops], ["demo-shop"])
+        self.assertIn("owner", payload["roles"])
+        self.assertEqual(payload["ownerShops"][0]["shopId"], "demo-shop")
+        self.assertEqual(payload["ownerShops"][0]["shopName"], "Demo Shop")
+
     def test_buyer_contact_validation_rejects_fake_numbers(self) -> None:
         self.assertEqual(self.store._normalize_account_contact_key("123456"), "")
         self.assertEqual(self.store._normalize_account_contact_key("1111111111"), "")

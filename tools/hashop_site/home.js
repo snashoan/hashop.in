@@ -21,6 +21,7 @@
   const ACCOUNT_HELP_STORAGE_KEY = "hashop_account_help_requests";
   const SETUP_CONTACT_VERIFICATION_STORAGE_KEY = "hashop_setup_contact_verification";
   const LISTING_VIEW_STORAGE_KEY = "hashop_listing_view_v2";
+  const HASHOP_THEME_STORAGE_KEY = "hashop_theme";
   const HASHOP_GOOGLE_LIGHT_MAP_STYLES = [
     { elementType: "geometry", stylers: [{ color: "#d5d5d5" }] },
     { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -60,12 +61,43 @@
     { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#89a4a9" }] }
   ];
 
+  function normalizeHashopTheme(value) {
+    return String(value || "").trim().toLowerCase() === "dark" ? "dark" : "light";
+  }
+
   function detectMapTheme() {
+    try {
+      const storedTheme = normalizeHashopTheme(window.localStorage.getItem(HASHOP_THEME_STORAGE_KEY));
+      if (storedTheme) return storedTheme;
+    } catch (error) {}
     return "light";
   }
 
   function googleMapStylesForTheme(theme) {
     return theme === "dark" ? HASHOP_GOOGLE_DARK_MAP_STYLES : HASHOP_GOOGLE_LIGHT_MAP_STYLES;
+  }
+
+  function applyHashopTheme(state, value) {
+    const theme = normalizeHashopTheme(value);
+    if (state) state.mapTheme = theme;
+    try {
+      window.localStorage.setItem(HASHOP_THEME_STORAGE_KEY, theme);
+    } catch (error) {}
+    const themeColor = theme === "dark" ? "#050505" : "#ffffff";
+    try {
+      document.documentElement.setAttribute("data-hashop-theme", theme);
+      document.body.setAttribute("data-hashop-theme", theme);
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.setAttribute("content", themeColor);
+    } catch (error) {}
+    syncMapUiState(state);
+    if (state && state.mapProvider === "google" && state.map && typeof state.map.setOptions === "function") {
+      state.map.setOptions({
+        backgroundColor: theme === "dark" ? "#11100b" : "#d7d0bf",
+        styles: googleMapStylesForTheme(theme)
+      });
+    }
+    return theme;
   }
 
   function hashopDebugEnabled() {
@@ -1048,7 +1080,9 @@
       accountToken: accountToken,
       displayName: displayName,
       contact: contact,
-      buyerKey: buyerKey
+      buyerKey: buyerKey,
+      ownerShops: normalizeOwnerShops(value.ownerShops || value.owner_shops || value.shops),
+      roles: normalizeAccountRoles(value.roles || [], normalizeOwnerShops(value.ownerShops || value.owner_shops || value.shops))
     };
   }
 
@@ -1418,14 +1452,15 @@
       } catch (error) {}
     }
     const current = state.accountSession || loadAccountSession() || {};
-    const ownerShops = normalizeOwnerShops(current.ownerShops || []);
-    const roles = normalizeAccountRoles((current.roles || []).concat(["buyer"]), ownerShops);
+    const accountOwnerShops = normalizeOwnerShops(buyerAccount.ownerShops || []);
+    const ownerShops = normalizeOwnerShops(accountOwnerShops.concat(current.ownerShops || []));
+    const roles = normalizeAccountRoles((current.roles || []).concat(buyerAccount.roles || []).concat(["buyer"]), ownerShops);
     const nextSession = setAccountSession(state, {
       displayName: String(current.displayName || buyerAccount.displayName || buyerAccount.contact || "").trim(),
       roles: roles,
       activeRole: "buyer",
       ownerShops: ownerShops,
-      preferredOwnerShopId: current.preferredOwnerShopId || "",
+      preferredOwnerShopId: current.preferredOwnerShopId || preferredOwnerShopId({ ownerShops: ownerShops }) || "",
       buyerAccount: buyerAccount
     });
     const currentProfile = state.buyerProfile && typeof state.buyerProfile === "object"
@@ -3187,7 +3222,7 @@
           '</div>' +
           '<div class="shop-owner-order-fact">' +
             '<span>Total</span>' +
-            '<strong>' + escapeHtml(total || "-") + '</strong>' +
+            '<strong>' + escapeHtml(total || "0") + '</strong>' +
           '</div>' +
           '<div class="shop-owner-order-fact is-wide">' +
             '<span>' + escapeHtml(orderFulfillmentLabel(order)) + '</span>' +
@@ -4233,7 +4268,7 @@
                       '</div>' +
                       '<p>' + escapeHtml(item.description || "Ready to import into this shop.") + '</p>' +
                       '<div class="shop-owner-library-meta">' +
-                        '<span>' + escapeHtml(formatPrice(item.price, detail && detail.pricing) || "-") + '</span>' +
+                        '<span>' + escapeHtml(formatPrice(item.price, detail && detail.pricing) || "Not set") + '</span>' +
                         '<span>' + escapeHtml("Qty " + Math.max(0, Number(item.quantity || 0))) + '</span>' +
                       '</div>' +
                       '<button class="shop-owner-save" type="button" data-owner-library-import="' + escapeHtml(item.libraryId || "") + '">Import item</button>' +
@@ -4906,7 +4941,7 @@
       title: String(item && item.title || source.title || "Item").trim(),
       description: String(source.description || item && item.description || "Available now.").trim(),
       quantity: quantity,
-      price: formattedPrice || price || "-",
+      price: formattedPrice || price || "Not set",
       lineTotal: item && item.total != null ? formatTotalAmount(item.total, detail && detail.pricing) : "",
       stock: sourceQuantity > 0 ? ("Qty " + sourceQuantity) : "Available",
       image: firstImage
@@ -5083,7 +5118,7 @@
     if (!detail) {
       state.listNode.innerHTML = '<div class="shop-pane-detail">' + stateCardMarkup({
         title: "Nothing listed yet",
-        message: "Call the shop or check again later."
+        message: "Check again later."
       }) + '</div>';
       return;
     }
@@ -5102,8 +5137,6 @@
     const locationText = String(detail.location || "").trim();
     const shopName = String(detail.name || shop.display_name || shop.shop_id || "Shop").trim();
     const distanceLabel = statusLabel(shop, state.userPoint);
-    const callHref = shopCallHref(detail.contact);
-    const whatsappHref = shopWhatsAppHref(detail.contact, shopName);
     const heroOverlineMarkup = '' +
       '<div class="shop-pane-overline">' +
         '<div class="shop-pane-chip">Shop</div>' +
@@ -5119,10 +5152,7 @@
     const statsMarkup = statsParts.length ? (
       '<div class="shop-pane-stats">' + statsParts.join('') + '</div>'
     ) : '';
-    const contactActionParts = [
-      callHref ? '<a class="shop-pane-quick-link is-primary" href="' + escapeHtml(callHref) + '">Call</a>' : '',
-      whatsappHref ? '<a class="shop-pane-quick-link" href="' + escapeHtml(whatsappHref) + '" target="_blank" rel="noopener">WhatsApp</a>' : ''
-    ].filter(Boolean);
+    const contactActionParts = [];
     const bottomContactMarkup = !ownerMode && contactActionParts.length ? (
       '<div class="shop-pane-quick-actions shop-pane-bottom-contact">' +
         contactActionParts.join('') +
@@ -5377,7 +5407,7 @@
               '</div>' +
               '<div class="shop-cart-copy">' +
                 '<strong>Total</strong>' +
-                '<span>' + escapeHtml(confirmation.order && (confirmation.order.total || confirmation.order.price) || "-") + '</span>' +
+                '<span>' + escapeHtml(confirmation.order && (confirmation.order.total || confirmation.order.price) || "0") + '</span>' +
               '</div>' +
             '</div>' +
 	            '<div class="shop-cart-row">' +
@@ -5834,6 +5864,7 @@
     if (token === "p" || label.indexOf("profile") >= 0) return "profile";
     if (token === "h" || label.indexOf("help") >= 0) return "help";
     if (token === "in" || label.indexOf("sign in") >= 0) return "signin";
+    if (token === "d" || label.indexOf("dark") >= 0 || label.indexOf("theme") >= 0) return "theme";
     if (token === "+") return "plus";
     if (token === "!") return "logout";
     return "dot";
@@ -5855,7 +5886,8 @@
       privacy: "shield-check",
       profile: "user",
       shop: "store",
-      signin: "log-in"
+      signin: "log-in",
+      theme: "moon"
     };
     return names[name] || names.dot;
   }
@@ -7017,7 +7049,15 @@
     const supportRows = [
       accountMenuRowMarkup({ icon: "H", title: "Help & Support", subtitle: "Questions and feedback", action: "help" }),
       accountLinkRowMarkup({ icon: "#", title: "About Hashop", subtitle: "Objective and project shape", href: "/about" }),
-      accountLinkRowMarkup({ icon: "P", title: "Privacy & Policies", subtitle: "Minimal rules and data use", href: "/privacy" })
+      accountLinkRowMarkup({ icon: "P", title: "Privacy & Policies", subtitle: "Minimal rules and data use", href: "/privacy" }),
+      accountMenuRowMarkup({
+        icon: "D",
+        title: "Dark mode",
+        subtitle: state.mapTheme === "dark" ? "Night interface" : "Day interface",
+        attr: ' data-account-theme-toggle="true"',
+        pressed: state.mapTheme === "dark",
+        toggle: true
+      })
     ];
     if (signedIn) {
       supportRows.push(accountMenuRowMarkup({ icon: "!", title: "Sign out", subtitle: "Leave this device", attr: ' data-account-signout="true"', danger: true }));
@@ -9390,6 +9430,11 @@
     state.searchQuery = "";
     state.ownerPanel.tab = "settings";
     state.ownerPanel.section = normalizeOwnerSettingsSection(options && options.section || state.ownerPanel.section || "profile");
+    state.ownerPanel.itemId = "";
+    state.ownerPanel.message = "";
+    state.ownerPanel.tone = "";
+    state.ownerPanel.addMenuOpen = false;
+    state.ownerPanel.orderDraftOpen = false;
     state.panelNode.classList.add("is-shop-view");
     state.panelNode.classList.remove("is-login-view");
     updateSearchField(state);
@@ -9417,6 +9462,8 @@
     const section = normalizeOwnerHistorySection(options && options.section || "orders");
     const openDraft = section === "orders" && !!(options && options.openDraft);
     if (state.activeShopId === shopId && isOwnerViewingShop(state)) {
+      const previousTab = String(state.ownerPanel.tab || "").trim();
+      const previousSection = String(state.ownerPanel.section || "").trim();
       const wasInSameOrdersState = state.ownerPanel.tab === "history" && state.ownerPanel.section === "orders";
       state.debugPaneView = "";
       state.activeShopView = "items";
@@ -9424,6 +9471,12 @@
       state.searchQuery = "";
       state.ownerPanel.tab = "history";
       state.ownerPanel.section = section;
+      state.ownerPanel.message = "";
+      state.ownerPanel.tone = "";
+      state.ownerPanel.addMenuOpen = false;
+      if (previousTab !== "history" || previousSection !== section || section !== "items") {
+        state.ownerPanel.itemId = "";
+      }
       state.ownerPanel.orderDraftOpen = section === "orders" && (openDraft || (wasInSameOrdersState && !!state.ownerPanel.orderDraftOpen));
       state.panelNode.classList.add("is-shop-view");
       state.panelNode.classList.remove("is-login-view");
@@ -10536,7 +10589,12 @@
         }
         throw new Error(message);
       }
-      const account = result.payload && result.payload.account;
+      const accountPayload = result.payload && result.payload.account;
+      const account = accountPayload && typeof accountPayload === "object"
+        ? Object.assign({}, accountPayload, {
+          ownerShops: accountPayload.ownerShops || result.payload.owner_shops || result.payload.ownerShops || []
+        })
+        : accountPayload;
       saveBuyerAccountSession(state, account);
       state.accountPaneMode = "";
       state.buyerAuthDraft = {
@@ -12336,6 +12394,13 @@
 	          return;
 	        }
 	      }
+      const accountThemeToggleButton = target.closest("[data-account-theme-toggle]");
+      if (accountThemeToggleButton) {
+        event.preventDefault();
+        applyHashopTheme(state, state.mapTheme === "dark" ? "light" : "dark");
+        renderShopList(state);
+        return;
+      }
       const accountOwnerToggleButton = target.closest("[data-account-owner-toggle]");
       if (accountOwnerToggleButton) {
         event.preventDefault();
@@ -12991,6 +13056,10 @@
       const ownerMainManageButton = target.closest("[data-owner-main-manage]");
       if (ownerMainManageButton) {
         event.preventDefault();
+        if (state.ownerPanel && state.ownerPanel.tab === "settings") {
+          closeOwnerOverlayToItems(state);
+          return;
+        }
         openOwnerSettingsPane(state, {
           section: "profile"
         });

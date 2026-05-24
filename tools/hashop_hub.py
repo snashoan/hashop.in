@@ -1693,6 +1693,32 @@ class ShopStore:
             ).fetchall()
         return [self._row_to_dict(row) for row in rows]
 
+    async def list_shops_for_recovery_contact(self, contact: str, limit: int = 100) -> List[Dict[str, str]]:
+        safe_limit = max(1, min(limit, 500))
+        return await asyncio.to_thread(self._list_shops_for_recovery_contact_threadsafe, contact, safe_limit)
+
+    def _list_shops_for_recovery_contact_threadsafe(self, contact: str, limit: int) -> List[Dict[str, str]]:
+        with self._lock:
+            return self._list_shops_for_recovery_contact_sync(contact, limit)
+
+    def _list_shops_for_recovery_contact_sync(self, contact: str, limit: int) -> List[Dict[str, str]]:
+        contact_key = self._reset_contact_key(contact)
+        if not contact_key:
+            return []
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT s.shop_id, s.display_name, s.reach_plan, s.public_url, s.map_color, s.created_at, s.updated_at
+                FROM shops s
+                INNER JOIN shop_recovery_contacts c ON c.shop_id = s.shop_id
+                WHERE c.contact_key = ? AND c.verified_at > 0
+                ORDER BY c.is_primary DESC, s.updated_at DESC, s.shop_id ASC
+                LIMIT ?
+                """,
+                (contact_key, limit),
+            ).fetchall()
+        return [self._row_to_dict(row) for row in rows]
+
     async def list_item_library(self, limit: int = 400) -> List[Dict[str, Any]]:
         safe_limit = max(1, min(limit, 1000))
         return await asyncio.to_thread(self._list_item_library_threadsafe, safe_limit)
@@ -3112,14 +3138,31 @@ class HashopHub:
         return web.json_response(payload, headers={"Cache-Control": "no-store"})
 
     @staticmethod
-    def _buyer_account_payload(account: Dict[str, str]) -> Dict[str, object]:
+    def _buyer_account_payload(
+        account: Dict[str, str],
+        owner_shops: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, object]:
+        owner_shop_rows: List[Dict[str, str]] = []
+        for shop in owner_shops or []:
+            if not isinstance(shop, dict):
+                continue
+            shop_id = str(shop.get("shop_id") or "").strip()
+            if not shop_id:
+                continue
+            owner_shop_rows.append(
+                {
+                    "shopId": shop_id,
+                    "shopName": str(shop.get("display_name") or shop_id).strip()[:160] or shop_id,
+                }
+            )
         return {
             "accountId": str(account.get("account_id") or "").strip(),
             "displayName": str(account.get("display_name") or "").strip(),
             "contact": str(account.get("contact") or "").strip(),
             "buyerKey": str(account.get("buyer_key") or "").strip(),
             "accountToken": str(account.get("account_token") or "").strip(),
-            "roles": ["buyer"],
+            "roles": ["buyer", "owner"] if owner_shop_rows else ["buyer"],
+            "ownerShops": owner_shop_rows,
         }
 
     @staticmethod
@@ -4053,11 +4096,13 @@ class HashopHub:
         account = await self.store.create_buyer_account(display_name, verified_contact or contact, password, buyer_key)
         if account is None:
             return web.json_response({"error": "account_exists"}, status=409)
+        owner_shops = await self.store.list_shops_for_recovery_contact(verified_contact or contact, limit=100)
         return web.json_response(
             {
                 "created": True,
-                "account": self._buyer_account_payload(account),
+                "account": self._buyer_account_payload(account, owner_shops),
                 "buyer_key": str(account.get("buyer_key") or "").strip(),
+                "owner_shops": [self._normalized_shop_record(shop) for shop in owner_shops],
             },
             status=201,
             headers={"Cache-Control": "no-cache"},
@@ -4092,10 +4137,15 @@ class HashopHub:
         account = await self.store.verify_buyer_account(contact, password, buyer_key)
         if account is None:
             return web.json_response({"error": "invalid_login"}, status=401)
+        owner_shops = await self.store.list_shops_for_recovery_contact(
+            str(account.get("contact") or contact).strip(),
+            limit=100,
+        )
         return web.json_response(
             {
-                "account": self._buyer_account_payload(account),
+                "account": self._buyer_account_payload(account, owner_shops),
                 "buyer_key": str(account.get("buyer_key") or "").strip(),
+                "owner_shops": [self._normalized_shop_record(shop) for shop in owner_shops],
             },
             headers={"Cache-Control": "no-cache"},
         )
@@ -4285,10 +4335,15 @@ class HashopHub:
         account = await self.store.reset_buyer_password_with_code(contact, reset_code, password, buyer_key)
         if account is None:
             return web.json_response({"error": "invalid_reset_code"}, status=401)
+        owner_shops = await self.store.list_shops_for_recovery_contact(
+            str(account.get("contact") or contact).strip(),
+            limit=100,
+        )
         return web.json_response(
             {
-                "account": self._buyer_account_payload(account),
+                "account": self._buyer_account_payload(account, owner_shops),
                 "buyer_key": str(account.get("buyer_key") or "").strip(),
+                "owner_shops": [self._normalized_shop_record(shop) for shop in owner_shops],
             },
             headers={"Cache-Control": "no-store"},
         )
