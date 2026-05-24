@@ -8,7 +8,7 @@ from pathlib import Path
 TOOLS_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TOOLS_DIR))
 
-from hashop_hub import ShopStore  # noqa: E402
+from hashop_hub import HashopHub, ShopStore  # noqa: E402
 
 
 class AuthGuardrailTests(unittest.TestCase):
@@ -104,6 +104,76 @@ class AuthGuardrailTests(unittest.TestCase):
 
         self.assertIsNotNone(first)
         self.assertIsNone(duplicate)
+
+    def test_console_normalization_keeps_payment_qr_and_fulfillment(self) -> None:
+        console = self.store._normalize_console(
+            "demo-shop",
+            "Demo Shop",
+            "https://hashop.test/demo-shop",
+            {
+                "payments": [
+                    {
+                        "id": "upi-demo",
+                        "label": "UPI",
+                        "upiId": "demo@upi",
+                        "qrFile": "demo-payment-qr.png",
+                    }
+                ],
+                "orders": [
+                    {
+                        "id": "ord-demo",
+                        "title": "Coca-Cola 750 ml",
+                        "address": "Walk-in",
+                        "paymentLabel": "Walk-in",
+                        "items": [
+                            {
+                                "id": "coke",
+                                "title": "Coca-Cola 750 ml",
+                                "quantity": 2,
+                                "price": "45",
+                                "image": "coke.png",
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+
+        self.assertEqual(console["payments"][0]["qrFile"], "demo-payment-qr.png")
+        self.assertEqual(console["orders"][0]["fulfillmentMode"], "pickup")
+        self.assertEqual(console["orders"][0]["items"][0]["image"], "coke.png")
+
+    def test_order_email_includes_product_picture_links_and_html_images(self) -> None:
+        hub = HashopHub(
+            public_base_url="https://hashop.test",
+            request_timeout=30,
+            site_dir=Path(self.temp_dir.name),
+            store=self.store,
+            uploads_dir=Path(self.temp_dir.name) / "uploads",
+        )
+        order = {
+            "title": "Coca-Cola 750 ml",
+            "total": "90",
+            "buyerName": "Buyer90",
+            "fulfillmentMode": "delivery",
+            "deliveryAddress": "Main Road",
+            "items": [
+                {
+                    "title": "Coca-Cola 750 ml",
+                    "quantity": 2,
+                    "price": "45",
+                    "description": "Cold drink bottle",
+                    "image": "coke.png",
+                }
+            ],
+        }
+
+        text_body = hub._order_email_body(order, "seller", "Demo Shop")
+        html_body = hub._order_email_html(order, "seller", "Demo Shop")
+
+        self.assertIn("Product pictures:", text_body)
+        self.assertIn("https://hashop.test/api/assets/coke.png", text_body)
+        self.assertIn('<img src="https://hashop.test/api/assets/coke.png"', html_body)
 
 
 if __name__ == "__main__":

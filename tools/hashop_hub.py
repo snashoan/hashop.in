@@ -4,6 +4,7 @@ import asyncio
 import base64
 import hashlib
 import hmac
+import html
 import json
 import math
 import mimetypes
@@ -2046,6 +2047,7 @@ class ShopStore:
                         "upiId": str(payment.get("upiId") or "").strip()[:255],
                         "btcAddress": str(payment.get("btcAddress") or "").strip()[:255],
                         "ethAddress": str(payment.get("ethAddress") or "").strip()[:255],
+                        "qrFile": str(payment.get("qrFile") or payment.get("paymentQrFile") or payment.get("qr") or "").strip()[:255],
                         "createdAt": self._safe_int(payment.get("createdAt"), minimum=0, maximum=9999999999999),
                     }
                 )
@@ -2060,6 +2062,12 @@ class ShopStore:
                 normalized_items = self._normalize_order_items(order.get("items"))
                 order_status = self._normalize_order_status(order.get("status"), order.get("paymentMode"), order)
                 status_flags = self._order_status_flags(order, order_status)
+                fulfillment_mode = str(order.get("fulfillmentMode") or order.get("fulfillment_mode") or "").strip().lower()
+                address_text = str(order.get("address") or "").strip()
+                buyer_key = str(order.get("buyerKey") or order.get("buyer_key") or "").strip().lower()
+                payment_label = str(order.get("paymentLabel") or order.get("payment_label") or "").strip()
+                if fulfillment_mode not in {"pickup", "delivery"}:
+                    fulfillment_mode = "pickup" if address_text.lower() in {"walk-in", "walk in"} or buyer_key.startswith("walkin-") or payment_label.lower() in {"walk-in", "walkin"} else "delivery"
                 normalized_orders.append(
                     {
                         "id": str(order.get("id") or uuid.uuid4().hex[:12]).strip()[:64],
@@ -2079,10 +2087,19 @@ class ShopStore:
                         "buyerAccountId": str(order.get("buyerAccountId") or order.get("accountId") or "").strip()[:64],
                         "buyerName": str(order.get("buyerName") or "").strip()[:160],
                         "buyerContact": str(order.get("buyerContact") or "").strip()[:255],
-                        "paymentLabel": str(order.get("paymentLabel") or "").strip()[:80],
+                        "paymentLabel": payment_label[:80],
                         "paymentValue": str(order.get("paymentValue") or "").strip()[:255],
+                        "paymentQrFile": str(order.get("paymentQrFile") or order.get("payment_qr_file") or "").strip()[:255],
                         "paymentMode": str(order.get("paymentMode") or "").strip()[:80],
-                        "address": str(order.get("address") or "").strip()[:4000],
+                        "fulfillmentMode": fulfillment_mode,
+                        "fulfillmentLabel": "Pickup" if fulfillment_mode == "pickup" else "Delivery",
+                        "deliveryAddress": str(order.get("deliveryAddress") or order.get("delivery_address") or "").strip()[:4000],
+                        "pickupAddress": str(order.get("pickupAddress") or order.get("pickup_address") or "").strip()[:4000],
+                        "deliveryLat": self._safe_float(order.get("deliveryLat") or order.get("delivery_lat"), minimum=-90, maximum=90),
+                        "deliveryLng": self._safe_float(order.get("deliveryLng") or order.get("delivery_lng"), minimum=-180, maximum=180),
+                        "pickupLat": self._safe_float(order.get("pickupLat") or order.get("pickup_lat"), minimum=-90, maximum=90),
+                        "pickupLng": self._safe_float(order.get("pickupLng") or order.get("pickup_lng"), minimum=-180, maximum=180),
+                        "address": address_text[:4000],
                         "notes": str(order.get("notes") or "").strip()[:4000],
                         "items": normalized_items,
                         "statusUpdatedAt": self._safe_int(order.get("statusUpdatedAt"), minimum=0, maximum=9999999999999),
@@ -2827,12 +2844,63 @@ class HashopHub:
             return "Hashop pickup order"
         return "Hashop order update"
 
-    @staticmethod
-    def _order_email_body(order: Dict[str, Any], target: str, shop_name: str) -> str:
+    def _public_asset_url(self, file_name: str) -> str:
+        safe_name = Path(str(file_name or "").strip()).name
+        if not safe_name:
+            return ""
+        return f"{self.public_base_url}/api/assets/{quote(safe_name)}"
+
+    def _order_email_items(self, order: Dict[str, Any]) -> List[Dict[str, str]]:
+        raw_items = order.get("items")
+        items: List[Dict[str, str]] = []
+        if isinstance(raw_items, list):
+            for item in raw_items[:12]:
+                if not isinstance(item, dict):
+                    continue
+                title = str(item.get("title") or "").strip()
+                if not title:
+                    continue
+                quantity = str(item.get("quantity") or "").strip()
+                price = str(item.get("price") or "").strip()
+                description = str(item.get("description") or "").strip()
+                image_file = str(item.get("image") or "").strip()
+                items.append(
+                    {
+                        "title": title,
+                        "quantity": quantity,
+                        "price": price,
+                        "description": description,
+                        "imageUrl": self._public_asset_url(image_file),
+                    }
+                )
+        if items:
+            return items
+        title = str(order.get("title") or "Order").strip()
+        quantity = str(order.get("quantity") or "").strip()
+        price = str(order.get("price") or order.get("total") or "").strip()
+        return [{"title": title, "quantity": quantity, "price": price, "description": "", "imageUrl": ""}]
+
+    def _order_email_body(self, order: Dict[str, Any], target: str, shop_name: str) -> str:
         mode = str(order.get("fulfillmentMode") or "").strip().lower()
         title = str(order.get("title") or "Order").strip()
         total = str(order.get("total") or order.get("price") or "").strip()
         buyer = str(order.get("buyerName") or order.get("buyerContact") or "Buyer").strip()
+        email_items = self._order_email_items(order)
+        item_lines = [
+            "- "
+            + str(item["title"])
+            + (f" x{item['quantity']}" if item.get("quantity") else "")
+            + (f" - {item['price']}" if item.get("price") else "")
+            for item in email_items
+        ]
+        image_lines = [
+            "- " + str(item["title"]) + ": " + str(item["imageUrl"])
+            for item in email_items
+            if item.get("imageUrl")
+        ]
+        media_block = ["", "Items:"] + item_lines
+        if image_lines:
+            media_block += ["", "Product pictures:"] + image_lines
         if target == "seller":
             destination = str(order.get("deliveryAddress") or order.get("address") or "").strip()
             return "\n".join([
@@ -2841,6 +2909,7 @@ class HashopHub:
                 f"Buyer: {buyer}",
                 f"Total: {total or '-'}",
                 f"Deliver to: {destination or 'Delivery address not set'}",
+                *media_block,
                 "",
                 "Use the Hashop map frame for the delivery cue when available.",
                 "Hashop",
@@ -2852,6 +2921,7 @@ class HashopHub:
                 f"Order: {title}",
                 f"Total: {total or '-'}",
                 f"Pickup: {pickup or 'Shop pickup point'}",
+                *media_block,
                 "",
                 "Use the Hashop map frame for the pickup cue when available.",
                 "Hashop",
@@ -2860,9 +2930,61 @@ class HashopHub:
             f"Your Hashop order at {shop_name or 'the shop'} is saved.",
             f"Order: {title}",
             f"Total: {total or '-'}",
+            *media_block,
             "",
             "Hashop",
         ])
+
+    def _order_email_html(self, order: Dict[str, Any], target: str, shop_name: str) -> str:
+        mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        title = html.escape(str(order.get("title") or "Order").strip())
+        total = html.escape(str(order.get("total") or order.get("price") or "-").strip() or "-")
+        buyer = html.escape(str(order.get("buyerName") or order.get("buyerContact") or "Buyer").strip())
+        heading = "New delivery order" if target == "seller" else ("Pickup order saved" if mode == "pickup" else "Order saved")
+        location_label = "Deliver to"
+        location = str(order.get("deliveryAddress") or order.get("address") or "").strip()
+        if mode == "pickup":
+            location_label = "Pickup"
+            location = str(order.get("pickupAddress") or order.get("address") or "").strip()
+        item_cards: List[str] = []
+        for item in self._order_email_items(order):
+            item_title = html.escape(str(item.get("title") or "Item"))
+            item_meta = " · ".join(
+                part
+                for part in (
+                    f"x{item.get('quantity')}" if item.get("quantity") else "",
+                    str(item.get("price") or ""),
+                )
+                if part
+            )
+            image_url = str(item.get("imageUrl") or "")
+            image_markup = (
+                f'<img src="{html.escape(image_url, quote=True)}" alt="{item_title}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #ddd;">'
+                if image_url
+                else '<div style="width:72px;height:72px;border-radius:10px;background:#f1f1f1;"></div>'
+            )
+            description = html.escape(str(item.get("description") or ""))
+            item_cards.append(
+                '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid #eee;">'
+                + image_markup
+                + '<div>'
+                + f'<strong style="display:block;color:#111;">{item_title}</strong>'
+                + (f'<span style="display:block;color:#555;">{html.escape(item_meta)}</span>' if item_meta else '')
+                + (f'<span style="display:block;color:#777;">{description}</span>' if description else '')
+                + '</div></div>'
+            )
+        return (
+            '<div style="font-family:Arial,sans-serif;line-height:1.45;color:#111;">'
+            f'<h2 style="margin:0 0 12px;">{html.escape(heading)}</h2>'
+            f'<p style="margin:0 0 6px;">Shop: <strong>{html.escape(shop_name or "Hashop")}</strong></p>'
+            f'<p style="margin:0 0 6px;">Order: <strong>{title}</strong></p>'
+            f'<p style="margin:0 0 6px;">Buyer: <strong>{buyer}</strong></p>'
+            f'<p style="margin:0 0 6px;">Total: <strong>{total}</strong></p>'
+            f'<p style="margin:0 0 12px;">{html.escape(location_label)}: <strong>{html.escape(location or "Not set")}</strong></p>'
+            + ''.join(item_cards)
+            + '<p style="margin:16px 0 0;color:#777;">Hashop</p>'
+            + '</div>'
+        )
 
     async def _send_order_email(
         self,
@@ -2895,6 +3017,7 @@ class HashopHub:
         message["From"] = formataddr((config.sender_name, config.sender))
         message["To"] = to_address
         message.set_content(self._order_email_body(order, target, shop_name))
+        message.add_alternative(self._order_email_html(order, target, shop_name), subtype="html")
         security = str(config.security or "starttls").strip().lower()
         context = ssl.create_default_context()
         if security in {"ssl", "tls", "smtps"}:
@@ -4215,6 +4338,7 @@ class HashopHub:
             buyer_contact = buyer_contact or str(buyer_account.get("contact") or "").strip()[:255]
         payment_label = str(payload.get("payment_label") or "").strip()[:80]
         payment_value = str(payload.get("payment_value") or "").strip()[:255]
+        payment_qr_file = str(payload.get("payment_qr_file") or payload.get("paymentQrFile") or "").strip()[:255]
         payment_mode = str(payload.get("payment_mode") or "").strip().lower()
         if payment_mode not in {"on_receive", "before_delivery"}:
             payment_mode = "on_receive"
@@ -4279,6 +4403,7 @@ class HashopHub:
             "buyerContact": buyer_contact,
             "paymentLabel": payment_label,
             "paymentValue": payment_value,
+            "paymentQrFile": payment_qr_file,
             "paymentMode": payment_mode,
             "fulfillmentMode": fulfillment_mode,
             "fulfillmentLabel": fulfillment_label,
@@ -4518,6 +4643,92 @@ class HashopHub:
         listings[item_index] = item_record
         console_payload["listings"] = listings
         record = await self.store.save_shop_console(shop_id, console_payload)
+        if record is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        return web.json_response(record)
+
+    async def handle_upload_payment_qr(self, request: web.Request) -> web.Response:
+        shop_id = self.normalize_shop_id(request.match_info["shop_id"])
+        if not shop_id:
+            raise web.HTTPNotFound()
+        existing = await self.store.get_shop_console(shop_id)
+        if existing is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+
+        try:
+            reader = await request.multipart()
+        except AssertionError:
+            return web.json_response({"error": "multipart_required"}, status=400)
+
+        field = await reader.next()
+        if field is None or field.name != "file":
+            return web.json_response({"error": "file_required"}, status=400)
+
+        content_type = str(field.headers.get("Content-Type") or "").strip().lower()
+        extension = self._logo_extension(field.filename, content_type)
+        if not extension:
+            return web.json_response({"error": "invalid_image_type"}, status=400)
+
+        data = bytearray()
+        max_size = 5 * 1024 * 1024
+        while True:
+            chunk = await field.read_chunk()
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > max_size:
+                return web.json_response({"error": "file_too_large"}, status=413)
+
+        if not data:
+            return web.json_response({"error": "empty_file"}, status=400)
+
+        file_name = f"{shop_id}-payment-qr-{uuid.uuid4().hex[:12]}{extension}"
+        file_path = self._asset_path(file_name)
+        file_path.write_bytes(bytes(data))
+
+        console_payload = existing["console"]
+        payments = console_payload.get("payments")
+        if not isinstance(payments, list):
+            payments = []
+
+        payment_index = next(
+            (
+                index
+                for index, payment in enumerate(payments)
+                if isinstance(payment, dict)
+                and (
+                    str(payment.get("upiId") or "").strip()
+                    or str(payment.get("label") or "").strip().lower() == "upi"
+                )
+            ),
+            -1,
+        )
+        if payment_index < 0:
+            payments.insert(
+                0,
+                {
+                    "id": "upi-" + uuid.uuid4().hex[:12],
+                    "label": "UPI",
+                    "details": "",
+                    "upiId": "",
+                    "btcAddress": "",
+                    "ethAddress": "",
+                    "createdAt": int(time.time() * 1000),
+                },
+            )
+            payment_index = 0
+
+        payment_record = dict(payments[payment_index])
+        previous_qr = str(payment_record.get("qrFile") or "").strip()
+        payment_record["label"] = str(payment_record.get("label") or "UPI").strip()[:120] or "UPI"
+        payment_record["qrFile"] = file_name
+        payments[payment_index] = payment_record
+        console_payload["payments"] = payments
+        record = await self.store.save_shop_console(shop_id, console_payload)
+        if previous_qr and previous_qr != file_name:
+            old_path = self._asset_path(previous_qr)
+            if old_path.exists():
+                old_path.unlink(missing_ok=True)
         if record is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
         return web.json_response(record)
@@ -4914,6 +5125,7 @@ def build_app(
     app.router.add_post("/api/shops/{shop_id}/orders/{order_id}/cancel", hub.handle_cancel_shop_order)
     app.router.add_post("/api/shops/{shop_id}/billing/map", hub.handle_update_map_unlock)
     app.router.add_post("/api/shops/{shop_id}/items/{item_id}/image", hub.handle_upload_item_image)
+    app.router.add_post("/api/shops/{shop_id}/payment-qr", hub.handle_upload_payment_qr)
     app.router.add_post("/api/shops/{shop_id}/logo", hub.handle_upload_shop_logo)
     app.router.add_get("/api/assets/{file_name}", hub.handle_get_uploaded_asset)
     app.router.add_get("/api/shops/{shop_id}/logo", hub.handle_get_shop_logo)

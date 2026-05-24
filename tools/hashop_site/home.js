@@ -1,6 +1,6 @@
 (function () {
-  const BUILD_VERSION = String(window.__HASHOP_BUILD__ || "hashop-home-i084").trim();
-  const BUILD_LABEL = String(window.__HASHOP_BUILD_LABEL__ || "Hashop Home - Iteration 084 - Image Owner Polish").trim();
+  const BUILD_VERSION = String(window.__HASHOP_BUILD__ || "hashop-home-i085").trim();
+  const BUILD_LABEL = String(window.__HASHOP_BUILD_LABEL__ || "Hashop Home - Iteration 085 - Orders QR Mail Polish").trim();
   const DEBUG_PAGE = String(window.__HASHOP_DEBUG_PAGE__ || "").trim();
   const DEBUG_ENABLED = hashopDebugEnabled();
   const INITIAL_ROUTE = parseInitialRoute();
@@ -2514,6 +2514,23 @@
     });
   }
 
+  function uploadOwnerPaymentQr(shopId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return window.fetch("/api/shops/" + encodeURIComponent(shopId) + "/payment-qr", {
+      method: "POST",
+      body: formData
+    }).then(function (response) {
+      return parseJson(response).then(function (payload) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: payload
+        };
+      });
+    });
+  }
+
   function hashopImageDataUrl(file, maxSize) {
     return new Promise(function (resolve, reject) {
       if (!file || !String(file.type || "").match(/^image\//)) {
@@ -2578,6 +2595,51 @@
     const safeName = String(fileName || "").trim();
     if (!safeName) return "";
     return "/api/assets/" + encodeURIComponent(safeName);
+  }
+
+  function paymentQrFile(payment) {
+    if (!payment || typeof payment !== "object") return "";
+    return String(payment.qrFile || payment.paymentQrFile || payment.qr || "").trim();
+  }
+
+  function paymentQrFileFromPayments(payments) {
+    if (!Array.isArray(payments)) return "";
+    for (const payment of payments) {
+      const qrFile = paymentQrFile(payment);
+      if (qrFile) return qrFile;
+    }
+    return "";
+  }
+
+  function paymentQrImageMarkup(qrFile, label, className) {
+    const safeQrFile = String(qrFile || "").trim();
+    if (!safeQrFile) return "";
+    const safeClassName = String(className || "").trim();
+    return '' +
+      '<span class="shop-payment-qr-image' + (safeClassName ? (' ' + escapeHtml(safeClassName)) : '') + '">' +
+        '<img src="' + escapeHtml(assetFileUrl(safeQrFile)) + '" alt="' + escapeHtml((label || "Payment") + " QR code") + '">' +
+      '</span>';
+  }
+
+  function ownerPaymentQrFieldMarkup(qrFile) {
+    const safeQrFile = String(qrFile || "").trim();
+    return '' +
+      '<div class="shop-owner-field shop-owner-field-wide shop-owner-payment-qr-field">' +
+        '<span>Payment QR</span>' +
+        '<div class="shop-owner-payment-qr-row">' +
+          (safeQrFile
+            ? paymentQrImageMarkup(safeQrFile, "Payment", "is-owner-preview")
+            : '<span class="shop-payment-qr-image is-empty" aria-hidden="true"></span>') +
+          '<div class="shop-owner-logo-copy shop-owner-payment-qr-copy">' +
+            '<strong>' + escapeHtml(safeQrFile ? "QR uploaded" : "No QR yet") + '</strong>' +
+            '<span>Shown to buyers when they choose Pay before.</span>' +
+          '</div>' +
+          '<label class="shop-owner-upload-button">' +
+            '<input class="shop-owner-file-input" type="file" accept="image/*" data-owner-payment-qr-input="true">' +
+            '<span>' + escapeHtml(safeQrFile ? "Replace QR" : "Upload QR") + '</span>' +
+          '</label>' +
+        '</div>' +
+      '</div>';
   }
 
   function mergeShopRecord(state, record, fallbackName) {
@@ -2748,7 +2810,8 @@
     setOrderConfirmation(state, state.activeShopId, Object.assign({}, confirmation, {
       order: matched,
       paymentMode: orderPaymentMode(matched),
-      paymentLabel: String(matched.paymentLabel || confirmation.paymentLabel || "").trim()
+      paymentLabel: String(matched.paymentLabel || confirmation.paymentLabel || "").trim(),
+      paymentQrFile: String(matched.paymentQrFile || matched.payment_qr_file || confirmation.paymentQrFile || "").trim()
     }));
   }
 
@@ -2812,8 +2875,17 @@
     setCheckoutNotice(state, shopId, null);
   }
 
+  function orderIsWalkIn(order) {
+    const address = String(order && (order.address || order.pickupAddress || order.pickup_address) || "").trim().toLowerCase();
+    const buyerKey = String(order && (order.buyerKey || order.buyer_key) || "").trim().toLowerCase();
+    const paymentLabel = String(order && (order.paymentLabel || order.payment_label) || "").trim().toLowerCase();
+    return address === "walk-in" || address === "walk in" || buyerKey.indexOf("walkin-") === 0 || paymentLabel === "walk-in" || paymentLabel === "walkin";
+  }
+
   function orderFulfillmentMode(order) {
-    return normalizeFulfillmentMode(order && (order.fulfillmentMode || order.fulfillment_mode || order.deliveryMode || order.delivery_mode));
+    const explicitMode = String(order && (order.fulfillmentMode || order.fulfillment_mode || order.deliveryMode || order.delivery_mode) || "").trim().toLowerCase();
+    if (explicitMode === "pickup" || explicitMode === "delivery") return explicitMode;
+    return orderIsWalkIn(order) ? "pickup" : "delivery";
   }
 
   function orderFulfillmentLabel(order) {
@@ -2958,6 +3030,7 @@
     if (name && contact && name !== contact) return name + " · " + contact;
     if (name) return name;
     if (contact) return contact;
+    if (orderIsWalkIn(order)) return "Walk-in";
     return "Buyer";
   }
 
@@ -2973,6 +3046,58 @@
 
   function ownerOrderAddressLine(order) {
     return orderFulfillmentLine(order);
+  }
+
+  function ownerOrderShortId(order) {
+    const id = String(order && order.id || "").trim();
+    if (!id) return "Order";
+    return "#" + id.replace(/^ord-/, "").slice(-6).toUpperCase();
+  }
+
+  function ownerOrderCardMarkup(order, detail, options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const nextAction = nextOwnerOrderAction(order);
+    const status = normalizedOrderStatus(order);
+    const statusText = orderStatusText(order);
+    const total = String(order && (order.total || order.price) || "").trim();
+    const when = formatOrderTimestamp(order && order.timestamp);
+    const paymentLine = ownerOrderPaymentLine(order);
+    const fulfillmentLine = ownerOrderAddressLine(order);
+    const deliveryCueReady = !!settings.includeMapCue
+      && orderFulfillmentMode(order) === "delivery"
+      && isValidMapPoint(Number(order && (order.deliveryLat || order.delivery_lat)), Number(order && (order.deliveryLng || order.delivery_lng)));
+    return '' +
+      '<article class="shop-owner-order-card is-status-' + escapeHtml(status || "created") + '">' +
+        '<div class="shop-owner-order-head shop-owner-order-headline">' +
+          '<div class="shop-owner-order-title">' +
+            '<span>' + escapeHtml(ownerOrderShortId(order) + (when ? (" · " + when) : "")) + '</span>' +
+            '<strong>' + escapeHtml(ownerOrderBuyerLine(order)) + '</strong>' +
+          '</div>' +
+          '<span class="shop-owner-order-status">' + escapeHtml(statusText) + '</span>' +
+        '</div>' +
+        orderItemsMarkup(order, detail || null, { compact: true, limit: Math.max(1, Number(settings.limit || 3) || 3) }) +
+        '<div class="shop-owner-order-facts">' +
+          '<div class="shop-owner-order-fact">' +
+            '<span>Payment</span>' +
+            '<strong>' + escapeHtml(paymentLine) + '</strong>' +
+          '</div>' +
+          '<div class="shop-owner-order-fact">' +
+            '<span>Total</span>' +
+            '<strong>' + escapeHtml(total || "-") + '</strong>' +
+          '</div>' +
+          '<div class="shop-owner-order-fact is-wide">' +
+            '<span>' + escapeHtml(orderFulfillmentLabel(order)) + '</span>' +
+            '<strong>' + escapeHtml(fulfillmentLine) + '</strong>' +
+          '</div>' +
+        '</div>' +
+        (nextAction ? (
+          '<div class="shop-owner-order-actions">' +
+            (deliveryCueReady ? '<button class="shop-owner-chip-button" type="button" data-owner-order-map-cue="' + escapeHtml(order && order.id || "") + '">Map cue</button>' : '') +
+            '<button class="shop-owner-save" type="button" data-owner-order-action="' + escapeHtml(order && order.id || "") + '" data-next-status="' + escapeHtml(nextAction.nextStatus) + '">' + escapeHtml(nextAction.label) + '</button>' +
+            (canOwnerCancelOrder(order) ? '<button class="shop-owner-chip-button is-danger" type="button" data-owner-order-action="' + escapeHtml(order && order.id || "") + '" data-next-status="cancelled">Cancel</button>' : '') +
+          '</div>'
+        ) : '') +
+      '</article>';
   }
 
   function canOwnerCancelOrder(order) {
@@ -3069,6 +3194,7 @@
           upiId: label === "UPI" ? String(item.value || "").trim() : "",
           btcAddress: label === "BTC" ? String(item.value || "").trim() : "",
           ethAddress: label === "ETH" ? String(item.value || "").trim() : "",
+          qrFile: paymentQrFile(item),
           createdAt: 0
         };
       }),
@@ -3218,6 +3344,7 @@
       if (!btcAddress && payment && payment.btcAddress) btcAddress = String(payment.btcAddress).trim();
       if (!ethAddress && payment && payment.ethAddress) ethAddress = String(payment.ethAddress).trim();
     });
+    const paymentQrFile = paymentQrFileFromPayments(payments);
     const pickupGps = parseGpsValue(profile.gps || (detail && detail.gps));
     const pickupSummary = pickupGps
       ? (pickupGps[0].toFixed(5) + ", " + pickupGps[1].toFixed(5))
@@ -3261,29 +3388,7 @@
     const ordersMarkup = orders.length ? (
       '<div class="shop-owner-order-list">' +
         orderedOwnerOrders(orders).map(function (item) {
-          const nextAction = nextOwnerOrderAction(item);
-          return '' +
-            '<article class="shop-owner-order-card">' +
-              '<div class="shop-owner-order-head">' +
-                '<strong>' + escapeHtml(item.title || "Order") + '</strong>' +
-                '<span>' + escapeHtml(orderStatusText(item)) + '</span>' +
-              '</div>' +
-              '<div class="shop-owner-order-meta">' +
-                '<span>' + escapeHtml(ownerOrderBuyerLine(item)) + '</span>' +
-                '<span>' + escapeHtml(item.total || item.price || "-") + '</span>' +
-              '</div>' +
-              '<div class="shop-owner-order-meta">' +
-                '<span>' + escapeHtml(ownerOrderPaymentLine(item)) + '</span>' +
-              '</div>' +
-              orderItemsMarkup(item, null, { compact: true, limit: 3 }) +
-              '<p>' + escapeHtml(ownerOrderAddressLine(item)) + '</p>' +
-              (nextAction ? (
-                '<div class="shop-owner-order-actions">' +
-                  '<button class="shop-owner-save" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="' + escapeHtml(nextAction.nextStatus) + '">' + escapeHtml(nextAction.label) + '</button>' +
-                  (canOwnerCancelOrder(item) ? '<button class="shop-owner-chip-button is-danger" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="cancelled">Cancel</button>' : '') +
-                '</div>'
-              ) : '') +
-            '</article>';
+          return ownerOrderCardMarkup(item, detail, { limit: 3 });
         }).join('') +
       '</div>'
     ) : '<div class="shop-list-empty">No orders yet.</div>';
@@ -3343,6 +3448,7 @@
             '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            ownerPaymentQrFieldMarkup(paymentQrFile) +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
           '</div>' +
           '<button class="shop-owner-save" type="button" data-owner-save="payments">Save payments</button>' +
@@ -3385,6 +3491,7 @@
       if (!btcAddress && payment && payment.btcAddress) btcAddress = String(payment.btcAddress).trim();
       if (!ethAddress && payment && payment.ethAddress) ethAddress = String(payment.ethAddress).trim();
     });
+    const paymentQrFile = paymentQrFileFromPayments(payments);
     const pickupGps = parseGpsValue(profile.gps || (detail && detail.gps));
     const pickupSummary = pickupGps
       ? (pickupGps[0].toFixed(5) + ", " + pickupGps[1].toFixed(5))
@@ -3428,28 +3535,7 @@
     const ordersMarkup = orders.length ? (
       '<div class="shop-owner-order-list">' +
         orderedOwnerOrders(orders).map(function (item) {
-          const nextAction = nextOwnerOrderAction(item);
-          return '' +
-            '<article class="shop-owner-order-card">' +
-              '<div class="shop-owner-order-head">' +
-                '<strong>' + escapeHtml(item.title || "Order") + '</strong>' +
-                '<span>' + escapeHtml(orderStatusText(item)) + '</span>' +
-              '</div>' +
-              '<div class="shop-owner-order-meta">' +
-                '<span>' + escapeHtml(ownerOrderBuyerLine(item)) + '</span>' +
-                '<span>' + escapeHtml(item.total || item.price || "-") + '</span>' +
-              '</div>' +
-              '<div class="shop-owner-order-meta">' +
-                '<span>' + escapeHtml(ownerOrderPaymentLine(item)) + '</span>' +
-              '</div>' +
-              '<p>' + escapeHtml(ownerOrderAddressLine(item)) + '</p>' +
-              (nextAction ? (
-                '<div class="shop-owner-order-actions">' +
-                  '<button class="shop-owner-save" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="' + escapeHtml(nextAction.nextStatus) + '">' + escapeHtml(nextAction.label) + '</button>' +
-                  (canOwnerCancelOrder(item) ? '<button class="shop-owner-chip-button is-danger" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="cancelled">Cancel</button>' : '') +
-                '</div>'
-              ) : '') +
-            '</article>';
+          return ownerOrderCardMarkup(item, detail, { limit: 3 });
         }).join('') +
       '</div>'
     ) : '<div class="shop-list-empty">No orders yet.</div>';
@@ -3526,6 +3612,7 @@
               '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
               '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
               '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+              ownerPaymentQrFieldMarkup(paymentQrFile) +
               '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
             '</div>' +
             '<button class="shop-owner-save" type="button" data-owner-save="payments">Save payments</button>' +
@@ -3663,6 +3750,7 @@
       if (!btcAddress && payment && payment.btcAddress) btcAddress = String(payment.btcAddress).trim();
       if (!ethAddress && payment && payment.ethAddress) ethAddress = String(payment.ethAddress).trim();
     });
+    const paymentQrFile = paymentQrFileFromPayments(payments);
     const pickupGps = parseGpsValue(profile.gps || (detail && detail.gps));
     const pickupSummary = pickupGps
       ? (pickupGps[0].toFixed(5) + ", " + pickupGps[1].toFixed(5))
@@ -3688,6 +3776,7 @@
             '<label class="shop-owner-field"><span>UPI</span><input class="shop-owner-input" name="upiId" value="' + escapeHtml(upiId) + '" placeholder="shop@upi" autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field"><span>BTC</span><input class="shop-owner-input" name="btcAddress" value="' + escapeHtml(btcAddress) + '" placeholder="bc1..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
             '<label class="shop-owner-field"><span>ETH</span><input class="shop-owner-input" name="ethAddress" value="' + escapeHtml(ethAddress) + '" placeholder="0x..." autocapitalize="off" autocomplete="off" spellcheck="false" /></label>' +
+            ownerPaymentQrFieldMarkup(paymentQrFile) +
             '<label class="shop-owner-field shop-owner-field-wide"><span>Payment note</span><textarea class="shop-owner-textarea" name="details" rows="3" placeholder="Shown to buyers">' + escapeHtml(paymentDetails) + '</textarea></label>' +
           '</div>' +
           '<div class="shop-owner-action-row">' +
@@ -3846,37 +3935,11 @@
             '<span>' + escapeHtml(filteredOrders.length ? (filteredOrders.length + " visible") : "No matching orders") + '</span>' +
           '</div>' +
 	          (filteredOrders.length ? (
-	            '<div class="shop-owner-order-list">' +
-	              filteredOrders.map(function (item) {
-	                const nextAction = nextOwnerOrderAction(item);
-	                const deliveryCueReady = orderFulfillmentMode(item) === "delivery"
-	                  && isValidMapPoint(Number(item.deliveryLat || item.delivery_lat), Number(item.deliveryLng || item.delivery_lng));
-	                return '' +
-	                  '<article class="shop-owner-order-card">' +
-	                    '<div class="shop-owner-order-head">' +
-	                      '<strong>' + escapeHtml(item.title || "Order") + '</strong>' +
-	                      '<span>' + escapeHtml(orderStatusText(item)) + '</span>' +
-                    '</div>' +
-                    '<div class="shop-owner-order-meta">' +
-                      '<span>' + escapeHtml(ownerOrderBuyerLine(item)) + '</span>' +
-                      '<span>' + escapeHtml(item.total || item.price || "-") + '</span>' +
-                    '</div>' +
-                    '<div class="shop-owner-order-meta">' +
-                      '<span>' + escapeHtml(formatOrderTimestamp(item.timestamp)) + '</span>' +
-	                      '<span>' + escapeHtml(ownerOrderPaymentLine(item)) + '</span>' +
-	                    '</div>' +
-	                    orderItemsMarkup(item, null, { compact: true, limit: 3 }) +
-	                    '<p>' + escapeHtml(ownerOrderAddressLine(item)) + '</p>' +
-	                    (nextAction ? (
-	                      '<div class="shop-owner-order-actions">' +
-	                        (deliveryCueReady ? '<button class="shop-owner-chip-button" type="button" data-owner-order-map-cue="' + escapeHtml(item.id || "") + '">Map cue</button>' : '') +
-	                        '<button class="shop-owner-save" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="' + escapeHtml(nextAction.nextStatus) + '">' + escapeHtml(nextAction.label) + '</button>' +
-	                        (canOwnerCancelOrder(item) ? '<button class="shop-owner-chip-button is-danger" type="button" data-owner-order-action="' + escapeHtml(item.id || "") + '" data-next-status="cancelled">Cancel</button>' : '') +
-	                      '</div>'
-	                    ) : '') +
-	                  '</article>';
-              }).join('') +
-            '</div>'
+		            '<div class="shop-owner-order-list">' +
+		              filteredOrders.map(function (item) {
+		                return ownerOrderCardMarkup(item, detail, { includeMapCue: true, limit: 3 });
+	              }).join('') +
+	            '</div>'
           ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No orders match this search." : "No orders yet.") + '</div>') +
         '</section>';
     } else if (section === "items") {
@@ -4112,14 +4175,16 @@
   function submitOwnerPayments(state, form) {
     if (!(form instanceof HTMLFormElement) || !state.activeShopId) return;
     const details = String((form.elements.details && form.elements.details.value) || "").trim();
+    const consoleData = ensureShopConsole(state, state.activeShopId);
+    const existingPayments = Array.isArray(consoleData && consoleData.payments) ? consoleData.payments : [];
+    const qrFile = paymentQrFileFromPayments(existingPayments);
     const payments = [];
     const upiId = String((form.elements.upiId && form.elements.upiId.value) || "").trim();
     const btcAddress = String((form.elements.btcAddress && form.elements.btcAddress.value) || "").trim();
     const ethAddress = String((form.elements.ethAddress && form.elements.ethAddress.value) || "").trim();
-    if (upiId) payments.push({ id: "upi-" + Date.now().toString(36), label: "UPI", details: details, upiId: upiId, btcAddress: "", ethAddress: "", createdAt: Date.now() });
+    if (upiId || qrFile) payments.push({ id: "upi-" + Date.now().toString(36), label: "UPI", details: details, upiId: upiId, btcAddress: "", ethAddress: "", qrFile: qrFile, createdAt: Date.now() });
     if (btcAddress) payments.push({ id: "btc-" + Date.now().toString(36), label: "BTC", details: details, upiId: "", btcAddress: btcAddress, ethAddress: "", createdAt: Date.now() });
     if (ethAddress) payments.push({ id: "eth-" + Date.now().toString(36), label: "ETH", details: details, upiId: "", btcAddress: "", ethAddress: ethAddress, createdAt: Date.now() });
-    const consoleData = ensureShopConsole(state, state.activeShopId);
     consoleData.payments = payments;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Payments updated.");
   }
@@ -4505,10 +4570,11 @@
       const upiId = String(payment.upiId || "").trim();
       const btcAddress = String(payment.btcAddress || "").trim();
       const ethAddress = String(payment.ethAddress || "").trim();
-      if (upiId) paymentEntries.push({ label: "UPI", value: upiId, note: details || label || "Pay on UPI" });
+      const qrFile = paymentQrFile(payment);
+      if (upiId || qrFile) paymentEntries.push({ label: "UPI", value: upiId, note: details || label || "Pay on UPI", qrFile: qrFile });
       if (btcAddress) paymentEntries.push({ label: "BTC", value: btcAddress, note: details || label || "Bitcoin address" });
       if (ethAddress) paymentEntries.push({ label: "ETH", value: ethAddress, note: details || label || "Ethereum address" });
-      if (!upiId && !btcAddress && !ethAddress && (label || details)) {
+      if (!upiId && !btcAddress && !ethAddress && !qrFile && (label || details)) {
         paymentEntries.push({ label: label || "Payment", value: details, note: "" });
       }
     });
@@ -4583,10 +4649,14 @@
     return "";
   }
 
+  function canUsePaymentEntry(payment, detail, amountNumber) {
+    return !!paymentQrFile(payment) || !!buildPaymentHref(payment, detail, amountNumber || 1);
+  }
+
   function payablePaymentEntries(detail, amountNumber) {
     const entries = Array.isArray(detail && detail.paymentEntries) ? detail.paymentEntries : [];
     return entries.filter(function (payment) {
-      return !!buildPaymentHref(payment, detail, amountNumber || 1);
+      return canUsePaymentEntry(payment, detail, amountNumber || 1);
     });
   }
 
@@ -4731,6 +4801,7 @@
       total: formatTotalAmount(totalAmount, detail && detail.pricing),
       payment_label: paymentMode === "before_delivery" ? String(payment && payment.label || "").trim() : "",
       payment_value: paymentMode === "before_delivery" ? String(payment && payment.value || "").trim() : "",
+      payment_qr_file: paymentMode === "before_delivery" ? paymentQrFile(payment) : "",
       payment_mode: paymentMode,
       notes: notes,
       items: items.map(function (item) {
@@ -4888,7 +4959,7 @@
     const canSubmitCart = totalAmount > 0 && (
       paymentMode !== "before_delivery"
       || !paymentPickerOpen
-      || (!!chosenPayment && !!chosenPaymentHref)
+      || (!!chosenPayment && canUsePaymentEntry(chosenPayment, detail, totalAmount))
     );
     const buyerProfile = buyerCheckoutProfile(state);
     const buyerSignedIn = buyerHasSignedIn(state);
@@ -4963,16 +5034,18 @@
               '<div class="shop-pane-cart-payments">' +
                 '<span class="shop-pane-cart-label">' + escapeHtml(chosenPayment ? ("Selected: " + (chosenPayment.label || "Payment")) : "Select a payment method") + '</span>' +
                 '<div class="shop-pane-pay-grid">' +
-                  paymentEntries.map(function (payment, index) {
-                    return '' +
-                      '<div class="shop-pay-card' + (index === chosenPaymentIndex ? ' is-selected' : '') + '" data-pay-select="' + index + '">' +
-                        '<div class="shop-pay-card-head">' +
-                          '<strong>' + escapeHtml(payment.label || "Payment") + '</strong>' +
-                          (payment.value ? '<button class="shop-pay-copy" type="button" data-pay-copy="' + escapeHtml(payment.value) + '" data-copy-index="' + index + '">Copy</button>' : '') +
-                        '</div>' +
-                        (payment.note ? '<span class="shop-pay-note">' + escapeHtml(payment.note) + '</span>' : '') +
-                        (payment.value ? '<code class="shop-pay-value">' + escapeHtml(payment.value) + '</code>' : '') +
-                      '</div>';
+	                  paymentEntries.map(function (payment, index) {
+	                    const qrMarkup = paymentQrImageMarkup(paymentQrFile(payment), payment.label || "Payment", "is-pay-card");
+	                    return '' +
+	                      '<div class="shop-pay-card' + (index === chosenPaymentIndex ? ' is-selected' : '') + '" data-pay-select="' + index + '">' +
+	                        '<div class="shop-pay-card-head">' +
+	                          '<strong>' + escapeHtml(payment.label || "Payment") + '</strong>' +
+	                          (payment.value ? '<button class="shop-pay-copy" type="button" data-pay-copy="' + escapeHtml(payment.value) + '" data-copy-index="' + index + '">Copy</button>' : '') +
+	                        '</div>' +
+	                        qrMarkup +
+	                        (payment.note ? '<span class="shop-pay-note">' + escapeHtml(payment.note) + '</span>' : '') +
+	                        (payment.value ? '<code class="shop-pay-value">' + escapeHtml(payment.value) + '</code>' : '') +
+	                      '</div>';
                   }).join('') +
                 '</div>' +
               '</div>'
@@ -5068,6 +5141,9 @@
     );
 
     const canCancelConfirmation = confirmation && canBuyerCancelOrder(confirmation.order || {});
+    const confirmationPaymentQr = confirmation
+      ? String(confirmation.paymentQrFile || confirmation.order && (confirmation.order.paymentQrFile || confirmation.order.payment_qr_file) || "").trim()
+      : "";
     const confirmationMarkup = confirmation ? (
       '<div class="shop-pane-cart-screen shop-pane-confirm-screen">' +
         '<div class="shop-pane-cart-kicker">' +
@@ -5094,17 +5170,18 @@
                 '<span>' + escapeHtml(confirmation.order && (confirmation.order.total || confirmation.order.price) || "-") + '</span>' +
               '</div>' +
             '</div>' +
-            '<div class="shop-cart-row">' +
-              '<div class="shop-cart-copy">' +
-                '<strong>Payment</strong>' +
-                '<span>' + escapeHtml(orderPaymentModeLabel(confirmation.order || {}) + (confirmation.paymentLabel ? (" • " + confirmation.paymentLabel) : "")) + '</span>' +
+	            '<div class="shop-cart-row">' +
+	              '<div class="shop-cart-copy">' +
+	                '<strong>Payment</strong>' +
+	                '<span>' + escapeHtml(orderPaymentModeLabel(confirmation.order || {}) + (confirmation.paymentLabel ? (" • " + confirmation.paymentLabel) : "")) + '</span>' +
               '</div>' +
               '<div class="shop-cart-copy">' +
                 '<strong>Placed</strong>' +
                 '<span>' + escapeHtml(formatOrderTimestamp(confirmation.order && confirmation.order.timestamp || 0)) + '</span>' +
-              '</div>' +
-            '</div>' +
-            '<div class="shop-cart-row shop-cart-fulfillment-row">' +
+	              '</div>' +
+	            '</div>' +
+	            (confirmationPaymentQr ? '<div class="shop-confirm-payment-qr">' + paymentQrImageMarkup(confirmationPaymentQr, confirmation.paymentLabel || "Payment", "is-confirm-card") + '<span>Payment QR</span></div>' : '') +
+	            '<div class="shop-cart-row shop-cart-fulfillment-row">' +
               '<div class="shop-cart-copy">' +
                 '<strong>' + escapeHtml(orderFulfillmentLabel(confirmation.order || {})) + '</strong>' +
                 '<span>' + escapeHtml(orderFulfillmentLine(confirmation.order || {})) + '</span>' +
@@ -12294,7 +12371,7 @@
           resetPaneScroll(state);
           return;
         }
-        if (chosenPaymentMode === "before_delivery" && !buildPaymentHref(chosenPaymentNow, detail, totalAmountNow)) {
+        if (chosenPaymentMode === "before_delivery" && !canUsePaymentEntry(chosenPaymentNow, detail, totalAmountNow)) {
           setCheckoutNotice(state, state.activeShopId, {
             tone: "error",
             message: "This payment method is not ready. Choose another one."
@@ -12340,6 +12417,7 @@
               paymentMode: chosenPaymentMode,
               fulfillmentMode: chosenFulfillmentMode,
               paymentLabel: String(chosenPaymentNow && chosenPaymentNow.label || "").trim(),
+              paymentQrFile: chosenPaymentMode === "before_delivery" ? paymentQrFile(chosenPaymentNow) : "",
               paymentHref: chosenPaymentMode === "before_delivery"
                 ? buildPaymentHref(chosenPaymentNow, detail, totalAmountNow)
                 : ""
@@ -12619,6 +12697,30 @@
           timeout: 10000,
           maximumAge: 60000
         });
+        return;
+      }
+      const paymentQrInput = target.closest("[data-owner-payment-qr-input]");
+      if (paymentQrInput) {
+        const qrFile = target.files && target.files[0];
+        if (!qrFile || !state.activeShopId) return;
+        state.ownerPanel.message = "Uploading payment QR...";
+        state.ownerPanel.tone = "";
+        renderShopList(state);
+        uploadOwnerPaymentQr(state.activeShopId, qrFile)
+          .then(function (result) {
+            if (!result || !result.ok) {
+              throw new Error(String(result && result.payload && result.payload.error || "payment_qr_upload_failed"));
+            }
+            applyConsoleRecord(state, state.activeShopId, result.payload);
+            state.ownerPanel.message = "Payment QR updated.";
+            state.ownerPanel.tone = "success";
+            renderShopList(state);
+          })
+          .catch(function () {
+            state.ownerPanel.message = "Could not upload the QR.";
+            state.ownerPanel.tone = "error";
+            renderShopList(state);
+          });
         return;
       }
     });

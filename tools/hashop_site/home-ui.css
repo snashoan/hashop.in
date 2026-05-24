@@ -24217,3 +24217,208 @@ html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-own
   color: var(--hashop-feed-accent) !important;
   -webkit-text-fill-color: var(--hashop-feed-accent) !important;
 }
+
+/* Iteration 085: owner orders read as an order queue, and payment QR stays visible. */
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-card,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.72rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0.82rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-feed-line) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-headline,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-headline {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 0.68rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-title,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-title {
+  display: grid !important;
+  gap: 0.12rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-title strong,
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-title span,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-title strong,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-title span {
+  display: block !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-title strong,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-title strong {
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  font-size: 0.96rem !important;
+  font-weight: 920 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-title span,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-title span {
+  color: #777 !important;
+  -webkit-text-fill-color: #777 !important;
+  font-size: 0.72rem !important;
+  font-weight: 760 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-status,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-status {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 1.8rem !important;
+  padding: 0 0.62rem !important;
+  border: 1px solid rgba(141, 123, 74, 0.32) !important;
+  border-radius: 999px !important;
+  background: #fbfbfb !important;
+  color: var(--hashop-feed-accent) !important;
+  -webkit-text-fill-color: var(--hashop-feed-accent) !important;
+  font-size: 0.7rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-facts,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-facts {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.54rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-fact,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact {
+  display: grid !important;
+  gap: 0.16rem !important;
+  min-width: 0 !important;
+  padding: 0.52rem 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(17, 17, 17, 0.08) !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-fact.is-wide,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact.is-wide {
+  grid-column: 1 / -1 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-fact span,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact span {
+  color: #777 !important;
+  -webkit-text-fill-color: #777 !important;
+  font-size: 0.68rem !important;
+  font-weight: 820 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-fact strong,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact strong {
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  font-size: 0.8rem !important;
+  font-weight: 880 !important;
+  line-height: 1.25 !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-card .shop-order-compact-items,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card .shop-order-compact-items {
+  display: grid !important;
+  gap: 0.5rem !important;
+}
+
+html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-order-card .shop-cart-row,
+html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card .shop-cart-row {
+  padding: 0.58rem 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(17, 17, 17, 0.08) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shop-owner-payment-qr-row {
+  display: grid !important;
+  grid-template-columns: 5rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  min-width: 0 !important;
+}
+
+.shop-owner-payment-qr-row .shop-owner-upload-button {
+  grid-column: 1 / -1 !important;
+}
+
+.shop-payment-qr-image {
+  display: grid !important;
+  place-items: center !important;
+  width: 5rem !important;
+  height: 5rem !important;
+  min-width: 5rem !important;
+  min-height: 5rem !important;
+  border: 1px solid rgba(141, 123, 74, 0.26) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  overflow: hidden !important;
+}
+
+.shop-payment-qr-image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.shop-payment-qr-image.is-empty::before {
+  content: "QR" !important;
+  color: var(--hashop-feed-accent) !important;
+  -webkit-text-fill-color: var(--hashop-feed-accent) !important;
+  font-size: 0.9rem !important;
+  font-weight: 920 !important;
+}
+
+.shop-pay-card .shop-payment-qr-image,
+.shop-confirm-payment-qr .shop-payment-qr-image {
+  width: 8.2rem !important;
+  height: 8.2rem !important;
+  min-width: 8.2rem !important;
+  min-height: 8.2rem !important;
+  margin: 0.3rem 0 !important;
+}
+
+.shop-confirm-payment-qr {
+  display: grid !important;
+  gap: 0.36rem !important;
+  justify-items: start !important;
+  padding: 0.72rem 0 !important;
+  border-top: 1px solid rgba(17, 17, 17, 0.08) !important;
+}
+
+.shop-confirm-payment-qr > span:not(.shop-payment-qr-image) {
+  color: #777 !important;
+  -webkit-text-fill-color: #777 !important;
+  font-size: 0.72rem !important;
+  font-weight: 820 !important;
+}
