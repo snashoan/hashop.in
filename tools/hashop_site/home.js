@@ -277,6 +277,12 @@
     const details = mapStateDetails(state);
     const provider = String(state.mapProvider || "loading").trim() || "loading";
     const theme = String(state.mapTheme || detectMapTheme()).trim() || "light";
+    try {
+      document.documentElement.setAttribute("data-hashop-theme", theme);
+      document.body.setAttribute("data-hashop-theme", theme);
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.setAttribute("content", theme === "dark" ? "#050505" : "#ffffff");
+    } catch (error) {}
     if (state.mapFrameNode) {
       setStateAttribute(state.mapFrameNode, "data-map-state", details.mode);
       setStateAttribute(state.mapFrameNode, "data-map-provider", provider);
