@@ -27942,3 +27942,84 @@ html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-panel-bar {
   margin-inline: 0 !important;
   transform: none !important;
 }
+
+/* Iteration 102: state substates and cart rows share the base item/list system. */
+html body .shell.shell-home .shop-state-substate {
+  display: grid !important;
+  gap: 0.52rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0.66rem 0 0 !important;
+  padding: 0.62rem 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(17, 17, 17, 0.1) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-state-substate-label {
+  display: block !important;
+  min-width: 0 !important;
+  color: #6b6b6b !important;
+  -webkit-text-fill-color: #6b6b6b !important;
+  font-size: 0.72rem !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: left !important;
+}
+
+html body .shell.shell-home .shop-state-substate-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home .shop-state-substate-actions > .shop-state-action {
+  flex: 1 1 auto !important;
+  min-width: min(9rem, 100%) !important;
+}
+
+html body .shell.shell-home .shop-pane-cart-feed > .shop-cart-list-card,
+html body .shell.shell-home .shop-pane-confirm-items > .shop-cart-list-card,
+html body .shell.shell-home .shop-order-compact-items > .shop-cart-list-card,
+html body .shell.shell-home .shop-pane-shop-feed[data-list-view="list"] > .shop-cart-list-card {
+  grid-template-columns: 2.9rem minmax(0, 1fr) !important;
+}
+
+html body .shell.shell-home .shop-cart-list-card > .shop-card-thumb {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+html body .shell.shell-home .shop-cart-list-card > .shop-card-main {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate {
+  border-top-color: rgba(247, 244, 234, 0.12) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate-label {
+  color: #aaa391 !important;
+  -webkit-text-fill-color: #aaa391 !important;
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home .shop-state-substate-actions > .shop-state-action {
+    min-width: 0 !important;
+  }
+}

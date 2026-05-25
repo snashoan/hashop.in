@@ -616,6 +616,21 @@
     return '<button class="shop-state-action' + (tone ? (' is-' + escapeHtml(tone)) : '') + '" type="button" ' + safeAttribute + '>' + escapeHtml(label || "Continue") + '</button>';
   }
 
+  function stateSubstateMarkup(actions, options) {
+    const items = Array.isArray(actions) ? actions : [];
+    const settings = options && typeof options === "object" ? options : {};
+    const body = items.map(function (action) {
+      return stateActionMarkup(action && action.label, action && action.attribute, action && action.tone);
+    }).join('');
+    if (!body) return "";
+    const label = String(settings.label || "").trim();
+    return '' +
+      '<div class="shop-state-substate" data-state-substate="actions">' +
+        (label ? '<span class="shop-state-substate-label">' + escapeHtml(label) + '</span>' : '') +
+        '<div class="shop-state-substate-actions">' + body + '</div>' +
+      '</div>';
+  }
+
   function stateMascotCode(options) {
     const settings = options && typeof options === "object" ? options : {};
     const code = String(settings.code || "").trim();
@@ -644,15 +659,7 @@
         '<strong>' + escapeHtml(settings.title || "Nothing here yet") + '</strong>' +
         (settings.message ? '<p>' + escapeHtml(settings.message) + '</p>' : '') +
         (settings.loading ? '<span class="shop-state-skeleton"></span>' : '') +
-        (actions.length ? (
-          '<div class="shop-state-action-frame">' +
-            '<div class="shop-state-actions">' +
-              actions.map(function (action) {
-                return stateActionMarkup(action && action.label, action && action.attribute, action && action.tone);
-              }).join('') +
-            '</div>' +
-          '</div>'
-        ) : '') +
+        stateSubstateMarkup(actions, { label: settings.actionLabel || "" }) +
       '</div>';
   }
 
@@ -683,11 +690,7 @@
           '<strong>' + escapeHtml(title) + '</strong>' +
           '<p>' + escapeHtml(message) + '</p>' +
         '</div>' +
-        '<div class="shop-empty-cart-actions shop-state-action-frame">' +
-          '<div class="shop-state-actions">' +
-            '<button class="shop-empty-cart-action" type="button" ' + actionAttribute + '>' + escapeHtml(actionLabel) + '</button>' +
-          '</div>' +
-        '</div>' +
+        stateSubstateMarkup([{ label: actionLabel, attribute: actionAttribute }]) +
       '</div>';
   }
 
@@ -706,17 +709,7 @@
       ? "This shop has not filled the shelf yet."
       : "When shops add items, they will show here.");
     const actions = Array.isArray(settings.actions) ? settings.actions : [];
-    const actionsMarkup = actions.length ? (
-      '<div class="shop-empty-items-actions shop-state-action-frame">' +
-        '<div class="shop-state-actions">' +
-          actions.map(function (action) {
-            const safeAttribute = String(action && action.attribute || "").trim();
-            if (!safeAttribute) return "";
-            return '<button class="shop-empty-items-action' + (action && action.tone ? (' is-' + escapeHtml(action.tone)) : '') + '" type="button" ' + safeAttribute + '>' + escapeHtml(action && action.label || "Continue") + '</button>';
-          }).join('') +
-        '</div>' +
-      '</div>'
-    ) : '';
+    const actionsMarkup = stateSubstateMarkup(actions);
     return '' +
       '<div class="shop-empty-items-card" role="status">' +
         '<div class="shop-empty-items-visual" aria-hidden="true">' +
@@ -5008,59 +5001,49 @@
       title: String(item && item.title || source.title || "Item").trim(),
       description: String(source.description || item && item.description || "Available now.").trim(),
       quantity: quantity,
+      stockQuantity: sourceQuantity,
+      rawPrice: price,
       price: formattedPrice || price || "Not set",
       lineTotal: item && item.total != null ? formatTotalAmount(item.total, detail && detail.pricing) : "",
       stock: sourceQuantity > 0 ? ("Qty " + sourceQuantity) : "Available",
-      image: firstImage
+      imageFiles: firstImage ? [firstImage] : []
     };
   }
 
-  function cartDisplayMediaMarkup(display) {
-    const item = display && typeof display === "object" ? display : {};
-    if (item.image) {
-      return '' +
-        '<div class="shop-card-thumb shop-cart-thumb is-image">' +
-          '<img src="' + escapeHtml(assetFileUrl(item.image)) + '" alt="' + escapeHtml(item.title || "Item") + '">' +
-        '</div>';
-    }
-    return '<div class="shop-card-thumb shop-cart-thumb" aria-hidden="true"><span>' + escapeHtml(String(item.title || "#").trim().charAt(0).toUpperCase() || "#") + '</span></div>';
-  }
-
-  function cartDisplayRowMarkup(detail, item, options) {
+  function cartDisplayRowMarkup(state, detail, item, options) {
     const settings = options && typeof options === "object" ? options : {};
     const display = cartDisplayItem(detail, item);
     const quantityLabel = display.quantity > 0 ? ("x" + display.quantity) : "";
     const totalLabel = display.lineTotal || display.price || "";
     const showLineTotal = !!(display.lineTotal && display.lineTotal !== display.price);
     const metaParts = [display.price, quantityLabel, showLineTotal ? totalLabel : "", display.stock].filter(Boolean);
-    const safeColor = /^#[0-9a-fA-F]{6}$/.test(String(settings.color || "")) ? String(settings.color) : HASHOP_DEFAULT_SHOP_COLOR;
-    const actionMarkup = settings.controls === false
-      ? '<span class="shop-card-open">' + escapeHtml(totalLabel) + '</span>'
-      : itemSelectionControlMarkup({
-          shopId: settings.shopId || "",
-          itemId: display.id,
-          quantity: display.quantity,
-          title: display.title
-        });
-    return '' +
-      '<article class="shop-card shop-discovery-card shop-item-discovery-card shop-cart-list-card" data-cart-item-id="' + escapeHtml(display.id) + '" style="--shop-color:' + escapeHtml(safeColor) + ';">' +
-        cartDisplayMediaMarkup(display) +
-        '<div class="shop-card-main">' +
-          '<div class="shop-card-topline">' +
-            '<div class="shop-card-title-block">' +
-              '<strong>' + escapeHtml(display.title) + '</strong>' +
-              '<span class="shop-card-subtitle">' + escapeHtml(metaParts.join(" · ")) + '</span>' +
-            '</div>' +
-            actionMarkup +
-          '</div>' +
-          '<div class="shop-card-items">' +
-            '<span class="shop-card-item">' + escapeHtml(display.price) + '</span>' +
-            (showLineTotal ? '<span class="shop-card-item">' + escapeHtml(display.lineTotal) + '</span>' : '') +
-            '<span class="shop-card-item">' + escapeHtml(display.stock) + '</span>' +
-            '<span class="shop-card-item">' + escapeHtml(clampText(display.description || "Available now.", 34)) + '</span>' +
-          '</div>' +
-        '</div>' +
-      '</article>';
+    const shopId = String(settings.shopId || state && state.activeShopId || "").trim();
+    const shop = settings.shop || state && state.shopById && state.shopById[shopId] || {};
+    const cartCardItem = {
+      id: display.id,
+      title: display.title,
+      description: display.description,
+      price: display.rawPrice || display.price,
+      quantity: display.stockQuantity,
+      imageFiles: display.imageFiles
+    };
+    return shopItemCardMarkup(state, detail, cartCardItem, shop, {
+      shopId: shopId,
+      itemId: display.id,
+      shopName: String(settings.shopName || detail && detail.name || shop && (shop.display_name || shop.shop_id) || shopId || "Shop").trim(),
+      openShop: false,
+      disableTouchAdd: true,
+      cardClass: "shop-cart-list-card",
+      thumbClass: "shop-cart-thumb",
+      cardAttrs: ' data-cart-item-id="' + escapeHtml(display.id) + '"',
+      selectedQty: display.quantity,
+      priceLabel: display.price,
+      stockLabel: display.stock,
+      subtitle: metaParts.join(" · "),
+      metaItems: [display.price, showLineTotal ? display.lineTotal : "", display.stock, display.description],
+      actionMarkup: settings.controls === false ? '<span class="shop-card-open">' + escapeHtml(totalLabel) + '</span>' : "",
+      color: settings.color
+    });
   }
 
   function orderItemsMarkup(order, detail, options) {
@@ -5077,7 +5060,7 @@
     return '' +
       '<div class="' + className + '">' +
         items.map(function (item) {
-          return cartDisplayRowMarkup(detail, item, { controls: false, compact: settings.compact });
+          return cartDisplayRowMarkup(null, detail, item, { controls: false, compact: settings.compact });
         }).join('') +
       '</div>';
   }
@@ -5423,8 +5406,10 @@
     const cartMarkup = filteredCartItems.length ? (
       '<div class="shop-pane-items shop-pane-shop-feed shop-pane-cart-feed" data-list-view="list">' +
         filteredCartItems.map(function (item) {
-          return cartDisplayRowMarkup(detail, item, {
+          return cartDisplayRowMarkup(state, detail, item, {
             shopId: state.activeShopId,
+            shopName: shopName,
+            shop: shop,
             color: shopColor(shop)
           });
         }).join('') +
@@ -8066,16 +8051,22 @@
     const shopName = String(settings.shopName || item && item.shopName || detail && detail.name || shop && (shop.display_name || shop.shop_id) || shopId || "Shop").trim();
     const title = String(item && item.title || "Item").trim();
     const quantity = Math.max(0, Number(item && item.quantity || 0));
-    const selectedQty = settings.ownerMode ? 0 : Math.max(0, Number(getShopCart(state, shopId)[itemId] || 0));
-    const priceLabel = formatPrice(item && item.price, detail && detail.pricing) || "Open";
-    const stockLabel = quantity > 0 ? (quantity + " left") : "Available";
+    const selectedQty = settings.ownerMode
+      ? 0
+      : settings.selectedQty != null
+      ? Math.max(0, Number(settings.selectedQty || 0))
+      : Math.max(0, Number(getShopCart(state, shopId)[itemId] || 0));
+    const priceLabel = String(settings.priceLabel || "").trim() || formatPrice(item && item.price, detail && detail.pricing) || "Open";
+    const stockLabel = String(settings.stockLabel || "").trim() || (quantity > 0 ? (quantity + " left") : "Available");
     const description = String(item && item.description || "").trim();
     const imageFiles = Array.isArray(item && item.imageFiles) ? item.imageFiles : [];
     const imageMarkup = imageFiles.length
       ? '<img src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(title) + '">'
       : '<span>' + escapeHtml((title.charAt(0) || "#").toUpperCase()) + '</span>';
     const safeColor = /^#[0-9a-fA-F]{6}$/.test(String(settings.color || "")) ? String(settings.color) : shopColor(shop || {});
-    const actionMarkup = settings.ownerMode
+    const actionMarkup = typeof settings.actionMarkup === "string" && settings.actionMarkup
+      ? settings.actionMarkup
+      : settings.ownerMode
       ? '<span class="shop-card-open">' + escapeHtml(stockLabel) + '</span>'
       : itemSelectionControlMarkup({
           shopId: shopId,
@@ -8083,25 +8074,35 @@
           quantity: selectedQty,
           title: title
         });
+    const subtitleLabel = String(settings.subtitle || "").trim() || (settings.showShopName === false ? stockLabel : shopName);
+    const metaItems = Array.isArray(settings.metaItems)
+      ? settings.metaItems
+      : [priceLabel, stockLabel, description];
+    const cardClass = String(settings.cardClass || "").trim();
+    const thumbClass = String(settings.thumbClass || "").trim();
+    const cardAttrs = String(settings.cardAttrs || "").trim();
     const openAttr = settings.openShop === false ? '' : ' data-open-shop-card="' + escapeHtml(shopId) + '"';
-    const addAttr = !settings.ownerMode && settings.openShop === false && itemId
+    const canTouchAdd = !settings.disableTouchAdd && !settings.ownerMode && settings.openShop === false && itemId;
+    const addAttr = canTouchAdd
       ? ' role="button" tabindex="0" data-pane-add-item="' + escapeHtml(itemId) + '" aria-label="Add ' + escapeHtml(title) + ' to cart"'
       : '';
     return '' +
-      '<article class="shop-card shop-discovery-card shop-item-discovery-card' + (settings.openShop === false && !settings.ownerMode ? ' is-touch-add' : '') + '"' + openAttr + addAttr + ' style="--shop-color:' + escapeHtml(safeColor) + ';">' +
-        '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
+      '<article class="shop-card shop-discovery-card shop-item-discovery-card' + (canTouchAdd ? ' is-touch-add' : '') + (cardClass ? (' ' + escapeHtml(cardClass)) : '') + '"' + (cardAttrs ? (' ' + cardAttrs) : '') + openAttr + addAttr + ' style="--shop-color:' + escapeHtml(safeColor) + ';">' +
+        '<div class="shop-card-thumb' + (thumbClass ? (' ' + escapeHtml(thumbClass)) : '') + '">' + imageMarkup + '</div>' +
         '<div class="shop-card-main">' +
           '<div class="shop-card-topline">' +
             '<div class="shop-card-title-block">' +
               '<strong>' + escapeHtml(title) + '</strong>' +
-              '<span class="shop-card-subtitle">' + escapeHtml(settings.showShopName === false ? stockLabel : shopName) + '</span>' +
+              '<span class="shop-card-subtitle">' + escapeHtml(subtitleLabel) + '</span>' +
             '</div>' +
             actionMarkup +
           '</div>' +
           '<div class="shop-card-items">' +
-            '<span class="shop-card-item">' + escapeHtml(priceLabel) + '</span>' +
-            '<span class="shop-card-item">' + escapeHtml(stockLabel) + '</span>' +
-            (description ? '<span class="shop-card-item">' + escapeHtml(clampText(description, 34)) + '</span>' : '') +
+            metaItems.map(function (value, index) {
+              const text = String(value || "").trim();
+              if (!text) return "";
+              return '<span class="shop-card-item' + (index === 0 ? ' is-primary' : '') + '">' + escapeHtml(index > 1 ? clampText(text, 34) : text) + '</span>';
+            }).join('') +
           '</div>' +
         '</div>' +
       '</article>';
