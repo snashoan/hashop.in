@@ -937,6 +937,7 @@
       }
       if (first === "setup") return finish({ kind: "setup" });
       if (first === "login") return finish({ kind: "login" });
+      if (first === "manage") return finish({ kind: "manage" });
       if (first === "account") {
         return finish({
           kind: "account",
@@ -1003,6 +1004,7 @@
     if (state.debugPaneView === "login") return appPath(state, "/login");
     if (state.debugPaneView === "account") {
       const accountSegment = accountPanePathSegment(state.accountPaneMode);
+      if (accountSegment === "shops") return appPath(state, "/manage");
       return appPath(state, accountSegment ? ("/account/" + encodePathSegment(accountSegment)) : "/account");
     }
     if (state.debugPaneView === "recent-orders") return appPath(state, "/cart");
@@ -1276,43 +1278,6 @@
       state.ownerShopId = preferredOwnerShopId(normalized, state.ownerShopId);
     }
     return normalized;
-  }
-
-  function pruneAccountSessionToKnownShops(state) {
-    if (!state || !state.accountSession || !state.shopById) return state ? state.accountSession : null;
-    const knownShopIds = Object.keys(state.shopById);
-    if (!knownShopIds.length) return state.accountSession;
-    const session = state.accountSession;
-    const ownerShops = accountOwnerShops(session);
-    const filteredOwnerShops = ownerShops.filter(function (shop) {
-      const shopId = String(shop && shop.shopId || "").trim();
-      return !!shopId && knownShopIds.indexOf(shopId) !== -1;
-    });
-    if (filteredOwnerShops.length === ownerShops.length) {
-      return session;
-    }
-    if (!filteredOwnerShops.length) {
-      const buyerOnly = accountBuyerAccount(session);
-      return setAccountSession(state, buyerOnly ? {
-        displayName: session.displayName,
-        roles: ["buyer"],
-        activeRole: "buyer",
-        ownerShops: [],
-        preferredOwnerShopId: "",
-        buyerAccount: buyerOnly
-      } : null);
-    }
-    return setAccountSession(state, {
-      displayName: session.displayName,
-      roles: session.roles,
-      activeRole: normalizeAccountActiveRole(session.activeRole, session.roles, filteredOwnerShops),
-      ownerShops: filteredOwnerShops,
-      preferredOwnerShopId: preferredOwnerShopId({
-        ownerShops: filteredOwnerShops,
-        preferredOwnerShopId: session.preferredOwnerShopId
-      }),
-      buyerAccount: session.buyerAccount || null
-    });
   }
 
   function saveShopIdentity(shopName, shopId) {
@@ -9670,6 +9635,8 @@
       openDebugLoginPane(state);
     } else if (kind === "account") {
       openAccountPane(state, { accountPaneMode: route.accountPaneMode });
+    } else if (kind === "manage") {
+      openAccountPane(state, { accountPaneMode: "shops" });
     } else if (kind === "orders") {
       if (shouldUseOwnerOrdersNav(state)) {
         openOwnerOrdersPane(state);
@@ -10122,8 +10089,6 @@
         openShopInPane(state, shopId, options);
       })
       .catch(function () {
-        clearShopIdentity();
-        state.accountSession = loadAccountSession();
         state.ownerShopId = "";
         state.loginDraft.username = "";
         state.loginDraft.password = "";
@@ -10132,10 +10097,10 @@
         state.loginDraft.resetContact = "";
         state.loginDraft.resetCode = "";
         state.loginDraft.resetPassword = "";
-        state.loginDraft.status = "Saved shop not found. Log in again.";
+        state.loginDraft.status = "Could not open saved shop. Try again.";
         state.loginDraft.tone = "error";
         syncBackButton(state);
-        openDebugLoginPane(state);
+        openAccountPane(state, { accountPaneMode: "shops" });
       });
   }
 
@@ -11649,7 +11614,6 @@
   setConnectionStatus(state, state.isOnline);
   setBuyerProfile(state, state.buyerProfile);
   setAccountSession(state, state.accountSession);
-  pruneAccountSessionToKnownShops(state);
   state.buyerAuthDraft.name = String(state.buyerProfile && state.buyerProfile.name || "");
   state.buyerAuthDraft.contact = String(state.buyerProfile && state.buyerProfile.contact || "");
 
@@ -12414,6 +12378,9 @@
         if (ownerModeOn) {
           setAccountActiveRole(state, "buyer");
           state.accountPaneMode = "";
+          updateSearchField(state);
+          syncActionButton(state);
+          syncBackButton(state);
           renderShopList(state);
           resetPaneScroll(state);
           return;
