@@ -645,10 +645,12 @@
         (settings.message ? '<p>' + escapeHtml(settings.message) + '</p>' : '') +
         (settings.loading ? '<span class="shop-state-skeleton"></span>' : '') +
         (actions.length ? (
-          '<div class="shop-state-actions">' +
-            actions.map(function (action) {
-              return stateActionMarkup(action && action.label, action && action.attribute, action && action.tone);
-            }).join('') +
+          '<div class="shop-state-action-frame">' +
+            '<div class="shop-state-actions">' +
+              actions.map(function (action) {
+                return stateActionMarkup(action && action.label, action && action.attribute, action && action.tone);
+              }).join('') +
+            '</div>' +
           '</div>'
         ) : '') +
       '</div>';
@@ -681,8 +683,10 @@
           '<strong>' + escapeHtml(title) + '</strong>' +
           '<p>' + escapeHtml(message) + '</p>' +
         '</div>' +
-        '<div class="shop-empty-cart-actions">' +
-          '<button class="shop-empty-cart-action" type="button" ' + actionAttribute + '>' + escapeHtml(actionLabel) + '</button>' +
+        '<div class="shop-empty-cart-actions shop-state-action-frame">' +
+          '<div class="shop-state-actions">' +
+            '<button class="shop-empty-cart-action" type="button" ' + actionAttribute + '>' + escapeHtml(actionLabel) + '</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
   }
@@ -703,12 +707,14 @@
       : "When shops add items, they will show here.");
     const actions = Array.isArray(settings.actions) ? settings.actions : [];
     const actionsMarkup = actions.length ? (
-      '<div class="shop-empty-items-actions">' +
-        actions.map(function (action) {
-          const safeAttribute = String(action && action.attribute || "").trim();
-          if (!safeAttribute) return "";
-          return '<button class="shop-empty-items-action' + (action && action.tone ? (' is-' + escapeHtml(action.tone)) : '') + '" type="button" ' + safeAttribute + '>' + escapeHtml(action && action.label || "Continue") + '</button>';
-        }).join('') +
+      '<div class="shop-empty-items-actions shop-state-action-frame">' +
+        '<div class="shop-state-actions">' +
+          actions.map(function (action) {
+            const safeAttribute = String(action && action.attribute || "").trim();
+            if (!safeAttribute) return "";
+            return '<button class="shop-empty-items-action' + (action && action.tone ? (' is-' + escapeHtml(action.tone)) : '') + '" type="button" ' + safeAttribute + '>' + escapeHtml(action && action.label || "Continue") + '</button>';
+          }).join('') +
+        '</div>' +
       '</div>'
     ) : '';
     return '' +
@@ -3571,7 +3577,7 @@
           '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
-          '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
+          '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
         '</div>' +
         '<div class="shop-owner-item-actions">' +
           '<button class="shop-owner-save" type="button" data-owner-item-save="' + escapeHtml(selectedItem.id || "") + '">Save item</button>' +
@@ -3631,7 +3637,7 @@
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
             '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
-            '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
           '</div>' +
           '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
           '<div class="shop-owner-item-list">' +
@@ -3718,7 +3724,7 @@
           '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
           '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
-          '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
+          '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
         '</div>' +
         '<div class="shop-owner-item-actions">' +
           '<button class="shop-owner-save" type="button" data-owner-item-save="' + escapeHtml(selectedItem.id || "") + '">Save item</button>' +
@@ -3794,7 +3800,7 @@
               '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
               '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
               '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
-              '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
+              '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
             '</div>' +
             '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
             '<div class="shop-owner-item-list">' +
@@ -3873,7 +3879,7 @@
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" data-owner-item-field="title" value="' + escapeHtml(selectedItem.title || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" data-owner-item-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="' + escapeHtml(selectedItem.price || "") + '" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" data-owner-item-field="quantity" type="number" min="0" step="1" value="' + escapeHtml(selectedItem.quantity || 0) + '" /></label>' +
-            '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" data-owner-item-field="description" rows="3">' + escapeHtml(selectedItem.description || "") + '</textarea></label>' +
             '<div class="shop-owner-field shop-owner-field-wide">' +
               '<span>Images</span>' +
               galleryMarkup +
@@ -4271,7 +4277,7 @@
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
             '<label class="shop-owner-field"><span>Price</span><input class="shop-owner-input" name="price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="20" /></label>' +
             '<label class="shop-owner-field"><span>Qty</span><input class="shop-owner-input" name="quantity" type="number" min="0" step="1" placeholder="12" /></label>' +
-            '<label class="shop-owner-field shop-owner-field-wide"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
+            '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
           '</div>' +
           '<div class="shop-owner-action-row">' +
             '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
@@ -5013,34 +5019,48 @@
     const item = display && typeof display === "object" ? display : {};
     if (item.image) {
       return '' +
-        '<span class="shop-cart-media is-image">' +
-          '<img class="shop-cart-image" src="' + escapeHtml(assetFileUrl(item.image)) + '" alt="' + escapeHtml(item.title || "Item") + '">' +
-        '</span>';
+        '<div class="shop-card-thumb shop-cart-thumb is-image">' +
+          '<img src="' + escapeHtml(assetFileUrl(item.image)) + '" alt="' + escapeHtml(item.title || "Item") + '">' +
+        '</div>';
     }
-    return '<span class="shop-cart-media" aria-hidden="true"></span>';
+    return '<div class="shop-card-thumb shop-cart-thumb" aria-hidden="true"><span>' + escapeHtml(String(item.title || "#").trim().charAt(0).toUpperCase() || "#") + '</span></div>';
   }
 
   function cartDisplayRowMarkup(detail, item, options) {
     const settings = options && typeof options === "object" ? options : {};
     const display = cartDisplayItem(detail, item);
     const quantityLabel = display.quantity > 0 ? ("x" + display.quantity) : "";
-    const metaParts = [display.price, quantityLabel, display.stock].filter(Boolean);
+    const totalLabel = display.lineTotal || display.price || "";
+    const showLineTotal = !!(display.lineTotal && display.lineTotal !== display.price);
+    const metaParts = [display.price, quantityLabel, showLineTotal ? totalLabel : "", display.stock].filter(Boolean);
+    const safeColor = /^#[0-9a-fA-F]{6}$/.test(String(settings.color || "")) ? String(settings.color) : HASHOP_DEFAULT_SHOP_COLOR;
+    const actionMarkup = settings.controls === false
+      ? '<span class="shop-card-open">' + escapeHtml(totalLabel) + '</span>'
+      : itemSelectionControlMarkup({
+          shopId: settings.shopId || "",
+          itemId: display.id,
+          quantity: display.quantity,
+          title: display.title
+        });
     return '' +
-      '<div class="shop-cart-row shop-cart-rich-row">' +
+      '<article class="shop-card shop-discovery-card shop-item-discovery-card shop-cart-list-card" data-cart-item-id="' + escapeHtml(display.id) + '" style="--shop-color:' + escapeHtml(safeColor) + ';">' +
         cartDisplayMediaMarkup(display) +
-        '<div class="shop-cart-copy">' +
-          '<strong>' + escapeHtml(display.title) + '</strong>' +
-          '<span class="shop-cart-description">' + escapeHtml(display.description || "Available now.") + '</span>' +
-          '<span class="shop-cart-meta">' + escapeHtml(metaParts.join(" · ")) + '</span>' +
+        '<div class="shop-card-main">' +
+          '<div class="shop-card-topline">' +
+            '<div class="shop-card-title-block">' +
+              '<strong>' + escapeHtml(display.title) + '</strong>' +
+              '<span class="shop-card-subtitle">' + escapeHtml(metaParts.join(" · ")) + '</span>' +
+            '</div>' +
+            actionMarkup +
+          '</div>' +
+          '<div class="shop-card-items">' +
+            '<span class="shop-card-item">' + escapeHtml(display.price) + '</span>' +
+            (showLineTotal ? '<span class="shop-card-item">' + escapeHtml(display.lineTotal) + '</span>' : '') +
+            '<span class="shop-card-item">' + escapeHtml(display.stock) + '</span>' +
+            '<span class="shop-card-item">' + escapeHtml(clampText(display.description || "Available now.", 34)) + '</span>' +
+          '</div>' +
         '</div>' +
-        (settings.controls === false
-          ? '<div class="shop-cart-line-total">' + escapeHtml(display.lineTotal || display.price || "") + '</div>'
-          : '<div class="shop-cart-actions">' +
-              '<button class="shop-cart-step" type="button" data-cart-step="-1" data-item-id="' + escapeHtml(display.id) + '">-</button>' +
-              '<span class="shop-cart-qty">' + escapeHtml(display.quantity) + '</span>' +
-              '<button class="shop-cart-step" type="button" data-cart-step="1" data-item-id="' + escapeHtml(display.id) + '">+</button>' +
-            '</div>') +
-      '</div>';
+      '</article>';
   }
 
   function orderItemsMarkup(order, detail, options) {
@@ -5057,7 +5077,7 @@
     return '' +
       '<div class="' + className + '">' +
         items.map(function (item) {
-          return cartDisplayRowMarkup(detail, item, { controls: false });
+          return cartDisplayRowMarkup(detail, item, { controls: false, compact: settings.compact });
         }).join('') +
       '</div>';
   }
@@ -5401,9 +5421,12 @@
       return matchesSearch([item.title, item.price], query);
     });
     const cartMarkup = filteredCartItems.length ? (
-      '<div class="shop-pane-cart-items">' +
+      '<div class="shop-pane-items shop-pane-shop-feed shop-pane-cart-feed" data-list-view="list">' +
         filteredCartItems.map(function (item) {
-          return cartDisplayRowMarkup(detail, item);
+          return cartDisplayRowMarkup(detail, item, {
+            shopId: state.activeShopId,
+            color: shopColor(shop)
+          });
         }).join('') +
       '</div>' +
       '<div class="shop-pane-cart-foot">' +
