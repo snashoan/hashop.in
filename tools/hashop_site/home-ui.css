@@ -27465,3 +27465,96 @@ html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-media-note) .
   min-width: 0 !important;
   text-align: left !important;
 }
+
+/* Iteration 100: dark mode is a palette replica, not a form restructure. */
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-form-card {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-field {
+  border-color: rgba(247, 244, 234, 0.1) !important;
+  background: #111111 !important;
+  background-color: #111111 !important;
+  background-image: none !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field > span,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field > span,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field > span,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide > span {
+  color: #b9b3a5 !important;
+  -webkit-text-fill-color: #b9b3a5 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-input {
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input::placeholder,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea::placeholder,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input::placeholder,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea::placeholder {
+  color: #8d8779 !important;
+  -webkit-text-fill-color: #8d8779 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-actions .shop-owner-save,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-submit {
+  border-color: #f7f4ea !important;
+  background: #f7f4ea !important;
+  background-color: #f7f4ea !important;
+  background-image: none !important;
+  color: #050505 !important;
+  -webkit-text-fill-color: #050505 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-actions,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-actions,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-links,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-public-links {
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links a,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-links button,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-public-links a {
+  border-color: rgba(247, 244, 234, 0.08) !important;
+  background: #111111 !important;
+  background-color: #111111 !important;
+  background-image: none !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+  box-shadow: none !important;
+}

@@ -1126,8 +1126,14 @@
 
   function normalizeAccountSession(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
-    const ownerShops = normalizeOwnerShops(source.ownerShops || source.shops);
     const buyerAccount = normalizeBuyerAccount(source.buyerAccount || source.buyer || source.account);
+    const rawOwnerShops = Array.isArray(source.ownerShops)
+      ? source.ownerShops
+      : (Array.isArray(source.shops) ? source.shops : []);
+    const rawBuyerOwnerShops = buyerAccount && Array.isArray(buyerAccount.ownerShops)
+      ? buyerAccount.ownerShops
+      : [];
+    const ownerShops = normalizeOwnerShops(rawOwnerShops.concat(rawBuyerOwnerShops));
     const roles = normalizeAccountRoles(source.roles, ownerShops);
     if (buyerAccount && roles.indexOf("buyer") === -1) {
       roles.push("buyer");
@@ -1414,9 +1420,10 @@
     return state.buyerProfile;
   }
 
-  function saveBuyerAccountSession(state, account) {
+  function saveBuyerAccountSession(state, account, options) {
     const buyerAccount = normalizeBuyerAccount(account);
     if (!state || !buyerAccount) return null;
+    const settings = options && typeof options === "object" ? options : {};
     if (buyerAccount.buyerKey) {
       try {
         window.localStorage.setItem("hashop_buyer_key", buyerAccount.buyerKey);
@@ -1424,12 +1431,17 @@
     }
     const current = state.accountSession || loadAccountSession() || {};
     const accountOwnerShops = normalizeOwnerShops(buyerAccount.ownerShops || []);
-    const ownerShops = normalizeOwnerShops(accountOwnerShops.concat(current.ownerShops || []));
+    const ownerShops = settings.replaceOwnerShops
+      ? accountOwnerShops
+      : normalizeOwnerShops(accountOwnerShops.concat(current.ownerShops || []));
     const roles = normalizeAccountRoles((current.roles || []).concat(buyerAccount.roles || []).concat(["buyer"]), ownerShops);
+    const activeRole = settings.preserveActiveRole
+      ? normalizeAccountActiveRole(current.activeRole, roles, ownerShops)
+      : "buyer";
     const nextSession = setAccountSession(state, {
       displayName: String(current.displayName || buyerAccount.displayName || buyerAccount.contact || "").trim(),
       roles: roles,
-      activeRole: "buyer",
+      activeRole: activeRole,
       ownerShops: ownerShops,
       preferredOwnerShopId: current.preferredOwnerShopId || preferredOwnerShopId({ ownerShops: ownerShops }) || "",
       buyerAccount: buyerAccount
@@ -1448,6 +1460,57 @@
       recentOrderRefs: currentProfile.recentOrderRefs || []
     });
     return nextSession;
+  }
+
+  function refreshBuyerAccountSession(state, options) {
+    if (!state) return Promise.resolve(null);
+    const settings = options && typeof options === "object" ? options : {};
+    const session = state.accountSession || loadAccountSession();
+    const buyerAccount = accountBuyerAccount(session);
+    if (!buyerAccount) return Promise.resolve(session || null);
+    if (state.accountSessionRefreshing && !settings.force) {
+      return state.accountSessionRefreshPromise || Promise.resolve(state.accountSession || session || null);
+    }
+    state.accountSessionRefreshing = true;
+    state.accountSessionRefreshPromise = refreshBuyerAccountSessionRequest(buyerAccount).then(function (result) {
+      if (!result || !result.ok) {
+        const error = String(result && result.payload && result.payload.error || "").trim();
+        if (!settings.silent && state.debugPaneView === "account") {
+          setAccountDraftMessage(state, error === "invalid_buyer_account" ? "Sign in again." : "Could not refresh account.", "error");
+          renderShopList(state);
+        }
+        return state.accountSession || session || null;
+      }
+      const payload = result.payload || {};
+      const accountPayload = payload.account;
+      const account = accountPayload && typeof accountPayload === "object"
+        ? Object.assign({}, accountPayload, {
+          ownerShops: accountPayload.ownerShops || payload.owner_shops || payload.ownerShops || []
+        })
+        : accountPayload;
+      const refreshed = saveBuyerAccountSession(state, account, {
+        preserveActiveRole: true,
+        replaceOwnerShops: Array.isArray(payload.owner_shops) || Array.isArray(payload.ownerShops)
+      });
+      updateSearchField(state);
+      syncActionButton(state);
+      syncBackButton(state);
+      if (state.debugPaneView === "account" || isOwnerAccountMode(state)) {
+        renderShopList(state);
+      }
+      refreshOwnerOrdersNavData(state, { force: true });
+      return refreshed;
+    }).catch(function () {
+      if (!settings.silent && state.debugPaneView === "account") {
+        setAccountDraftMessage(state, "Could not refresh account.", "error");
+        renderShopList(state);
+      }
+      return state.accountSession || session || null;
+    }).finally(function () {
+      state.accountSessionRefreshing = false;
+      state.accountSessionRefreshPromise = null;
+    });
+    return state.accountSessionRefreshPromise;
   }
 
   function mergeBuyerProfile(state, patch) {
@@ -2404,6 +2467,33 @@
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload || {})
+    }).then(function (response) {
+      return parseJson(response).then(function (body) {
+        return {
+          ok: response.ok,
+          status: response.status,
+          payload: body
+        };
+      });
+    });
+  }
+
+  function refreshBuyerAccountSessionRequest(account) {
+    const buyerAccount = normalizeBuyerAccount(account);
+    if (!buyerAccount) {
+      return Promise.resolve({ ok: false, status: 0, payload: { error: "missing_buyer_account" } });
+    }
+    return window.fetch("/api/buyer/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      cache: "no-store",
+      body: JSON.stringify({
+        account_id: buyerAccount.accountId,
+        account_token: buyerAccount.accountToken,
+        buyer_key: buyerAccount.buyerKey || ensureBuyerKey()
+      })
     }).then(function (response) {
       return parseJson(response).then(function (body) {
         return {
@@ -9516,6 +9606,7 @@
     renderShopList(state);
     resetPaneScroll(state);
     refreshBuyerOrders(state, { force: false });
+    refreshBuyerAccountSession(state, { silent: true });
   }
 
   function openConceptPane(state, concept) {
@@ -9538,6 +9629,7 @@
     syncBackButton(state);
     renderShopList(state);
     resetPaneScroll(state);
+    refreshBuyerAccountSession(state, { silent: true });
   }
 
   function openCheckoutSignIn(state, shopId) {
@@ -10566,7 +10658,7 @@
           ownerShops: accountPayload.ownerShops || result.payload.owner_shops || result.payload.ownerShops || []
         })
         : accountPayload;
-      saveBuyerAccountSession(state, account);
+      saveBuyerAccountSession(state, account, { replaceOwnerShops: true });
       state.accountPaneMode = "";
       state.buyerAuthDraft = {
         name: String(account && (account.displayName || account.display_name) || name || "").trim(),
@@ -10719,7 +10811,7 @@
         throw new Error(message);
       }
       const account = result.payload && result.payload.account;
-      saveBuyerAccountSession(state, account);
+      saveBuyerAccountSession(state, account, { replaceOwnerShops: true });
       state.accountPaneMode = "";
       state.buyerAuthDraft = {
         name: String(account && (account.displayName || account.display_name) || "").trim(),
@@ -11552,6 +11644,8 @@
     buyerOrdersLoading: false,
     buyerOrdersError: "",
     buyerOrdersPollTimer: 0,
+    accountSessionRefreshing: false,
+    accountSessionRefreshPromise: null,
     accountAddresses: loadAccountAddresses(),
     accountPayments: loadAccountPayments(),
     accountDraft: {
@@ -11629,6 +11723,7 @@
   refreshOwnerOrdersNavData(state);
 
   applyRouteState(state, INITIAL_ROUTE);
+  refreshBuyerAccountSession(state, { silent: true });
 
   if (state.searchInput) {
     state.searchInput.addEventListener("input", function () {
@@ -11642,6 +11737,7 @@
     renderShopList(state);
     if (state.debugPaneView === "recent-orders" || state.debugPaneView === "account") {
       refreshBuyerOrders(state, { force: true });
+      refreshBuyerAccountSession(state, { force: true, silent: true });
     }
     if (state.activeShopId && isOwnerViewingShop(state)) {
       refreshShopConsole(state, state.activeShopId, { preserveScroll: true }).catch(function () {});
