@@ -1,6 +1,6 @@
 (function () {
-  const BUILD_VERSION = String(window.__HASHOP_BUILD__ || "hashop-home-i085").trim();
-  const BUILD_LABEL = String(window.__HASHOP_BUILD_LABEL__ || "Hashop Home - Iteration 085 - Orders QR Mail Polish").trim();
+  const BUILD_VERSION = String(window.__HASHOP_BUILD__ || "hashop-home-i103").trim();
+  const BUILD_LABEL = String(window.__HASHOP_BUILD_LABEL__ || "Hashop Home - Iteration 103 - Account Reset and Interactive Map").trim();
   const DEBUG_PAGE = String(window.__HASHOP_DEBUG_PAGE__ || "").trim();
   const DEBUG_ENABLED = hashopDebugEnabled();
   const INITIAL_ROUTE = parseInitialRoute();
@@ -163,7 +163,7 @@
   function normalizeAccountPaneMode(value) {
     const mode = slugify(String(value || "").trim()).slice(0, 40);
     if (mode === "orders" || mode === "buyer-orders" || mode === "history") return "buyer-orders";
-    if (mode === "sign-in" || mode === "signin" || mode === "login") return "buyer-login";
+    if (mode === "buyer-login" || mode === "sign-in" || mode === "signin" || mode === "login") return "buyer-login";
     if (mode === "profile" || mode === "addresses" || mode === "payments" || mode === "shops" || mode === "help" || mode === "settings") {
       return mode;
     }
@@ -266,7 +266,11 @@
       const shopLabel = String(activeShop && (activeShop.display_name || activeShop.shop_id) || "Shop").trim();
       return { mode: "shop", label: shopLabel || "Shop" };
     }
-    if (state.userPoint) return { mode: "located", label: "Near you" };
+    if (state.userPoint) {
+      if (state.userPointSource === "map") return { mode: "focused", label: "Map point" };
+      if (state.userPointSource === "address") return { mode: "located", label: "Saved place" };
+      return { mode: "located", label: "Near you" };
+    }
     const count = Array.isArray(state.shopPoints) ? state.shopPoints.length : 0;
     if (count > 0) return { mode: "ready", label: count === 1 ? "1 shop" : (count + " shops") };
     return { mode: "ready", label: "Map" };
@@ -425,6 +429,7 @@
         lat: lat,
         lng: lng,
         accuracy: accuracy,
+        source: String(parsed && parsed.source || "location").trim() || "location",
         updatedAt: Number(parsed && parsed.updatedAt) || 0
       };
     } catch (error) {
@@ -1413,6 +1418,79 @@
     return loadBuyerProfile();
   }
 
+  function clearAccountScopedLocalData(state, options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const preserveCartShopId = String(settings.preserveCartShopId || "").trim();
+    const preservedCart = state && preserveCartShopId && state.cartByShop && state.cartByShop[preserveCartShopId]
+      ? Object.assign({}, state.cartByShop[preserveCartShopId])
+      : null;
+    try {
+      [
+        "hashop_account_session",
+        "hashop_shop_name",
+        "hashop_vendor_id",
+        "hashop_buyer_profile",
+        "hashop_buyer_key",
+        "hashop_last_location",
+        ACCOUNT_ADDRESS_STORAGE_KEY,
+        ACCOUNT_PAYMENT_STORAGE_KEY,
+        ACCOUNT_HELP_STORAGE_KEY,
+        SETUP_CONTACT_VERIFICATION_STORAGE_KEY
+      ].forEach(function (key) {
+        window.localStorage.removeItem(key);
+      });
+    } catch (error) {}
+    if (!state) return;
+    state.accountSessionSerial = Math.max(0, Number(state.accountSessionSerial || 0) || 0) + 1;
+    state.accountSessionRefreshing = false;
+    state.accountSessionRefreshPromise = null;
+    if (state.userMarker) {
+      if (state.mapProvider === "google" && typeof state.userMarker.setMap === "function") {
+        state.userMarker.setMap(null);
+      } else if (state.map && typeof state.map.removeLayer === "function") {
+        state.map.removeLayer(state.userMarker);
+      }
+    }
+    if (state.userAccuracy) {
+      if (state.mapProvider === "google" && typeof state.userAccuracy.setMap === "function") {
+        state.userAccuracy.setMap(null);
+      } else if (state.map && typeof state.map.removeLayer === "function") {
+        state.map.removeLayer(state.userAccuracy);
+      }
+    }
+    state.accountSession = null;
+    state.ownerShopId = "";
+    state.buyerProfile = normalizeBuyerProfile({}, "");
+    state.buyerOrders = [];
+    state.buyerOrdersLoading = false;
+    state.buyerOrdersError = "";
+    state.accountAddresses = [];
+    state.accountPayments = [];
+    state.savedUserLocation = null;
+    state.userPoint = null;
+    state.userPointSource = "";
+    state.userMarker = null;
+    state.userAccuracy = null;
+    state.cartByShop = preservedCart ? Object.assign({}, { [preserveCartShopId]: preservedCart }) : {};
+    state.selectedPaymentByShop = {};
+    state.paymentPickerOpenByShop = {};
+    state.paymentModeByShop = {};
+    state.fulfillmentModeByShop = {};
+    state.checkoutNoticeByShop = {};
+    state.orderConfirmationByShop = {};
+    state.pendingCheckoutShopId = preservedCart ? preserveCartShopId : "";
+    state.ownerOrderDraftByShop = {};
+    state.ownerPanel.tab = "";
+    state.ownerPanel.section = "";
+    state.ownerPanel.itemId = "";
+    state.ownerPanel.message = "";
+    state.ownerPanel.tone = "";
+    state.ownerPanel.addMenuOpen = false;
+    state.ownerPanel.orderDraftOpen = false;
+    syncLegacyOwnerIdentity(null);
+    syncMapUiState(state);
+  }
+
   function setBuyerProfile(state, profile) {
     if (!state) return null;
     state.buyerProfile = saveBuyerProfile(profile || {});
@@ -1461,17 +1539,42 @@
     return nextSession;
   }
 
+  function replaceSignedInBuyerAccount(state, account, options) {
+    if (!state) return Promise.resolve(null);
+    const buyerAccount = normalizeBuyerAccount(account);
+    if (!buyerAccount) return Promise.resolve(null);
+    const settings = options && typeof options === "object" ? options : {};
+    clearBuyerOrdersPoll(state);
+    clearAccountScopedLocalData(state, {
+      preserveCartShopId: settings.preserveCartShopId
+    });
+    const saved = saveBuyerAccountSession(state, buyerAccount, {
+      replaceOwnerShops: true
+    });
+    return refreshBuyerAccountSession(state, {
+      force: true,
+      silent: true
+    }).then(function (refreshed) {
+      return refreshed || saved;
+    }).catch(function () {
+      return saved;
+    });
+  }
+
   function refreshBuyerAccountSession(state, options) {
     if (!state) return Promise.resolve(null);
     const settings = options && typeof options === "object" ? options : {};
     const session = state.accountSession || loadAccountSession();
     const buyerAccount = accountBuyerAccount(session);
     if (!buyerAccount) return Promise.resolve(session || null);
+    const refreshSerial = Math.max(0, Number(state.accountSessionSerial || 0) || 0);
+    const refreshAccountId = String(buyerAccount.accountId || "").trim();
+    const refreshAccountToken = String(buyerAccount.accountToken || "").trim();
     if (state.accountSessionRefreshing && !settings.force) {
       return state.accountSessionRefreshPromise || Promise.resolve(state.accountSession || session || null);
     }
     state.accountSessionRefreshing = true;
-    state.accountSessionRefreshPromise = refreshBuyerAccountSessionRequest(buyerAccount).then(function (result) {
+    const refreshPromise = refreshBuyerAccountSessionRequest(buyerAccount).then(function (result) {
       if (!result || !result.ok) {
         const error = String(result && result.payload && result.payload.error || "").trim();
         if (!settings.silent && state.debugPaneView === "account") {
@@ -1487,6 +1590,15 @@
           ownerShops: accountPayload.ownerShops || payload.owner_shops || payload.ownerShops || []
         })
         : accountPayload;
+      const currentAccount = accountBuyerAccount(state.accountSession || loadAccountSession());
+      if (
+        Math.max(0, Number(state.accountSessionSerial || 0) || 0) !== refreshSerial
+        || !currentAccount
+        || String(currentAccount.accountId || "").trim() !== refreshAccountId
+        || String(currentAccount.accountToken || "").trim() !== refreshAccountToken
+      ) {
+        return state.accountSession || loadAccountSession() || null;
+      }
       const refreshed = saveBuyerAccountSession(state, account, {
         preserveActiveRole: true,
         replaceOwnerShops: Array.isArray(payload.owner_shops) || Array.isArray(payload.ownerShops)
@@ -1506,9 +1618,12 @@
       }
       return state.accountSession || session || null;
     }).finally(function () {
-      state.accountSessionRefreshing = false;
-      state.accountSessionRefreshPromise = null;
+      if (state.accountSessionRefreshPromise === refreshPromise) {
+        state.accountSessionRefreshing = false;
+        state.accountSessionRefreshPromise = null;
+      }
     });
+    state.accountSessionRefreshPromise = refreshPromise;
     return state.accountSessionRefreshPromise;
   }
 
@@ -1613,17 +1728,22 @@
     const lat = Number(source.lat);
     const lng = Number(source.lng);
     state.userPoint = [lat, lng];
+    state.userPointSource = "address";
     state.savedUserLocation = {
       lat: lat,
       lng: lng,
       accuracy: 0,
+      source: "address",
       label: String(source.label || "Saved address").trim(),
       updatedAt: Date.now()
     };
     try {
       window.localStorage.setItem("hashop_last_location", JSON.stringify(state.savedUserLocation));
     } catch (error) {}
-    upsertUserMarker(state, lat, lng, 0);
+    upsertUserMarker(state, lat, lng, 0, {
+      source: "address",
+      title: String(source.label || "Saved address").trim()
+    });
     syncMapUiState(state);
     updateMapView(state);
     syncActionButton(state);
@@ -2566,7 +2686,7 @@
     });
   }
 
-  function resetBuyerPassword(contact, resetCode, password) {
+  function resetBuyerPassword(contact, resetCode, password, buyerKey) {
     return window.fetch("/api/buyer/reset-password", {
       method: "POST",
       headers: {
@@ -2576,7 +2696,7 @@
         contact: contact,
         reset_code: resetCode,
         password: password,
-        buyer_key: ensureBuyerKey()
+        buyer_key: String(buyerKey || "").trim() || ensureBuyerKey()
       })
     }).then(function (response) {
       return parseJson(response).then(function (body) {
@@ -6297,17 +6417,22 @@
   function rememberSetupLocation(state, lat, lng, accuracy) {
     if (!state || !isValidMapPoint(lat, lng)) return false;
     state.userPoint = [Number(lat), Number(lng)];
+    state.userPointSource = "address";
     state.savedUserLocation = {
       lat: Number(lat),
       lng: Number(lng),
       accuracy: accuracy || 0,
+      source: "address",
       updatedAt: Date.now()
     };
     try {
       window.localStorage.setItem("hashop_last_location", JSON.stringify(state.savedUserLocation));
     } catch (error) {}
     if (state.map) {
-      upsertUserMarker(state, lat, lng, accuracy);
+      upsertUserMarker(state, lat, lng, accuracy, {
+        source: "address",
+        title: "Address pin"
+      });
     } else {
       syncMapUiState(state);
     }
@@ -6669,6 +6794,7 @@
       window.localStorage.removeItem("hashop_last_location");
     } catch (error) {}
     state.userPoint = null;
+    state.userPointSource = "";
     state.savedUserLocation = null;
     if (state.userMarker) {
       if (state.mapProvider === "google" && typeof state.userMarker.setMap === "function") {
@@ -8831,6 +8957,57 @@
     });
   }
 
+  function mapTapIsUiChrome(target) {
+    return target instanceof Element && !!target.closest(
+      ".map-popup, .leaflet-control, .leaflet-marker-icon, .leaflet-popup, .gm-style-iw, .gm-bundled-control, .gmnoprint, button, a"
+    );
+  }
+
+  function setMapBrowsePoint(state, lat, lng, options) {
+    if (!state || !isValidMapPoint(lat, lng) || setupAddressPickerActive(state)) return false;
+    const settings = options && typeof options === "object" ? options : {};
+    state.orderMapCue = null;
+    upsertUserMarker(state, Number(lat), Number(lng), 0, {
+      persist: false,
+      source: "map",
+      title: "Map point"
+    });
+    if (!settings.keepPaneState && !state.activeShopId && !state.debugPaneView) {
+      setPaneExpanded(state, true, "normal");
+    }
+    renderShopList(state);
+    updateSearchField(state);
+    syncActionButton(state);
+    syncMapUiState(state);
+    return true;
+  }
+
+  function installInteractiveMapBrowse(state) {
+    if (!state || !state.map || state.interactiveMapBrowseInstalled) return;
+    state.interactiveMapBrowseInstalled = true;
+    if (state.mapProvider === "google" && window.google && window.google.maps && typeof state.map.addListener === "function") {
+      state.map.addListener("click", function (event) {
+        if (setupAddressPickerActive(state)) return;
+        if (event && mapTapIsUiChrome(event.domEvent && event.domEvent.target)) return;
+        const latLng = event && event.latLng;
+        if (!latLng) return;
+        const lat = typeof latLng.lat === "function" ? latLng.lat() : latLng.lat;
+        const lng = typeof latLng.lng === "function" ? latLng.lng() : latLng.lng;
+        setMapBrowsePoint(state, lat, lng);
+      });
+      return;
+    }
+    if (state.mapProvider === "leaflet" && typeof state.map.on === "function") {
+      state.map.on("click", function (event) {
+        if (setupAddressPickerActive(state)) return;
+        if (event && event.originalEvent && mapTapIsUiChrome(event.originalEvent.target)) return;
+        const latlng = event && event.latlng;
+        if (!latlng) return;
+        setMapBrowsePoint(state, latlng.lat, latlng.lng);
+      });
+    }
+  }
+
   function setPaneNavButtonState(button, options) {
     if (!button) return;
     const settings = options && typeof options === "object" ? options : {};
@@ -9091,24 +9268,10 @@
 
   function signOutAccountSession(state) {
     if (!state) return;
-    setAccountSession(state, null);
     clearBuyerOrdersPoll(state);
-    state.buyerProfile = clearBuyerLocalIdentity();
-    state.buyerOrders = [];
-    state.buyerOrdersLoading = false;
-    state.buyerOrdersError = "";
-    state.accountAddresses = saveAccountAddresses([]);
-    state.accountPayments = saveAccountPayments([]);
+    clearAccountScopedLocalData(state);
     state.setupDraft = setupDraftFromProfile(state);
-    state.ownerShopId = "";
     state.ownerOrdersNavLoading = false;
-    state.ownerPanel.tab = "";
-    state.ownerPanel.section = "";
-    state.ownerPanel.itemId = "";
-    state.ownerPanel.message = "";
-    state.ownerPanel.tone = "";
-    state.ownerPanel.addMenuOpen = false;
-    state.ownerPanel.orderDraftOpen = false;
     state.accountPaneMode = "";
     state.activeShopId = "";
     state.activeShopView = "items";
@@ -10132,6 +10295,7 @@
         const mergedShop = mergeShopRecord(state, shopRecord || { shop_id: shopId, display_name: username }, username);
         state.accountSession = saveShopIdentity(String(mergedShop && mergedShop.display_name || username).trim(), shopId);
         setPreferredOwnerShop(state, shopId);
+        refreshBuyerAccountSession(state, { force: true, silent: true }).catch(function () {});
         state.ownerPanel.tab = "";
         state.ownerPanel.section = "";
         state.ownerPanel.itemId = "";
@@ -10643,6 +10807,7 @@
       renderShopList(state);
       return;
     }
+    const freshBuyerKey = generateBuyerKey();
     draft.submitting = true;
     draft.tone = "";
     draft.status = actionMode === "login" ? "Opening account..." : "Saving account...";
@@ -10652,7 +10817,7 @@
       contact: contact,
       password: password,
       verification_code: verificationCode,
-      buyer_key: ensureBuyerKey()
+      buyer_key: freshBuyerKey
     }).then(function (result) {
       if (!result || !result.ok) {
         const error = String(result && result.payload && result.payload.error || "").trim();
@@ -10682,29 +10847,34 @@
           ownerShops: accountPayload.ownerShops || result.payload.owner_shops || result.payload.ownerShops || []
         })
         : accountPayload;
-      saveBuyerAccountSession(state, account, { replaceOwnerShops: true });
-      state.accountPaneMode = "";
-      state.buyerAuthDraft = {
-        name: String(account && (account.displayName || account.display_name) || name || "").trim(),
-        contact: String(account && account.contact || contact || "").trim(),
-        password: "",
-        createMode: false,
-        createStep: "contact",
-        resetMode: false,
-        resetStep: "address",
-        resetCode: "",
-        resetPassword: "",
-        verificationCode: "",
-        status: actionMode === "login" ? "Opened." : "Saved.",
-        tone: "success",
-        submitting: false
-      };
-      if (returnToPendingCheckout(state)) {
+      const checkoutShopId = String(state.pendingCheckoutShopId || "").trim();
+      return replaceSignedInBuyerAccount(state, account, {
+        preserveCartShopId: checkoutShopId
+      }).then(function (session) {
+        const refreshedAccount = accountBuyerAccount(session) || normalizeBuyerAccount(account);
+        state.accountPaneMode = "";
+        state.buyerAuthDraft = {
+          name: String(refreshedAccount && refreshedAccount.displayName || name || "").trim(),
+          contact: String(refreshedAccount && refreshedAccount.contact || contact || "").trim(),
+          password: "",
+          createMode: false,
+          createStep: "contact",
+          resetMode: false,
+          resetStep: "address",
+          resetCode: "",
+          resetPassword: "",
+          verificationCode: "",
+          status: actionMode === "login" ? "Opened." : "Saved.",
+          tone: "success",
+          submitting: false
+        };
+        if (returnToPendingCheckout(state)) {
+          syncActionButton(state);
+          return;
+        }
+        renderShopList(state);
         syncActionButton(state);
-        return;
-      }
-      renderShopList(state);
-      syncActionButton(state);
+      });
     }).catch(function (error) {
       draft.submitting = false;
       draft.tone = "error";
@@ -10813,11 +10983,12 @@
       renderShopList(state);
       return;
     }
+    const freshBuyerKey = generateBuyerKey();
     draft.submitting = true;
     draft.tone = "";
     draft.status = "Changing password...";
     renderShopList(state);
-    resetBuyerPassword(contact, resetCode, password).then(function (result) {
+    resetBuyerPassword(contact, resetCode, password, freshBuyerKey).then(function (result) {
       if (!result || !result.ok) {
         const error = String(result && result.payload && result.payload.error || "").trim();
         let message = "Could not change password.";
@@ -10835,25 +11006,27 @@
         throw new Error(message);
       }
       const account = result.payload && result.payload.account;
-      saveBuyerAccountSession(state, account, { replaceOwnerShops: true });
-      state.accountPaneMode = "";
-      state.buyerAuthDraft = {
-        name: String(account && (account.displayName || account.display_name) || "").trim(),
-        contact: String(account && account.contact || contact || "").trim(),
-        password: "",
-        createMode: false,
-        createStep: "contact",
-        resetMode: false,
-        resetStep: "address",
-        resetCode: "",
-        resetPassword: "",
-        verificationCode: "",
-        status: "Password changed.",
-        tone: "success",
-        submitting: false
-      };
-      renderShopList(state);
-      syncActionButton(state);
+      return replaceSignedInBuyerAccount(state, account).then(function (session) {
+        const refreshedAccount = accountBuyerAccount(session) || normalizeBuyerAccount(account);
+        state.accountPaneMode = "";
+        state.buyerAuthDraft = {
+          name: String(refreshedAccount && refreshedAccount.displayName || "").trim(),
+          contact: String(refreshedAccount && refreshedAccount.contact || contact || "").trim(),
+          password: "",
+          createMode: false,
+          createStep: "contact",
+          resetMode: false,
+          resetStep: "address",
+          resetCode: "",
+          resetPassword: "",
+          verificationCode: "",
+          status: "Password changed.",
+          tone: "success",
+          submitting: false
+        };
+        renderShopList(state);
+        syncActionButton(state);
+      });
     }).catch(function (error) {
       draft.submitting = false;
       draft.tone = "error";
@@ -11329,6 +11502,7 @@
         openShopInPane(state, shop.shop_id);
       });
     });
+    installInteractiveMapBrowse(state);
     updateMapView(state);
     syncMapUiState(state);
     maybeLocateOnLoad(state);
@@ -11336,26 +11510,36 @@
     return true;
   }
 
-  function upsertUserMarker(state, lat, lng, accuracy) {
+  function upsertUserMarker(state, lat, lng, accuracy, options) {
     if (!state || !state.map) return;
     if (!isValidMapPoint(lat, lng)) return;
+    const settings = options && typeof options === "object" ? options : {};
+    const persist = settings.persist !== false;
+    const source = String(settings.source || (persist ? "location" : "map")).trim() || "location";
+    const markerTitle = String(settings.title || (source === "map" ? "Map point" : "Your location")).trim();
     state.userPoint = [lat, lng];
-    state.savedUserLocation = {
-      lat: lat,
-      lng: lng,
-      accuracy: accuracy || 0,
-      updatedAt: Date.now()
-    };
-    try {
-      window.localStorage.setItem("hashop_last_location", JSON.stringify(state.savedUserLocation));
-    } catch (error) {}
+    state.userPointSource = source;
+    if (persist) {
+      state.savedUserLocation = {
+        lat: lat,
+        lng: lng,
+        accuracy: accuracy || 0,
+        source: source,
+        updatedAt: Date.now()
+      };
+      try {
+        window.localStorage.setItem("hashop_last_location", JSON.stringify(state.savedUserLocation));
+      } catch (error) {}
+    } else {
+      state.savedUserLocation = null;
+    }
     if (state.mapProvider === "google" && window.google && window.google.maps) {
       const point = { lat: Number(lat), lng: Number(lng) };
       if (!state.userMarker) {
         state.userMarker = new window.google.maps.Marker({
           position: point,
           map: state.map,
-          title: "Your location",
+          title: markerTitle,
           draggable: setupAddressPickerActive(state),
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
@@ -11368,6 +11552,9 @@
         });
       } else {
         state.userMarker.setPosition(point);
+        if (typeof state.userMarker.setTitle === "function") {
+          state.userMarker.setTitle(markerTitle);
+        }
       }
       syncMapUiState(state);
       syncSetupAddressPickerUi(state);
@@ -11393,7 +11580,7 @@
       state.userMarker = window.L.marker([lat, lng], {
         icon: window.L.divIcon({
           className: "",
-          html: '<div class="map-user-marker' + (setupAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
+          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (setupAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
           iconSize: [16, 16],
           iconAnchor: [8, 8]
         }),
@@ -11401,6 +11588,14 @@
       }).addTo(state.map);
     } else {
       state.userMarker.setLatLng([lat, lng]);
+      if (typeof state.userMarker.setIcon === "function") {
+        state.userMarker.setIcon(window.L.divIcon({
+          className: "",
+          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (setupAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        }));
+      }
     }
     syncMapUiState(state);
     syncSetupAddressPickerUi(state);
@@ -11543,12 +11738,16 @@
       });
       window.L.marker(point, { icon: icon })
         .addTo(map)
-        .on("click", function () {
+        .on("click", function (event) {
+          if (event && event.originalEvent && window.L && window.L.DomEvent) {
+            window.L.DomEvent.stopPropagation(event.originalEvent);
+          }
           openShopInPane(state, shop.shop_id);
         })
         .bindPopup(buildPopup(shop, state.userPoint), { closeButton: false, autoPanPadding: [20, 20] });
     });
 
+    installInteractiveMapBrowse(state);
     updateMapView(state);
     syncMapUiState(state);
     maybeLocateOnLoad(state);
@@ -11571,6 +11770,7 @@
     mapTheme: detectMapTheme(),
     shopPoints: [],
     userPoint: lastLocation ? [lastLocation.lat, lastLocation.lng] : null,
+    userPointSource: lastLocation ? String(lastLocation.source || "location").trim() : "",
     userMarker: null,
     userAccuracy: null,
     savedUserLocation: lastLocation,
@@ -11668,6 +11868,7 @@
     buyerOrdersLoading: false,
     buyerOrdersError: "",
     buyerOrdersPollTimer: 0,
+    accountSessionSerial: 0,
     accountSessionRefreshing: false,
     accountSessionRefreshPromise: null,
     accountAddresses: loadAccountAddresses(),
@@ -11697,6 +11898,7 @@
     locateRevealTimer: 0,
     compassHeading: null,
     compassInstalled: false,
+    interactiveMapBrowseInstalled: false,
     setupAddressPickActive: false,
     setupAddressPickedPoint: null,
     setupAddressPickRequestId: 0,

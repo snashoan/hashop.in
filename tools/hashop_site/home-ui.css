@@ -28023,3 +28023,21 @@ html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate-l
     min-width: 0 !important;
   }
 }
+
+html body .shell.shell-home .map-user-marker.is-map-point {
+  width: 1rem !important;
+  height: 1rem !important;
+  background: #ffffff !important;
+  border-color: #d0a64b !important;
+  box-shadow: 0 0 0 4px rgba(208, 166, 75, 0.18), 0 8px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+html body .shell.shell-home .map-user-marker.is-map-point::before,
+html body .shell.shell-home .map-user-marker.is-map-point::after {
+  border-color: rgba(208, 166, 75, 0.5) !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .map-user-marker.is-map-point {
+  background: #050505 !important;
+  border-color: #d0a64b !important;
+}
