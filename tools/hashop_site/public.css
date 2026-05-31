@@ -5,21 +5,39 @@
 }
 
 :root {
+  color-scheme: light;
+  --public-bg: #ffffff;
+  --public-top: #ffffff;
+  --public-sheet: #ffffff;
+  --public-row: #f6f5f1;
+  --public-row-soft: #fbfaf7;
+  --public-text: #111111;
+  --public-muted: #69665c;
+  --public-soft: #8d8779;
+  --public-gold: #8d7b4a;
+  --public-gold-2: #8d7b4a;
+  --public-cyan: #111111;
+  --public-line: rgba(17, 17, 17, 0.1);
+  --public-action: #111111;
+  --public-action-text: #ffffff;
+}
+
+html[data-hashop-theme="dark"] {
   color-scheme: dark;
   --public-bg: #050505;
-  --public-top: #090807;
-  --public-sheet: #0d0c0a;
-  --public-row: #15130f;
-  --public-row-soft: #100f0d;
-  --public-text: #f8f2df;
-  --public-muted: rgba(248, 242, 223, 0.68);
-  --public-soft: rgba(248, 242, 223, 0.44);
-  --public-gold: #d6ac54;
-  --public-gold-2: #f2d27c;
-  --public-cyan: #29c6ea;
-  --public-line: rgba(214, 172, 84, 0.2);
-  --public-action: linear-gradient(135deg, #ffeaa4 0%, var(--public-gold) 58%, #9b6c24 100%);
-  --public-action-text: #090704;
+  --public-top: #050505;
+  --public-sheet: #050505;
+  --public-row: #111111;
+  --public-row-soft: #0b0b0b;
+  --public-text: #f7f4ea;
+  --public-muted: #aaa391;
+  --public-soft: #8d8779;
+  --public-gold: #bca55e;
+  --public-gold-2: #bca55e;
+  --public-cyan: #f7f4ea;
+  --public-line: rgba(247, 244, 234, 0.12);
+  --public-action: #f7f4ea;
+  --public-action-text: #050505;
 }
 
 html,
@@ -58,7 +76,7 @@ a {
   min-height: 3rem;
   margin: -0.2rem 0 0.42rem;
   padding: 0.32rem 0;
-  background: rgba(5, 5, 5, 0.88);
+  background: color-mix(in srgb, var(--public-top) 92%, transparent);
   backdrop-filter: blur(12px);
 }
 
@@ -95,6 +113,7 @@ a {
   min-width: 2.06rem;
   min-height: 2.06rem;
   border-radius: 8px;
+  border: 1px solid var(--public-gold);
   background: var(--public-action);
   color: var(--public-action-text);
   font-size: 1.22rem;
@@ -159,15 +178,16 @@ a {
   place-items: center;
   padding: 0 0.68rem;
   border-radius: 8px;
-  background: rgba(248, 242, 223, 0.06);
+  border: 1px solid var(--public-line);
+  background: var(--public-row-soft);
 }
 
 .public-hero {
   position: relative;
   display: grid;
   align-content: end;
-  min-height: min(70vh, 35rem);
-  padding: clamp(2.2rem, 8vw, 5rem) 0 clamp(1rem, 4vw, 2rem);
+  min-height: min(58vh, 28rem);
+  padding: clamp(1.55rem, 6vw, 3.6rem) 0 clamp(1rem, 4vw, 1.8rem);
   overflow: hidden;
   border-bottom: 1px solid var(--public-line);
 }
@@ -178,7 +198,7 @@ a {
   right: max(-0.65rem, -2vw);
   bottom: -1.7rem;
   z-index: -1;
-  color: rgba(214, 172, 84, 0.1);
+  color: color-mix(in srgb, var(--public-gold) 14%, transparent);
   font-family: "Sora", system-ui, sans-serif;
   font-size: clamp(12rem, 48vw, 29rem);
   font-weight: 900;
@@ -206,14 +226,15 @@ h3 {
 h1 {
   max-width: 9.8ch;
   margin-top: 0.48rem;
-  font-size: clamp(3.05rem, 15vw, 7.9rem);
-  line-height: 0.86;
+  font-size: clamp(2.65rem, 11vw, 6.4rem);
+  line-height: 0.9;
+  overflow-wrap: anywhere;
 }
 
 .public-lede {
   max-width: 37rem;
   margin: 0.92rem 0 0;
-  color: rgba(248, 242, 223, 0.78);
+  color: var(--public-muted);
   font-size: clamp(1rem, 2.4vw, 1.18rem);
   font-weight: 800;
   line-height: 1.45;
@@ -233,6 +254,7 @@ h1 {
   min-width: 9rem;
   padding: 0 0.96rem;
   border-radius: 8px;
+  border: 1px solid var(--public-action);
   background: var(--public-action);
   color: var(--public-action-text);
   font-size: 0.88rem;
@@ -240,7 +262,8 @@ h1 {
 }
 
 .public-action.is-secondary {
-  background: rgba(248, 242, 223, 0.08);
+  border-color: var(--public-line);
+  background: var(--public-row-soft);
   color: var(--public-text);
 }
 
@@ -370,5 +393,69 @@ h1 {
 
   .public-action {
     width: 100%;
+  }
+}
+
+/* Public i006: same Hashop surface rules as the app. */
+.public-shell,
+.public-top,
+.public-hero,
+.public-speedline,
+.public-section,
+.public-list,
+.public-list li,
+.public-foot {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.public-top,
+.public-action,
+.public-nav a,
+.public-speedline span,
+.public-list li {
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.78, 0.2, 1);
+}
+
+.public-nav a:active,
+.public-action:active {
+  transform: translateY(1px);
+}
+
+.public-speedline span,
+.public-list li {
+  border: 1px solid var(--public-line);
+}
+
+.public-section p,
+.public-list li,
+.public-speedline span,
+.public-foot span,
+.public-brand-word strong,
+.public-brand-word span {
+  overflow-wrap: anywhere;
+}
+
+.public-list li {
+  align-content: start;
+}
+
+.public-foot span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-top,
+  .public-action,
+  .public-nav a,
+  .public-speedline span,
+  .public-list li {
+    transition-duration: 1ms;
   }
 }

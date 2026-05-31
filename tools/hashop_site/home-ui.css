@@ -17,121 +17,6 @@
   --hashop-motion-frame-ease: cubic-bezier(0.2, 0.78, 0.2, 1);
 }
 
-/* Final override 2026-05-13: keep search and listings physically separated. */
-.shop-list-panel.is-root-view,
-.shop-list-panel[data-pane-mode="home"],
-.shop-list-panel[data-pane-mode="search"],
-.shop-list-panel[data-pane-mode="contact"],
-.shop-list-panel[data-pane-mode="shop"],
-.shop-list-panel[data-pane-mode="cart"],
-.shop-list-panel[data-pane-mode="owner-orders"],
-.shop-list-panel[data-pane-mode="owner-items"] {
-  --hashop-sheet-x: 0.56rem;
-  --hashop-sheet-top: 0.28rem;
-  --hashop-search-h: 2.68rem;
-  --hashop-row-gap: 0.46rem;
-  --hashop-nav-h: 3.34rem;
-  --hashop-sheet-bottom: calc(0.42rem + env(safe-area-inset-bottom));
-  position: relative !important;
-  display: block !important;
-  padding: 0 !important;
-  gap: 0 !important;
-  overflow: hidden !important;
-  border-radius: 14px 14px 0 0 !important;
-  box-shadow: none !important;
-}
-
-.shop-list-panel.is-root-view .shop-panel-bar,
-.shop-list-panel[data-pane-mode="home"] .shop-panel-bar,
-.shop-list-panel[data-pane-mode="search"] .shop-panel-bar,
-.shop-list-panel[data-pane-mode="contact"] .shop-panel-bar {
-  display: none !important;
-}
-
-.shop-list-panel.is-root-view .shop-list-head,
-.shop-list-panel[data-pane-mode="home"] .shop-list-head,
-.shop-list-panel[data-pane-mode="search"] .shop-list-head,
-.shop-list-panel[data-pane-mode="contact"] .shop-list-head,
-.shop-list-panel[data-pane-mode="shop"] .shop-list-head,
-.shop-list-panel[data-pane-mode="cart"] .shop-list-head,
-.shop-list-panel[data-pane-mode="owner-orders"] .shop-list-head,
-.shop-list-panel[data-pane-mode="owner-items"] .shop-list-head {
-  position: absolute !important;
-  left: var(--hashop-sheet-x) !important;
-  right: var(--hashop-sheet-x) !important;
-  top: var(--hashop-sheet-top) !important;
-  z-index: 30 !important;
-  height: var(--hashop-search-h) !important;
-  min-height: var(--hashop-search-h) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: block !important;
-  background: var(--hashop-structure-sheet) !important;
-}
-
-.shop-list-panel.is-root-view .shop-list-search,
-.shop-list-panel[data-pane-mode="home"] .shop-list-search,
-.shop-list-panel[data-pane-mode="search"] .shop-list-search,
-.shop-list-panel[data-pane-mode="contact"] .shop-list-search,
-.shop-list-panel[data-pane-mode="shop"] .shop-list-search,
-.shop-list-panel[data-pane-mode="cart"] .shop-list-search,
-.shop-list-panel[data-pane-mode="owner-orders"] .shop-list-search,
-.shop-list-panel[data-pane-mode="owner-items"] .shop-list-search,
-.shop-list-panel.is-root-view .shop-list-search-input,
-.shop-list-panel[data-pane-mode="home"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="search"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="contact"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="shop"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="cart"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="owner-orders"] .shop-list-search-input,
-.shop-list-panel[data-pane-mode="owner-items"] .shop-list-search-input {
-  height: var(--hashop-search-h) !important;
-  min-height: var(--hashop-search-h) !important;
-}
-
-.shop-list-panel.is-root-view .shop-list-grid,
-.shop-list-panel[data-pane-mode="home"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="search"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="contact"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="shop"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="cart"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="owner-orders"] .shop-list-grid,
-.shop-list-panel[data-pane-mode="owner-items"] .shop-list-grid {
-  position: absolute !important;
-  left: var(--hashop-sheet-x) !important;
-  right: var(--hashop-sheet-x) !important;
-  top: calc(var(--hashop-sheet-top) + var(--hashop-search-h) + var(--hashop-row-gap)) !important;
-  bottom: calc(var(--hashop-sheet-bottom) + var(--hashop-nav-h) + var(--hashop-row-gap)) !important;
-  z-index: 1 !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  overscroll-behavior-y: contain !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-.shop-list-panel.is-root-view .home-bottom-nav,
-.shop-list-panel[data-pane-mode="home"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="search"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="contact"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="shop"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="cart"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="owner-orders"] .home-bottom-nav,
-.shop-list-panel[data-pane-mode="owner-items"] .home-bottom-nav {
-  position: absolute !important;
-  left: var(--hashop-sheet-x) !important;
-  right: var(--hashop-sheet-x) !important;
-  bottom: var(--hashop-sheet-bottom) !important;
-  z-index: 20 !important;
-  height: var(--hashop-nav-h) !important;
-  min-height: var(--hashop-nav-h) !important;
-  margin: 0 !important;
-}
-
 /* Live hard layout correction 2026-05-13: prevent search/list overlap by
    reserving fixed internal slots instead of relying on inherited grid flow. */
 .shop-list-panel.is-root-view,
@@ -28040,4 +27925,224 @@ html body .shell.shell-home .map-user-marker.is-map-point::after {
 html body .shell.shell-home[data-hashop-map-theme="dark"] .map-user-marker.is-map-point {
   background: #050505 !important;
   border-color: #d0a64b !important;
+}
+
+/* Iteration 104: buyer-first surface hygiene and motion. */
+html,
+body,
+html body:has(.shell.shell-home) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+html body .shell.shell-home {
+  --hashop-polish-bg: var(--hashop-ui-bg, #ffffff);
+  --hashop-polish-ink: var(--hashop-ui-ink, #111111);
+  --hashop-polish-muted: var(--hashop-ui-muted, #666666);
+  --hashop-polish-line: var(--hashop-ui-line, rgba(17, 17, 17, 0.1));
+  --hashop-polish-accent: var(--hashop-ui-accent, #8d7b4a);
+  --hashop-list-gap: 0.18rem !important;
+  --hashop-list-frame-top: 0.34rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] {
+  --hashop-polish-bg: #050505;
+  --hashop-polish-ink: #f7f4ea;
+  --hashop-polish-muted: #aaa391;
+  --hashop-polish-line: rgba(247, 244, 234, 0.12);
+  --hashop-polish-accent: #bca55e;
+}
+
+html body .shell.shell-home .home-stage,
+html body .shell.shell-home .shop-list-panel,
+html body .shell.shell-home .shop-list-panel[data-pane-mode],
+html body .shell.shell-home .shop-list-grid,
+html body .shell.shell-home .shop-pane-detail,
+html body .shell.shell-home .shop-account-stack,
+html body .shell.shell-home .shop-owner-stack {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+html body .shell.shell-home .shop-list-panel.is-root-view,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="home"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="search"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="contact"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="shop"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="cart"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="owner-shop"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="owner-manage"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="owner-orders"],
+html body .shell.shell-home .shop-list-panel[data-pane-mode="owner-items"] {
+  --hashop-row-gap: 0.18rem !important;
+  --hashop-sheet-top: 0.34rem !important;
+  background: var(--hashop-polish-bg) !important;
+  background-color: var(--hashop-polish-bg) !important;
+  background-image: none !important;
+}
+
+html body .shell.shell-home .shop-list-panel .shop-list-head,
+html body .shell.shell-home .shop-list-panel.is-root-view .shop-list-head,
+html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-list-head {
+  isolation: isolate !important;
+  overflow: visible !important;
+  background: var(--hashop-polish-bg) !important;
+  background-color: var(--hashop-polish-bg) !important;
+  background-image: none !important;
+  box-shadow:
+    0 -0.42rem 0 0.42rem var(--hashop-polish-bg),
+    0 0.42rem 0 0 var(--hashop-polish-bg) !important;
+}
+
+html body .shell.shell-home .shop-list-panel .shop-list-head::before,
+html body .shell.shell-home .shop-list-panel .shop-list-head::after,
+html body .shell.shell-home .shop-list-panel.is-root-view .shop-list-head::before,
+html body .shell.shell-home .shop-list-panel.is-root-view .shop-list-head::after,
+html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-list-head::before,
+html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-list-head::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home .shop-list-search {
+  overflow: hidden !important;
+  background: var(--hashop-polish-bg) !important;
+  background-color: var(--hashop-polish-bg) !important;
+  background-image: none !important;
+}
+
+html body .shell.shell-home .shop-list-grid {
+  clip-path: inset(0) !important;
+  background: var(--hashop-polish-bg) !important;
+  background-color: var(--hashop-polish-bg) !important;
+  background-image: none !important;
+  scrollbar-gutter: stable both-edges;
+}
+
+html body .shell.shell-home .shop-list-grid > .shop-list-sortbar,
+html body .shell.shell-home .shop-list-grid > .shop-list-viewbar,
+html body .shell.shell-home .shop-pane-detail .shop-list-sortbar,
+html body .shell.shell-home .shop-pane-detail .shop-list-viewbar,
+html body .shell.shell-home .shop-owner-stack .shop-list-sortbar,
+html body .shell.shell-home .shop-owner-stack .shop-list-viewbar {
+  top: 0 !important;
+  z-index: 12 !important;
+  background: var(--hashop-polish-bg) !important;
+  background-color: var(--hashop-polish-bg) !important;
+  background-image: none !important;
+  box-shadow:
+    0 -0.5rem 0 0.5rem var(--hashop-polish-bg),
+    0 0.4rem 0 0 var(--hashop-polish-bg) !important;
+}
+
+html body .shell.shell-home .shop-list-sort-count,
+html body .shell.shell-home .shop-list-sort-button,
+html body .shell.shell-home .shop-list-view-button,
+html body .shell.shell-home .home-bottom-link span:last-child,
+html body .shell.shell-home .shop-card-open,
+html body .shell.shell-home .shop-card-add {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .shop-card,
+html body .shell.shell-home .shop-card-main,
+html body .shell.shell-home .shop-card-topline,
+html body .shell.shell-home .shop-card-title-block,
+html body .shell.shell-home .shop-card-items,
+html body .shell.shell-home .shop-account-menu-row,
+html body .shell.shell-home .shop-account-menu-copy,
+html body .shell.shell-home .shop-owner-order-card,
+html body .shell.shell-home .shop-owner-order-head,
+html body .shell.shell-home .shop-owner-order-title {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+html body .shell.shell-home .shop-card-title-block strong,
+html body .shell.shell-home .shop-card-subtitle,
+html body .shell.shell-home .shop-account-menu-copy strong,
+html body .shell.shell-home .shop-account-menu-copy span,
+html body .shell.shell-home .shop-owner-order-title strong,
+html body .shell.shell-home .shop-owner-order-title span {
+  overflow: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  text-align: left !important;
+}
+
+html body .shell.shell-home .shop-card-title-block strong,
+html body .shell.shell-home .shop-account-menu-copy strong,
+html body .shell.shell-home .shop-owner-order-title strong {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 2 !important;
+}
+
+html body .shell.shell-home .shop-card-subtitle,
+html body .shell.shell-home .shop-account-menu-copy span,
+html body .shell.shell-home .shop-owner-order-title span {
+  display: block !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .shop-card-item {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .home-bottom-link,
+html body .shell.shell-home .shop-list-sort-button,
+html body .shell.shell-home .shop-list-view-button,
+html body .shell.shell-home .shop-account-menu-row,
+html body .shell.shell-home .shop-card,
+html body .shell.shell-home .shop-state-action,
+html body .shell.shell-home .shop-login-submit,
+html body .shell.shell-home .shop-owner-save {
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.78, 0.2, 1) !important;
+}
+
+html body .shell.shell-home.is-state-transitioning .shop-list-grid > *,
+html body .shell.shell-home.is-state-transitioning .shop-pane-detail > *,
+html body .shell.shell-home.is-state-transitioning .shop-account-stack > *,
+html body .shell.shell-home.is-state-transitioning .shop-owner-stack > * {
+  animation: hashop-state-settle 220ms cubic-bezier(0.2, 0.78, 0.2, 1) both !important;
+}
+
+@keyframes hashop-state-settle {
+  from {
+    opacity: 0.84;
+    transform: translateY(0.28rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body .shell.shell-home *,
+  html body .shell.shell-home.is-state-transitioning * {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
 }

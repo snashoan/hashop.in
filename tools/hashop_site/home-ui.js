@@ -30,6 +30,8 @@
 
   const attributeNames = ['aria-label', 'title', 'placeholder', 'value'];
   let scheduled = false;
+  let lastMotionSignature = '';
+  let motionTimer = 0;
 
   function cleanText(value) {
     if (!value || typeof value !== 'string') return value;
@@ -82,10 +84,35 @@
     });
   }
 
+  function syncStateMotion() {
+    const shell = document.querySelector('.shell-home');
+    const panel = shell && shell.querySelector('.shop-list-panel');
+    const grid = shell && shell.querySelector('.shop-list-grid');
+    if (!shell || !panel || !grid) return;
+    const signature = [
+      shell.getAttribute('data-hashop-screen') || '',
+      panel.getAttribute('data-pane-mode') || '',
+      grid.getAttribute('data-list-view') || '',
+      grid.children.length,
+      (grid.textContent || '').trim().slice(0, 80)
+    ].join('|');
+    if (signature === lastMotionSignature) return;
+    lastMotionSignature = signature;
+    shell.classList.remove('is-state-transitioning');
+    window.requestAnimationFrame(function () {
+      shell.classList.add('is-state-transitioning');
+      window.clearTimeout(motionTimer);
+      motionTimer = window.setTimeout(function () {
+        shell.classList.remove('is-state-transitioning');
+      }, 260);
+    });
+  }
+
   function polish() {
     scheduled = false;
     cleanNodeText(document.body);
     cleanAttributes(document.body);
+    syncStateMotion();
   }
 
   function schedulePolish() {
