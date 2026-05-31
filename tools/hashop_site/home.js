@@ -307,9 +307,17 @@
     return !!(state && state.debugPaneView === "setup" && state.setupAddressPickActive);
   }
 
+  function accountProfileAddressPickerActive(state) {
+    return !!(state && state.accountPaneMode === "profile" && state.accountProfileAddressPickActive);
+  }
+
+  function mapAddressPickerActive(state) {
+    return setupAddressPickerActive(state) || accountProfileAddressPickerActive(state);
+  }
+
   function syncSetupAddressPickerUi(state) {
     if (!state) return;
-    const mode = setupAddressPickerActive(state) ? "active" : "";
+    const mode = mapAddressPickerActive(state) ? "active" : "";
     setStateAttribute(state.shellNode, "data-setup-address-picker", mode);
     setStateAttribute(state.mapFrameNode, "data-setup-address-picker", mode);
     setStateAttribute(state.mapNode, "data-setup-address-picker", mode);
@@ -6094,7 +6102,7 @@
     const meta = String(settings.meta || "").trim();
     const icon = String(settings.icon || "").trim().slice(0, 3) || "#";
     const className = String(settings.className || "").trim();
-    const pressedAttr = settings.pressed ? ' aria-pressed="true"' : '';
+    const pressedAttr = settings.toggle ? (' aria-pressed="' + (settings.pressed ? 'true' : 'false') + '"') : '';
     const toggleMarkup = settings.toggle ? (
       '<span class="shop-account-toggle-mark' + (settings.pressed ? ' is-on' : '') + '" aria-hidden="true"><span></span></span>'
     ) : '';
@@ -6474,6 +6482,82 @@
     });
   }
 
+  function setAccountProfileAddressFromPoint(state, lat, lng, accuracy, options) {
+    if (!state || !rememberSetupLocation(state, lat, lng, accuracy)) return;
+    const settings = options && typeof options === "object" ? options : {};
+    const draft = ensureAccountDraft(state);
+    state.accountProfileAddressPickActive = true;
+    state.accountProfileAddressPickedPoint = {
+      lat: Number(lat),
+      lng: Number(lng),
+      accuracy: Math.max(0, Number(accuracy || 0) || 0),
+      updatedAt: Date.now()
+    };
+    state.accountProfileAddressPickRequestId = Math.max(0, Number(state.accountProfileAddressPickRequestId || 0) || 0) + 1;
+    const requestId = state.accountProfileAddressPickRequestId;
+    draft.profileEditorOpen = true;
+    draft.message = String(settings.pendingMessage || "Picking address...").trim();
+    draft.tone = "";
+    syncSetupAddressPickerUi(state);
+    renderShopList(state);
+    resolveAddress(lat, lng).then(function (addressText) {
+      if (requestId !== state.accountProfileAddressPickRequestId) return;
+      const nextDraft = ensureAccountDraft(state);
+      nextDraft.profileEditorOpen = true;
+      nextDraft.profileAddress = String(addressText || formatAccountCoordinates(lat, lng)).trim();
+      nextDraft.message = String(settings.doneMessage || "Address picked. Hold map to adjust.").trim();
+      nextDraft.tone = "success";
+      renderShopList(state);
+    }).catch(function () {
+      if (requestId !== state.accountProfileAddressPickRequestId) return;
+      const nextDraft = ensureAccountDraft(state);
+      nextDraft.profileEditorOpen = true;
+      nextDraft.profileAddress = formatAccountCoordinates(lat, lng);
+      nextDraft.message = String(settings.doneMessage || "Address picked. Hold map to adjust.").trim();
+      nextDraft.tone = "success";
+      renderShopList(state);
+    });
+  }
+
+  function setMapAddressPickerFromPoint(state, lat, lng, accuracy, options) {
+    if (accountProfileAddressPickerActive(state)) {
+      setAccountProfileAddressFromPoint(state, lat, lng, accuracy, options);
+      return;
+    }
+    setSetupAddressFromPoint(state, lat, lng, accuracy, options);
+  }
+
+  function currentMapCenterPoint(state) {
+    if (!state || !state.map || typeof state.map.getCenter !== "function") return null;
+    const center = state.map.getCenter();
+    if (!center) return null;
+    const lat = typeof center.lat === "function" ? center.lat() : center.lat;
+    const lng = typeof center.lng === "function" ? center.lng() : center.lng;
+    return isValidMapPoint(lat, lng) ? [Number(lat), Number(lng)] : null;
+  }
+
+  function startAccountProfileAddressPicker(state) {
+    if (!state) return;
+    const draft = ensureAccountDraft(state);
+    state.accountProfileAddressPickActive = true;
+    draft.profileEditorOpen = true;
+    draft.message = "Hold map to move pin.";
+    draft.tone = "";
+    syncSetupAddressPickerUi(state);
+    syncUserMarkerAdjustable(state);
+    setPaneExpanded(state, false, "normal");
+    const center = currentMapCenterPoint(state);
+    if (center) {
+      setAccountProfileAddressFromPoint(state, center[0], center[1], 0, {
+        pendingMessage: "Picking map center...",
+        doneMessage: "Map address picked. Hold map to adjust."
+      });
+      return;
+    }
+    renderShopList(state);
+    resetPaneScroll(state);
+  }
+
   function useSetupMapAddress(state) {
     if (!state) return;
     const draft = ensureSetupDraft(state);
@@ -6622,10 +6706,34 @@
       }));
     }
     mergeBuyerProfile(state, { name: name, contact: contact, address: address });
+    if (address) {
+      const existingAddresses = Array.isArray(state.accountAddresses) ? state.accountAddresses : loadAccountAddresses();
+      const pickedPoint = state.accountProfileAddressPickedPoint && isValidMapPoint(state.accountProfileAddressPickedPoint.lat, state.accountProfileAddressPickedPoint.lng)
+        ? state.accountProfileAddressPickedPoint
+        : null;
+      const profileAddress = normalizeAccountAddress({
+        id: "profile-address",
+        label: name || "Profile address",
+        text: address,
+        lat: pickedPoint ? pickedPoint.lat : null,
+        lng: pickedPoint ? pickedPoint.lng : null,
+        isDefault: true,
+        updatedAt: Date.now()
+      });
+      state.accountAddresses = saveAccountAddresses([profileAddress].concat(existingAddresses.filter(function (item) {
+        return String(item && item.id || "") !== "profile-address";
+      }).map(function (item) {
+        return Object.assign({}, item, { isDefault: false });
+      })));
+    }
     draft.profileName = name;
     draft.profileContact = contact;
     draft.profileAddress = address;
+    draft.profileEditorOpen = false;
     setAccountDraftMessage(state, "Profile saved.", "success");
+    state.accountProfileAddressPickActive = false;
+    syncSetupAddressPickerUi(state);
+    syncUserMarkerAdjustable(state);
     syncActionButton(state);
     syncBackButton(state);
     renderShopList(state);
@@ -6964,6 +7072,7 @@
     const profileNameValue = accountDraftValue(state, "profileName", buyerAccountLabel);
     const profileContactValue = accountDraftValue(state, "profileContact", buyerContact);
     const profileAddressValue = accountDraftValue(state, "profileAddress", buyerCheckoutAddress(state, state.buyerProfile || {}));
+    const profileEditorOpen = !!accountDraft.profileEditorOpen;
     const currentLocationText = state.userPoint
       ? formatAccountCoordinates(state.userPoint[0], state.userPoint[1])
       : (state.savedUserLocation ? formatAccountCoordinates(state.savedUserLocation.lat, state.savedUserLocation.lng) : "Not set");
@@ -6994,9 +7103,49 @@
       });
     });
     if (accountPaneMode === "profile") {
+      const profileSubtitle = accountVerified ? "Verified details" : hasLocalProfile ? "Saved details" : "Guest details";
+      const profileAddressPoint = state.accountProfileAddressPickedPoint && isValidMapPoint(state.accountProfileAddressPickedPoint.lat, state.accountProfileAddressPickedPoint.lng)
+        ? formatAccountCoordinates(state.accountProfileAddressPickedPoint.lat, state.accountProfileAddressPickedPoint.lng)
+        : currentLocationText;
+      if (!profileEditorOpen) {
+        state.listNode.innerHTML = accountSubPanelMarkup({
+          title: "Profile",
+          subtitle: profileSubtitle,
+          body: '' +
+            '<section class="shop-account-profile-view">' +
+              '<div class="shop-account-profile-hero">' +
+                accountAvatarMarkup("is-large") +
+                '<span class="shop-account-profile-copy">' +
+                  '<strong>' + escapeHtml(profileNameValue || buyerAccountLabel || "Guest buyer") + '</strong>' +
+                  '<span>' + escapeHtml(buyerContact || accountSubline) + '</span>' +
+                '</span>' +
+              '</div>' +
+              '<section class="shop-account-menu-card shop-account-profile-details">' +
+                accountRecordRowMarkup({ icon: "P", title: "Name", subtitle: profileNameValue || "Not set", meta: profileNameValue ? "Saved" : "" }) +
+                accountRecordRowMarkup({ icon: "In", title: "Contact", subtitle: profileContactValue || "Not set", meta: accountVerified ? "Verified" : "" }) +
+                accountRecordRowMarkup({
+                  icon: "A",
+                  title: "Address",
+                  subtitle: profileAddressValue || "Not set",
+                  meta: state.accountProfileAddressPickedPoint ? "Map" : "",
+                  actions: [
+                    '<button class="shop-account-mini-button" type="button" data-account-profile-map-address="true">Map</button>'
+                  ]
+                }) +
+                accountRecordRowMarkup({ icon: "L", title: "Map pin", subtitle: profileAddressPoint || "Not set", meta: state.accountProfileAddressPickActive ? "Active" : "" }) +
+              '</section>' +
+              accountStatusMarkup(state) +
+            '</section>',
+          actions: [
+            '<button class="shop-owner-save" type="button" data-account-edit-profile="true">Edit profile</button>',
+            hasBuyer ? '<button class="shop-owner-chip-button" type="button" data-account-menu="password">Password reset</button>' : '<button class="shop-owner-chip-button" type="button" data-account-open-buyer-login="true">Sign in</button>'
+          ]
+        });
+        return;
+      }
       state.listNode.innerHTML = accountSubPanelMarkup({
-        title: "Profile",
-        subtitle: accountVerified ? "Verified details" : hasLocalProfile ? "Saved details" : "Guest details",
+        title: "Edit profile",
+        subtitle: profileSubtitle,
         body: accountFormCardMarkup(
           '<div class="shop-account-media-field">' +
             accountAvatarMarkup("is-edit") +
@@ -7012,10 +7161,14 @@
           accountDraftFieldMarkup("Name", "profileName", profileNameValue, { autocomplete: "name", placeholder: "Your name" }) +
           accountDraftFieldMarkup("Phone or email", "profileContact", profileContactValue, { autocomplete: "username", placeholder: "Phone or email" }) +
           accountDraftFieldMarkup("Address", "profileAddress", profileAddressValue, { autocomplete: "street-address", placeholder: "House, road, or pickup note" }) +
+          '<div class="shop-account-map-row">' +
+            '<button class="shop-account-mini-button" type="button" data-account-profile-map-address="true">Pick on map</button>' +
+            '<span>' + escapeHtml(state.accountProfileAddressPickActive ? "Hold map to adjust pin." : "Use the map frame for accuracy.") + '</span>' +
+          '</div>' +
           accountStatusMarkup(state) +
           '<div class="shop-account-actions shop-account-form-actions">' +
             '<button class="shop-owner-save" type="button" data-account-save-profile="true">Save profile</button>' +
-            (hasBuyer ? '<button class="shop-owner-chip-button" type="button" data-account-menu="password">Password reset</button>' : '<button class="shop-owner-chip-button" type="button" data-account-open-buyer-login="true">Sign in</button>') +
+            '<button class="shop-owner-chip-button" type="button" data-account-cancel-profile-edit="true">Cancel</button>' +
           '</div>'
         )
       });
@@ -8918,7 +9071,7 @@
     }
 
     state.mapNode.addEventListener("pointerdown", function (event) {
-      if (!setupAddressPickerActive(state)) return;
+      if (!mapAddressPickerActive(state)) return;
       if (event.button && event.button !== 0) return;
       const target = event.target;
       if (target instanceof Element && target.closest(".map-popup, .leaflet-control, .gm-style-iw")) return;
@@ -8930,7 +9083,7 @@
         pressTimer = 0;
         const point = mapLatLngFromClientPoint(state, startX, startY);
         if (!point) return;
-        setSetupAddressFromPoint(state, point[0], point[1], 0, {
+        setMapAddressPickerFromPoint(state, point[0], point[1], 0, {
           pendingMessage: "Moving pin...",
           doneMessage: "Pin moved. Hold map to adjust."
         });
@@ -8946,11 +9099,11 @@
     state.mapNode.addEventListener("pointerup", clearPress);
     state.mapNode.addEventListener("pointercancel", clearPress);
     state.mapNode.addEventListener("contextmenu", function (event) {
-      if (!setupAddressPickerActive(state)) return;
+      if (!mapAddressPickerActive(state)) return;
       event.preventDefault();
       const point = mapLatLngFromClientPoint(state, event.clientX, event.clientY);
       if (!point) return;
-      setSetupAddressFromPoint(state, point[0], point[1], 0, {
+      setMapAddressPickerFromPoint(state, point[0], point[1], 0, {
         pendingMessage: "Moving pin...",
         doneMessage: "Pin moved. Hold map to adjust."
       });
@@ -8964,7 +9117,7 @@
   }
 
   function setMapBrowsePoint(state, lat, lng, options) {
-    if (!state || !isValidMapPoint(lat, lng) || setupAddressPickerActive(state)) return false;
+    if (!state || !isValidMapPoint(lat, lng) || mapAddressPickerActive(state)) return false;
     const settings = options && typeof options === "object" ? options : {};
     state.orderMapCue = null;
     upsertUserMarker(state, Number(lat), Number(lng), 0, {
@@ -8987,7 +9140,7 @@
     state.interactiveMapBrowseInstalled = true;
     if (state.mapProvider === "google" && window.google && window.google.maps && typeof state.map.addListener === "function") {
       state.map.addListener("click", function (event) {
-        if (setupAddressPickerActive(state)) return;
+        if (mapAddressPickerActive(state)) return;
         if (event && mapTapIsUiChrome(event.domEvent && event.domEvent.target)) return;
         const latLng = event && event.latLng;
         if (!latLng) return;
@@ -8999,7 +9152,7 @@
     }
     if (state.mapProvider === "leaflet" && typeof state.map.on === "function") {
       state.map.on("click", function (event) {
-        if (setupAddressPickerActive(state)) return;
+        if (mapAddressPickerActive(state)) return;
         if (event && event.originalEvent && mapTapIsUiChrome(event.originalEvent.target)) return;
         const latlng = event && event.latlng;
         if (!latlng) return;
@@ -9176,7 +9329,7 @@
 
   function syncUserMarkerAdjustable(state) {
     if (!state || !state.userMarker) return;
-    const active = setupAddressPickerActive(state);
+    const active = mapAddressPickerActive(state);
     if (state.mapProvider === "google" && typeof state.userMarker.setDraggable === "function") {
       state.userMarker.setDraggable(active);
       if (active && state.setupAddressDragMarker !== state.userMarker && typeof state.userMarker.addListener === "function") {
@@ -9185,7 +9338,7 @@
         }
         state.setupAddressDragMarker = state.userMarker;
         state.setupAddressDragListener = state.userMarker.addListener("dragend", function (event) {
-          if (!setupAddressPickerActive(state)) return;
+          if (!mapAddressPickerActive(state)) return;
           let latLng = event && event.latLng;
           if (!latLng && typeof state.userMarker.getPosition === "function") {
             latLng = state.userMarker.getPosition();
@@ -9193,7 +9346,7 @@
           if (!latLng) return;
           const lat = typeof latLng.lat === "function" ? latLng.lat() : latLng.lat;
           const lng = typeof latLng.lng === "function" ? latLng.lng() : latLng.lng;
-          setSetupAddressFromPoint(state, lat, lng, 0, {
+          setMapAddressPickerFromPoint(state, lat, lng, 0, {
             doneMessage: "Pin moved. Hold map to adjust."
           });
         });
@@ -9213,9 +9366,9 @@
       }
       state.setupAddressDragMarker = state.userMarker;
       state.setupAddressDragHandler = function () {
-        if (!setupAddressPickerActive(state) || !state.userMarker || typeof state.userMarker.getLatLng !== "function") return;
+        if (!mapAddressPickerActive(state) || !state.userMarker || typeof state.userMarker.getLatLng !== "function") return;
         const latlng = state.userMarker.getLatLng();
-        setSetupAddressFromPoint(state, latlng.lat, latlng.lng, 0, {
+        setMapAddressPickerFromPoint(state, latlng.lat, latlng.lng, 0, {
           doneMessage: "Pin moved. Hold map to adjust."
         });
       };
@@ -9779,6 +9932,11 @@
     closeOwnerAddMenu(state);
     state.debugPaneView = "account";
     state.accountPaneMode = normalizeAccountPaneMode(settings.accountPaneMode);
+    if (state.accountPaneMode !== "profile") {
+      state.accountProfileAddressPickActive = false;
+      syncSetupAddressPickerUi(state);
+      syncUserMarkerAdjustable(state);
+    }
     state.activeShopId = "";
     state.activeShopView = "items";
     state.detailLoading = false;
@@ -11540,7 +11698,7 @@
           position: point,
           map: state.map,
           title: markerTitle,
-          draggable: setupAddressPickerActive(state),
+          draggable: mapAddressPickerActive(state),
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
             scale: 8,
@@ -11580,18 +11738,18 @@
       state.userMarker = window.L.marker([lat, lng], {
         icon: window.L.divIcon({
           className: "",
-          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (setupAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
+          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (mapAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
           iconSize: [16, 16],
           iconAnchor: [8, 8]
         }),
-        draggable: setupAddressPickerActive(state)
+        draggable: mapAddressPickerActive(state)
       }).addTo(state.map);
     } else {
       state.userMarker.setLatLng([lat, lng]);
       if (typeof state.userMarker.setIcon === "function") {
         state.userMarker.setIcon(window.L.divIcon({
           className: "",
-          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (setupAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
+          html: '<div class="map-user-marker' + (source === "map" ? ' is-map-point' : '') + (mapAddressPickerActive(state) ? ' is-adjustable' : '') + '"></div>',
           iconSize: [16, 16],
           iconAnchor: [8, 8]
         }));
@@ -11903,6 +12061,9 @@
     setupAddressPickedPoint: null,
     setupAddressPickRequestId: 0,
     setupAddressPickerInstalled: false,
+    accountProfileAddressPickActive: false,
+    accountProfileAddressPickedPoint: null,
+    accountProfileAddressPickRequestId: 0,
     setupAddressDragMarker: null,
     setupAddressDragHandler: null,
     setupAddressDragListener: null,
@@ -12676,6 +12837,13 @@
 	        }
 	        if (accountMenu === "profile" || accountMenu === "addresses" || accountMenu === "payments" || accountMenu === "shops" || accountMenu === "help" || accountMenu === "settings") {
 	          setAccountDraftMessage(state, "", "");
+	          if (accountMenu === "profile") {
+	            const profileMenuDraft = ensureAccountDraft(state);
+	            profileMenuDraft.profileEditorOpen = false;
+	            state.accountProfileAddressPickActive = false;
+	            syncSetupAddressPickerUi(state);
+	            syncUserMarkerAdjustable(state);
+	          }
 	          if (accountMenu === "addresses") {
 	            const addressMenuDraft = ensureAccountDraft(state);
 	            addressMenuDraft.addressEditorOpen = false;
@@ -12807,7 +12975,10 @@
 	      if (accountMainButton) {
 	        event.preventDefault();
 	        state.accountPaneMode = "";
+	        state.accountProfileAddressPickActive = false;
 	        setAccountDraftMessage(state, "", "");
+	        syncSetupAddressPickerUi(state);
+	        syncUserMarkerAdjustable(state);
 	        syncPaneUrl(state);
 	        renderShopList(state);
 	        resetPaneScroll(state);
@@ -12840,6 +13011,35 @@
       if (accountSaveProfileButton) {
         event.preventDefault();
         saveAccountProfileDetails(state);
+        return;
+      }
+      const accountEditProfileButton = target.closest("[data-account-edit-profile]");
+      if (accountEditProfileButton) {
+        event.preventDefault();
+        const draft = ensureAccountDraft(state);
+        draft.profileEditorOpen = true;
+        setAccountDraftMessage(state, "", "");
+        renderShopList(state);
+        resetPaneScroll(state);
+        return;
+      }
+      const accountCancelProfileEditButton = target.closest("[data-account-cancel-profile-edit]");
+      if (accountCancelProfileEditButton) {
+        event.preventDefault();
+        const draft = ensureAccountDraft(state);
+        draft.profileEditorOpen = false;
+        state.accountProfileAddressPickActive = false;
+        setAccountDraftMessage(state, "", "");
+        syncSetupAddressPickerUi(state);
+        syncUserMarkerAdjustable(state);
+        renderShopList(state);
+        resetPaneScroll(state);
+        return;
+      }
+      const accountProfileMapAddressButton = target.closest("[data-account-profile-map-address]");
+      if (accountProfileMapAddressButton) {
+        event.preventDefault();
+        startAccountProfileAddressPicker(state);
         return;
       }
       const accountSaveAddressButton = target.closest("[data-account-save-address]");

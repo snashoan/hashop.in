@@ -27995,6 +27995,7 @@ html body .shell.shell-home .shop-list-panel[data-pane-mode] .shop-list-head {
   background: var(--hashop-polish-bg) !important;
   background-color: var(--hashop-polish-bg) !important;
   background-image: none !important;
+  transition: none !important;
   box-shadow:
     0 -0.42rem 0 0.42rem var(--hashop-polish-bg),
     0 0.42rem 0 0 var(--hashop-polish-bg) !important;
@@ -28145,4 +28146,179 @@ html body .shell.shell-home.is-state-transitioning .shop-owner-stack > * {
     animation: none !important;
     transition-duration: 1ms !important;
   }
+}
+
+/* Iteration 106: account toggles, profile view, and dark-mode surface seal. */
+html body .shell.shell-home .shop-account-menu-row.shop-account-manage-toggle::before,
+html body .shell.shell-home .shop-account-menu-row.shop-account-manage-toggle::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home .shop-account-menu-row[aria-pressed] {
+  grid-template-columns: 1.9rem minmax(0, 1fr) auto !important;
+}
+
+html body .shell.shell-home .shop-account-toggle-mark {
+  position: relative !important;
+  display: inline-block !important;
+  justify-self: end !important;
+  flex: 0 0 auto !important;
+  width: 2.34rem !important;
+  height: 1.28rem !important;
+  border: 1px solid var(--hashop-ui-line-strong, rgba(17, 17, 17, 0.2)) !important;
+  border-radius: 999px !important;
+  background: var(--hashop-ui-cell, #f4f2ed) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32) !important;
+  overflow: hidden !important;
+  transition:
+    background-color 170ms ease,
+    border-color 170ms ease,
+    box-shadow 170ms ease !important;
+}
+
+html body .shell.shell-home .shop-account-toggle-mark > span {
+  position: absolute !important;
+  top: 50% !important;
+  left: 0.16rem !important;
+  width: 0.92rem !important;
+  height: 0.92rem !important;
+  border-radius: 999px !important;
+  background: var(--hashop-ui-ink, #111111) !important;
+  transform: translate(0, -50%) !important;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.78, 0.2, 1),
+    background-color 170ms ease !important;
+}
+
+html body .shell.shell-home .shop-account-toggle-mark.is-on {
+  border-color: var(--hashop-ui-accent, #8d7b4a) !important;
+  background: rgba(141, 123, 74, 0.14) !important;
+}
+
+html body .shell.shell-home .shop-account-toggle-mark.is-on > span {
+  left: 0.16rem !important;
+  background: var(--hashop-ui-accent, #8d7b4a) !important;
+  transform: translate(1.02rem, -50%) !important;
+}
+
+html body .shell.shell-home .shop-account-profile-view {
+  display: grid !important;
+  gap: 0.82rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home .shop-account-profile-hero {
+  display: grid !important;
+  grid-template-columns: 3.7rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.86rem !important;
+  min-width: 0 !important;
+  padding: 0.18rem 0 0.42rem !important;
+  border-bottom: 1px solid var(--hashop-ui-line, rgba(17, 17, 17, 0.1)) !important;
+}
+
+html body .shell.shell-home .shop-account-avatar.is-large {
+  width: 3.45rem !important;
+  height: 3.45rem !important;
+  font-size: 1.12rem !important;
+}
+
+html body .shell.shell-home .shop-account-profile-details {
+  display: grid !important;
+  gap: 0 !important;
+  border-top: 1px solid var(--hashop-ui-line, rgba(17, 17, 17, 0.1)) !important;
+}
+
+html body .shell.shell-home .shop-account-map-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.74rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0.3rem 0 0 !important;
+}
+
+html body .shell.shell-home .shop-account-map-row > span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: var(--hashop-ui-muted, #666666) !important;
+  -webkit-text-fill-color: var(--hashop-ui-muted, #666666) !important;
+  font-size: 0.76rem !important;
+  font-weight: 760 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home .shop-list-panel .shop-list-head,
+html body .shell.shell-home .shop-list-panel .shop-list-grid > .shop-list-sortbar,
+html body .shell.shell-home .shop-list-panel .shop-list-grid > .shop-list-viewbar {
+  isolation: isolate !important;
+  z-index: 30 !important;
+  background: var(--hashop-polish-bg, var(--hashop-ui-bg, #ffffff)) !important;
+  background-color: var(--hashop-polish-bg, var(--hashop-ui-bg, #ffffff)) !important;
+  background-image: none !important;
+  box-shadow:
+    0 -0.8rem 0 0.8rem var(--hashop-polish-bg, var(--hashop-ui-bg, #ffffff)),
+    0 0.48rem 0 0 var(--hashop-polish-bg, var(--hashop-ui-bg, #ffffff)) !important;
+}
+
+html body .shell.shell-home .shop-list-panel .shop-list-grid > .shop-list-sortbar,
+html body .shell.shell-home .shop-list-panel .shop-list-grid > .shop-list-viewbar {
+  margin-top: 0 !important;
+  border-top: 0 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"],
+html body .shell.shell-home[data-hashop-map-theme="dark"] .home-stage,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-stack {
+  background: #050505 !important;
+  background-color: #050505 !important;
+  background-image: none !important;
+  transition: none !important;
+  color: #f7f4ea !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-head,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid > .shop-list-sortbar,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid > .shop-list-viewbar {
+  background: #050505 !important;
+  background-color: #050505 !important;
+  background-image: none !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+  box-shadow:
+    0 -0.8rem 0 0.8rem #050505,
+    0 0.5rem 0 0 #050505 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search {
+  border-color: rgba(247, 244, 234, 0.16) !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input::placeholder {
+  color: #aaa391 !important;
+  -webkit-text-fill-color: #aaa391 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-head .shop-list-search,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-head .shop-list-search-input,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel.is-root-view .shop-list-head .shop-list-search,
+html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel.is-root-view .shop-list-head .shop-list-search-input {
+  background: #050505 !important;
+  background-color: #050505 !important;
+  background-image: none !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+  transition: none !important;
+  box-shadow:
+    0 -0.8rem 0 0.8rem #050505,
+    0 0.5rem 0 0 #050505 !important;
 }
