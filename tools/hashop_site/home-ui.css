@@ -28608,3 +28608,95 @@ html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-back-action.is-v
   -webkit-text-fill-color: #d8c47a !important;
   box-shadow: none !important;
 }
+
+/* Iteration 112: mobile feed cards should read as rows, not squeezed columns. */
+html body .shell.shell-home .shop-list-sort-button,
+html body .shell.shell-home .shop-list-view-button {
+  width: 2.55rem !important;
+  min-width: 2.28rem !important;
+  min-height: 2rem !important;
+  padding-inline: 0.2rem !important;
+}
+
+@media (max-width: 700px) {
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0 !important;
+  }
+
+  html body .shell.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-card,
+  html body .shell.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-discovery-card,
+  html body .shell.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-item-discovery-card {
+    grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    gap: 0.72rem !important;
+    min-height: 6.95rem !important;
+    padding: 0.76rem 0.08rem 0.78rem 0 !important;
+    border-bottom: 1px solid rgba(17, 17, 17, 0.08) !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-thumb {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 5.5rem !important;
+    height: 5.5rem !important;
+    min-width: 5.5rem !important;
+    min-height: 5.5rem !important;
+    max-width: 5.5rem !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-main {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    gap: 0.24rem !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-topline {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: start !important;
+    gap: 0.58rem !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-title-block strong {
+    font-size: 1rem !important;
+    line-height: 1.18 !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-open,
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-add,
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-item-qty-chip {
+    min-width: 2.65rem !important;
+    min-height: 2rem !important;
+    max-width: 5rem !important;
+    display: inline-grid !important;
+    place-items: center end !important;
+    padding: 0 !important;
+    font-size: 0.74rem !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-items {
+    gap: 0.06rem !important;
+  }
+
+  html body .shell.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-item {
+    font-size: 0.76rem !important;
+    line-height: 1.22 !important;
+  }
+
+  html body .shell.shell-home .shop-list-sort-button,
+  html body .shell.shell-home .shop-list-view-button {
+    width: 2.55rem !important;
+    min-width: 2.28rem !important;
+    min-height: 2rem !important;
+    padding-inline: 0.2rem !important;
+  }
+
+  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-card,
+  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-discovery-card,
+  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-item-discovery-card {
+    border-bottom-color: rgba(247, 244, 234, 0.12) !important;
+  }
+}

@@ -186,8 +186,8 @@ a {
   position: relative;
   display: grid;
   align-content: end;
-  min-height: min(58vh, 28rem);
-  padding: clamp(1.55rem, 6vw, 3.6rem) 0 clamp(1rem, 4vw, 1.8rem);
+  min-height: min(50vh, 24rem);
+  padding: clamp(1.3rem, 5vw, 3rem) 0 clamp(0.9rem, 3.6vw, 1.55rem);
   overflow: hidden;
   border-bottom: 1px solid var(--public-line);
 }
@@ -224,10 +224,10 @@ h3 {
 }
 
 h1 {
-  max-width: 9.8ch;
+  max-width: 10.8ch;
   margin-top: 0.48rem;
-  font-size: clamp(2.65rem, 11vw, 6.4rem);
-  line-height: 0.9;
+  font-size: clamp(2.45rem, 9.2vw, 5.35rem);
+  line-height: 0.92;
   overflow-wrap: anywhere;
 }
 
@@ -369,7 +369,21 @@ h1 {
   }
 
   .public-hero {
-    min-height: min(66vh, 30rem);
+    min-height: auto;
+    padding-top: clamp(1rem, 6vw, 1.35rem);
+    padding-bottom: 1rem;
+  }
+
+  h1 {
+    max-width: 11.5ch;
+    font-size: clamp(2.25rem, 10vw, 3.35rem);
+    line-height: 0.94;
+  }
+
+  .public-lede {
+    margin-top: 0.78rem;
+    font-size: 0.94rem;
+    line-height: 1.38;
   }
 
   .public-speedline,
