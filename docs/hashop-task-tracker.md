@@ -1,6 +1,6 @@
 # Hashop Task Tracker
 
-Last updated: 2026-05-20
+Last updated: 2026-05-31
 
 ## Current direction
 
@@ -11,6 +11,7 @@ Last updated: 2026-05-20
 - Logging in must be optional for buyers and role-aware for owners.
 - `My shop` is owner-only. Buyer identity must not be forced into the shop object.
 - Hashop should become the reference commerce app on top of Shivy, while Shivy Commerce becomes the reusable open-source layer for other branded ecommerce sites.
+- Documentation should stay concise, formal, and useful for a person running Hashop end to end.
 
 ## In progress
 
@@ -31,6 +32,11 @@ Last updated: 2026-05-20
   - keep live Hashop stable while extracting reusable commerce pieces
   - document what belongs to Shivy runtime, Shivy Commerce, Hashop brand config, and host adapters
   - use `docs/shivy-commerce-plan.md` as the migration plan before starting code extraction
+- Codebase and documentation hygiene
+  Current focus:
+  - keep reusable helpers browser-safe and testable under Node
+  - keep public docs aligned with the actual app behavior
+  - keep `README.md` as the entry point and route deeper product details into `docs/`
 
 ## Identity foundation
 
@@ -300,6 +306,13 @@ Last updated: 2026-05-20
   - `tools/hashop_site/commerce-core.js` now holds reusable price, cart, and order-status helpers
   - `tools/hashop_tests/commerce-core.test.js` covers the first pure helper contract
   - `home.js` delegates those helper calls through the new commerce core without changing visible behavior
+- Documentation and module hygiene pass
+  - `README.md` now gives a concise product, setup, route, configuration, verification, and documentation entry point
+  - `docs/hashop-architecture.md` documents current modules, data model, routes, extraction rules, build tokens, and verification
+  - `docs/hashop-end-to-end-tutorial.md` documents the buyer, buyer-account, shop-owner, stock, payment, order, and operator paths
+  - `docs/assets/` now contains simple Hashop system, buyer-flow, and owner-flow diagrams
+  - `tools/hashop_site/home-polish-core.js` extracts pure UI polish helpers with Node coverage
+  - `tools/hashop_site/public-theme.js` extracts the public About/Privacy theme bootstrap with Node coverage
 - Task tracker is now the running source of truth in the repo
 
 ## Pending tasks
@@ -379,6 +392,7 @@ Last updated: 2026-05-20
 
 - Consolidate repeated late CSS override layers after the current UI stabilizes.
 - Keep pure commerce logic moving toward `commerce-core.js`.
+- Keep presentation-only helper logic moving toward browser-safe modules when it can be tested without a browser.
 - Keep backend route handlers thin for static pages and product shell routes.
 - Prefer small helpers over repeated HTML string blocks when account rows or forms repeat.
 

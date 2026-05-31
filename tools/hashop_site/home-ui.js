@@ -1,45 +1,15 @@
 (function () {
   'use strict';
 
-  const textReplacements = [
-    ['Find shop fast', 'Nearby shops'],
-    ['Find shop', 'Shops'],
-    ['Call shop', 'Call Shop'],
-    ['No callable shops found.', 'No shops to call found.'],
-    ['No matching items yet.', 'No items found.'],
-    ['No matching shops found.', 'No shops found.'],
-    ['No shops nearby yet.', 'No shops yet.'],
-    ['Open or create your shop here', 'Add your shop'],
-    ['Create or open your shop', 'Add your shop'],
-    ['Shop Command', 'Add shop'],
-    ['Debug', 'Add shop'],
-    ['Commerce Grid', 'Shops near you'],
-    ['Mapped local supply', 'Shops near you'],
-    ['Live territory', 'Nearby'],
-    ['Network intelligence', 'Nearby shops'],
-    ['Call or message the shop before you go.', 'Call or message the shop.'],
-    ['See items below. Call the shop if you want to confirm stock first.', 'See items below.'],
-    ['Optional. Saved on this device for faster repeat orders.', 'Saved on this phone.'],
-    ['Payment methods stay hidden until you continue to pay.', 'Choose payment to continue.'],
-    ['Live status refresh runs automatically while this screen is open.', 'Status updates here.'],
-    ['Order first. Pay the shop when you get it.', 'Pay when you receive.'],
-    ['Only if you trust the shop and want to prepay.', 'Pay before delivery.'],
-    ['Add or open shop', 'Open shop tools'],
-    ['Register', 'Add']
-  ];
-
-  const attributeNames = ['aria-label', 'title', 'placeholder', 'value'];
+  const polishCore = window.HashopHomePolishCore || {};
+  const attributeNames = polishCore.DEFAULT_ATTRIBUTE_NAMES || ['aria-label', 'title', 'placeholder', 'value'];
   let scheduled = false;
   let lastMotionSignature = '';
   let motionTimer = 0;
 
   function cleanText(value) {
-    if (!value || typeof value !== 'string') return value;
-    let next = value;
-    textReplacements.forEach(function (pair) {
-      next = next.split(pair[0]).join(pair[1]);
-    });
-    return next;
+    if (polishCore.cleanText) return polishCore.cleanText(value);
+    return value;
   }
 
   function cleanNodeText(root) {
@@ -89,13 +59,21 @@
     const panel = shell && shell.querySelector('.shop-list-panel');
     const grid = shell && shell.querySelector('.shop-list-grid');
     if (!shell || !panel || !grid) return;
-    const signature = [
-      shell.getAttribute('data-hashop-screen') || '',
-      panel.getAttribute('data-pane-mode') || '',
-      grid.getAttribute('data-list-view') || '',
-      grid.children.length,
-      (grid.textContent || '').trim().slice(0, 80)
-    ].join('|');
+    const signature = polishCore.stateMotionSignature
+      ? polishCore.stateMotionSignature({
+        screen: shell.getAttribute('data-hashop-screen') || '',
+        pane: panel.getAttribute('data-pane-mode') || '',
+        view: grid.getAttribute('data-list-view') || '',
+        childCount: grid.children.length,
+        text: grid.textContent || ''
+      })
+      : [
+        shell.getAttribute('data-hashop-screen') || '',
+        panel.getAttribute('data-pane-mode') || '',
+        grid.getAttribute('data-list-view') || '',
+        grid.children.length,
+        (grid.textContent || '').trim().slice(0, 80)
+      ].join('|');
     if (signature === lastMotionSignature) return;
     lastMotionSignature = signature;
     shell.classList.remove('is-state-transitioning');

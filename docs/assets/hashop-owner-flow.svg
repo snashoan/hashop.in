@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" role="img" aria-labelledby="title desc">
+  <title id="title">Hashop owner flow</title>
+  <desc id="desc">Sign in, add shop, update stock, set payments, receive orders, and complete fulfillment.</desc>
+  <rect width="960" height="260" rx="26" fill="#ffffff"/>
+  <rect x="24" y="24" width="912" height="212" rx="20" fill="#111111"/>
+  <text x="56" y="72" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">Shop-owner path</text>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#111111">
+    <rect x="58" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="94" y="148" font-weight="700">Account</text><text x="91" y="170">Sign in</text>
+    <rect x="220" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="251" y="148" font-weight="700">Shop</text><text x="252" y="170">Create</text>
+    <rect x="382" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="417" y="148" font-weight="700">Stock</text><text x="417" y="170">Items</text>
+    <rect x="544" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="578" y="148" font-weight="700">Orders</text><text x="570" y="170">Accept/ready</text>
+    <rect x="706" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="747" y="148" font-weight="700">Close</text><text x="733" y="170">Paid/done</text>
+  </g>
+  <path d="M176 152 H220 M338 152 H382 M500 152 H544 M662 152 H706 M824 152 H880" stroke="#d8b35d" stroke-width="3" fill="none"/>
+  <path d="M870 144 L880 152 L870 160" stroke="#d8b35d" stroke-width="3" fill="none"/>
+  <text x="844" y="175" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#ffffff">History</text>
+</svg>

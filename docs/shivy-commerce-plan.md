@@ -1,6 +1,6 @@
 # Shivy Commerce Plan
 
-Last updated: 2026-05-07
+Last updated: 2026-05-31
 
 ## Purpose
 
@@ -20,6 +20,7 @@ The public buyer and owner UI should still feel like a normal commerce app. Shiv
   - public buyer storefront
   - owner/shop management UI
   - account, cart, order, map, and debug screens
+  - small browser-safe helper modules for commerce logic, UI polish, and public theme bootstrapping
 - `tools/hashop_hub.py` is the live Hashop hub/API.
   - shops
   - shop console JSON
@@ -155,6 +156,7 @@ Required brand hooks:
 - `brand.paymentPolicy`
 - `brand.mapDefaults`
 - `brand.copy`
+- `brand.publicTheme`
 
 Optional brand hooks:
 

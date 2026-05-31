@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" role="img" aria-labelledby="title desc">
+  <title id="title">Hashop buyer flow</title>
+  <desc id="desc">Browse shops, choose items, review cart, choose pickup or delivery, place order, and track order.</desc>
+  <rect width="960" height="260" rx="26" fill="#ffffff"/>
+  <rect x="24" y="24" width="912" height="212" rx="20" fill="#f7f7f4" stroke="#111111" stroke-width="2"/>
+  <text x="56" y="72" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#111111">Buyer path</text>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#111111">
+    <rect x="58" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+    <text x="91" y="148" font-weight="700">Open</text><text x="80" y="170">Shops/Items</text>
+    <rect x="220" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#111111"/>
+    <text x="255" y="148" font-weight="700">Select</text><text x="251" y="170">Item</text>
+    <rect x="382" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#111111"/>
+    <text x="419" y="148" font-weight="700">Cart</text><text x="401" y="170">Quantity</text>
+    <rect x="544" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#111111"/>
+    <text x="578" y="148" font-weight="700">Method</text><text x="566" y="170">Pickup/delivery</text>
+    <rect x="706" y="116" width="118" height="72" rx="14" fill="#ffffff" stroke="#111111"/>
+    <text x="742" y="148" font-weight="700">Order</text><text x="729" y="170">Pay choice</text>
+  </g>
+  <path d="M176 152 H220 M338 152 H382 M500 152 H544 M662 152 H706 M824 152 H880" stroke="#111111" stroke-width="3" fill="none"/>
+  <path d="M870 144 L880 152 L870 160" stroke="#111111" stroke-width="3" fill="none"/>
+  <text x="854" y="175" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111111">Track</text>
+</svg>

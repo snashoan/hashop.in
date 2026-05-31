@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Hashop system map</title>
+  <desc id="desc">Buyer, Hashop app, hub, shop owner, storage, mail, maps, and payments.</desc>
+  <rect width="960" height="420" rx="28" fill="#ffffff"/>
+  <rect x="24" y="24" width="912" height="372" rx="22" fill="#f7f7f4" stroke="#111111" stroke-width="2"/>
+  <text x="56" y="68" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111111">Hashop commerce surface</text>
+  <text x="56" y="96" font-family="Arial, sans-serif" font-size="14" fill="#555555">One app frame for buyer flow and shop-owner work</text>
+
+  <rect x="56" y="150" width="150" height="96" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+  <text x="86" y="190" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111111">Buyer</text>
+  <text x="86" y="216" font-family="Arial, sans-serif" font-size="13" fill="#555555">Guest or account</text>
+
+  <rect x="286" y="122" width="180" height="152" rx="18" fill="#111111"/>
+  <text x="334" y="174" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">Hashop app</text>
+  <text x="320" y="204" font-family="Arial, sans-serif" font-size="13" fill="#d8d8d8">Shops, Items, Cart</text>
+  <text x="333" y="226" font-family="Arial, sans-serif" font-size="13" fill="#d8d8d8">Account, Orders</text>
+
+  <rect x="546" y="122" width="160" height="152" rx="18" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+  <text x="592" y="174" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111111">Hub</text>
+  <text x="575" y="204" font-family="Arial, sans-serif" font-size="13" fill="#555555">API, SQLite</text>
+  <text x="573" y="226" font-family="Arial, sans-serif" font-size="13" fill="#555555">uploads, mail</text>
+
+  <rect x="786" y="150" width="118" height="96" rx="14" fill="#ffffff" stroke="#d8b35d" stroke-width="3"/>
+  <text x="815" y="190" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111111">Shop</text>
+  <text x="803" y="216" font-family="Arial, sans-serif" font-size="13" fill="#555555">Stock, orders</text>
+
+  <path d="M206 198 H286" stroke="#111111" stroke-width="3" fill="none"/>
+  <path d="M466 198 H546" stroke="#111111" stroke-width="3" fill="none"/>
+  <path d="M706 198 H786" stroke="#111111" stroke-width="3" fill="none"/>
+  <path d="M276 190 L286 198 L276 206" fill="none" stroke="#111111" stroke-width="3"/>
+  <path d="M536 190 L546 198 L536 206" fill="none" stroke="#111111" stroke-width="3"/>
+  <path d="M776 190 L786 198 L776 206" fill="none" stroke="#111111" stroke-width="3"/>
+
+  <rect x="286" y="314" width="120" height="42" rx="12" fill="#ffffff" stroke="#d0d0ca"/>
+  <text x="319" y="341" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111111">Maps</text>
+  <rect x="420" y="314" width="120" height="42" rx="12" fill="#ffffff" stroke="#d0d0ca"/>
+  <text x="453" y="341" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111111">Email</text>
+  <rect x="554" y="314" width="120" height="42" rx="12" fill="#ffffff" stroke="#d0d0ca"/>
+  <text x="579" y="341" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111111">Payments</text>
+  <rect x="688" y="314" width="120" height="42" rx="12" fill="#ffffff" stroke="#d0d0ca"/>
+  <text x="719" y="341" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111111">Assets</text>
+</svg>

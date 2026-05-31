@@ -1,306 +1,132 @@
-# Hashop UI Specs
+# Hashop UI Guidelines
 
-Last updated: 2026-05-10
+Last updated: 2026-05-31
 
-## Goal
+Hashop should feel like a fast local commerce tool. The interface must help a buyer find stock, place an order, and leave. It must also let a shop owner manage stock and orders without changing into a separate admin product.
 
-Hashop should feel like a fast local commerce tool.
+## Core Standard
 
-The user should be able to:
+- Keep one persistent app frame.
+- Keep buyer navigation stable: `Shops`, `Items`, `Cart`, `Account`.
+- In owner mode, keep the same positions and use: `My shops`, `Stock`, `Orders`, `Account`.
+- Do not duplicate state buttons inside the state body.
+- Do not hide a state because it is empty.
+- Keep forms short, labeled, and one-column on phones.
+- Keep public pages visually related to the app.
 
-- open the app
-- find a shop or item
-- add to cart
-- place or manage an order
-- open account settings
+## Layout
 
-without needing to understand how the system works.
+- Use one visible plane for the app frame.
+- Center the pane on the viewport.
+- Prevent horizontal overflow at every state.
+- Keep the search and filter area connected with no scroll leak behind it.
+- Keep bottom navigation clear of content and system safe areas.
+- Use stable image boxes so products and shop images do not resize the layout.
+- Avoid nested cards unless the inner object is a real repeated item.
 
-The code structure can be modular underneath, but the screen surface must feel like one steady product.
+## Touch
 
-## Research Base
+- Main controls must be at least 48px tall.
+- Rows should be at least 56px tall.
+- Icon-only controls still need a 48px touch target.
+- Scrollable panes must support vertical finger drag.
+- Buttons inside tappable cards must remain visually separate.
+- Back controls must render as one line, for example `< Back`.
 
-These specs are based on common mobile commerce patterns and current usability guidance:
-
-- Bottom navigation should be stable and limited to a few top-level places.
-- Touch targets must be large enough for thumbs.
-- Account areas should prioritize core self-service tasks.
-- Checkout and buying should not force account creation.
-- Forms should be short, labeled, and one-column on phones.
-
-References checked:
-
-- Apple Human Interface Guidelines: Tab bars
-- Material Design: Bottom navigation
-- Google Android Accessibility: touch target size
-- W3C WCAG target-size guidance
-- Baymard ecommerce account, checkout, and mobile commerce research
-
-## App Frame
-
-Hashop has one persistent app frame.
-
-Top level states:
-
-- Shops
-- Items
-- Cart
-- Account
-
-Rules:
-
-- Bottom nav always shows the same four places.
-- Bottom nav is for navigation only, not actions.
-- Do not duplicate state buttons above the pane.
-- Do not hide a bottom tab because its content is empty.
-- Empty states should explain the state with one action.
-- Owner mode may rename Cart to Orders, but the position stays the same.
-
-## Touch Layer
-
-Every interactive element must have a reliable touch area.
-
-Rules:
-
-- Important controls are at least 48px tall.
-- Icon-only controls still get a 48px touch box.
-- Rows are at least 56px tall.
-- Primary bottom actions are 48-56px tall.
-- Adjacent controls have at least 8px breathing room.
-- Nothing important sits behind the bottom nav.
-- Scrollable panes must allow vertical finger drag.
-- Cards can be tappable, but buttons inside cards must still be clearly separate.
-
-## Visual Layer
-
-The visual system should be neutral, structured, and consistent.
+## Visual System
 
 Use:
 
-- dark neutral background
-- off-white text
-- muted secondary text
-- thin neutral borders
-- one clear primary button style
-- simple row cards
-- contained images
-- consistent spacing
+- white and black as the day/night base
+- neutral text colors with clear contrast
+- faint gold only for active state, focus, icons, and small accents
+- contained product images
+- simple rows and tiles
+- consistent spacing and font sizes
 
 Avoid:
 
-- gold as the default accent
-- glow as structure
-- decorative panels
-- many button shapes
-- mixed border radii
-- overlapping sticky controls
-- labels that look like buttons
+- yellow-heavy surfaces
+- generic outline stacks
+- decorative panels that compete with the product
+- grey drift between unrelated states
+- hidden or transparent text
+- repeated horizontal divider lines used as decoration
 
-## State Rules
+## State Requirements
 
-Each state gets one job.
+### Shops
 
-Shops:
+- Show shop-first listings.
+- Keep search visible and aligned.
+- Open shop details without shifting the whole page sideways.
+- Use the map as context, not as a blocking dashboard.
 
-- show shops
-- search shops
-- open shop page
-- show useful shop facts only
+### Items
 
-Items:
+- Make the product the main object.
+- Show shop identity as supporting text.
+- Keep product image, title, price, and quantity aligned.
+- Allow direct add-to-cart behavior.
 
-- show items
-- search items
-- show shop source as supporting information
-- add item to cart
+### Cart
 
-Cart:
+- Use the same listing rhythm as item rows.
+- Show quantity increase and decrease controls.
+- Show payment mode clearly.
+- Keep the empty state light, useful, and branded.
 
-- show selected items
-- edit quantity
-- choose payment
-- place order
-- cancel if allowed
+### Account
 
-Account:
+- Signed out: show sign in, create account, and shop-owner entry clearly.
+- Buyer signed in: show profile, orders, saved place, support, theme, and sign out.
+- Owner active: show owned shops, role controls, support, and sign out.
+- Do not turn Account into a dashboard.
 
-- identify the person
-- sign in or create account
-- show buyer settings after sign-in
-- show shop-owner settings after shop ownership is active
-- never become a dashboard
+### Owner Mode
 
-## Account State
+- Owner mode is a role switch, not a new app.
+- `My shops` lists owned shops only.
+- `Stock` manages inventory.
+- `Orders` handles current and historical orders.
+- Owner forms must match the normal Hashop form rhythm.
 
-Account is currently the weakest state and should be rebuilt around direct task rows.
-
-Signed out:
-
-1. Profile placeholder
-2. Phone/email field
-3. Password field
-4. Sign in button
-5. Create account
-6. Forgot password
-7. Add shop as a secondary path
-
-Rules:
-
-- Do not show orders, settings, addresses, payments, and help before sign-in unless guest orders exist.
-- Do not show a large menu before the login form.
-- Keep create account and forgot password as quiet text buttons.
-- Keep Add shop secondary, because buyer account is the default.
-
-Signed-in buyer:
-
-1. Profile summary
-2. Orders
-3. Saved place or last used place
-4. Payment
-5. Shops
-6. Sign out
-
-Rules:
-
-- Orders appears only if there are orders or the user is signed in.
-- Saved place means current or last-used delivery area, not permanent address storage by default.
-- Shops means saved or owned shop access, not a marketplace shortcut.
-
-Shop owner:
-
-1. Profile summary
-2. Saved shops
-3. Orders access through bottom nav position 3
-4. Payment methods
-5. Sign out
-
-Rules:
-
-- Owner account does not show buyer address rows as primary content.
-- Shop management belongs inside the shop owner flow.
-- Account only lists identity, shops, payment, and sign out.
-
-## Row Spec
-
-Account rows, cart rows, and owner rows should share one row model.
-
-Row anatomy:
-
-- left icon or avatar
-- title
-- short subtitle
-- optional small status
-- right chevron or action
-
-Sizing:
-
-- row min height: 56px
-- row padding: 12px
-- icon cell: 36-40px
-- title: 15-17px
-- subtitle: 13-14px
-- chevron/action area: 44-48px touch target
-
-Rules:
-
-- Rows should align on the same grid.
-- Titles should not wrap unless unavoidable.
-- Subtitles can wrap to two lines only when useful.
-- Status text should be short: Open, Closed, Paid, Pending, Cancelled.
-
-## Button Spec
-
-Primary button:
-
-- full width in forms
-- neutral light fill
-- dark text
-- one per form block
-
-Secondary button:
-
-- dark fill
-- neutral border
-- light text
-
-Danger button:
-
-- red text or red outline
-- never placed before safe actions
-
-Text button:
-
-- only for low-risk links like Forgot password
-- not used as the main action
-
-## Form Spec
-
-Forms must be short and direct.
-
-Rules:
+## Forms
 
 - Labels stay visible above fields.
-- Placeholder is only an example.
-- One column on phones.
-- Main action at the bottom of the form.
-- Error/status appears under the related field or above the action.
-- Do not ask for optional details before the user needs them.
+- Placeholder text is only an example.
+- Main action sits at the end of the form.
+- Error text appears near the related field or action.
+- Do not show stale empty forms.
+- Do not ask for optional details before they are needed.
 
-Account login form:
+## Motion
 
-- Phone/email
-- Password
-- Sign in
-- Create account
-- Forgot password
+- Use short transitions for state changes.
+- Animation must clarify that the pane changed.
+- Do not animate layout into overflow.
+- Respect touch responsiveness over decorative motion.
 
-Create account form:
+## Copy
 
-- Phone/email first
-- Password second
-- Name optional later
+- Use direct product words: `Shops`, `Items`, `Cart`, `Account`, `Stock`, `Orders`.
+- Avoid internal architecture terms in buyer and owner UI.
+- Empty states should name what is missing and provide one next action.
+- Public pages can explain the model, but the app should mostly show the model.
 
-Password reset:
+## Production Check
 
-- Step 1: Phone/email
-- Step 2: Reset code
-- Step 3: New password
+Before shipping UI changes, inspect:
 
-## Desktop Spec
+- default `Shops`
+- `Items`
+- empty and filled `Cart`
+- signed-out `Account`
+- signed-in buyer `Account`
+- owner `My shops`
+- owner `Stock`
+- owner `Orders`
+- `/about`
+- `/privacy`
 
-Desktop should not become a different product.
-
-Rules:
-
-- Keep the same states.
-- Use wider panes, not more controls.
-- Account can center as a single column.
-- Shops/items can use map plus pane.
-- Cart and Account should prioritize readability over split panels.
-
-## Implementation Standard
-
-Shared states should use the same UI primitives:
-
-- app frame
-- bottom nav
-- full-width form card
-- row card
-- item card
-- shop card
-- empty state card
-- primary action
-- secondary action
-- danger action
-
-Do not create a new button/card shape for one state unless the existing model cannot work.
-
-## Next UI Cleanup Order
-
-1. Rebuild Account signed-out state as a direct login form.
-2. Standardize Account rows to the shared row model.
-3. Remove decorative account panels and glow-like styling.
-4. Enforce touch target sizes across Account.
-5. Re-check buyer Account.
-6. Re-check owner Account.
-7. Apply the same professional polish to Shops, Items, and Cart after Account is stable.
+Each screen must have correct alignment, no text overflow, no hidden bottom content, and no horizontal scroll.

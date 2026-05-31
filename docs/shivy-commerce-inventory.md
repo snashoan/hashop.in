@@ -1,6 +1,6 @@
 # Shivy Commerce Inventory
 
-Last updated: 2026-05-07
+Last updated: 2026-05-31
 
 This inventory maps the current Hashop implementation into the future Shivy Commerce layers. It is intentionally practical: extract small pure pieces first, keep Hashop live, then move larger services behind adapters.
 
@@ -80,6 +80,21 @@ Target:
 - Shivy Commerce map adapter.
 - Brand supplies map defaults and marker styling.
 
+### Presentation Helpers
+
+Move only pure helpers first.
+
+- text cleanup rules
+- state-motion signature generation
+- public page theme normalization
+- public page theme application
+
+Target:
+
+- `tools/hashop_site/home-polish-core.js` now starts the UI polish helper layer.
+- `tools/hashop_site/public-theme.js` now starts the public theme helper layer.
+- Later location: brand-aware Shivy Commerce presentation package.
+
 ### Debug Flow
 
 Move as a Shivy plugin.
@@ -155,3 +170,14 @@ Implemented first:
 - Hashop `home.js` delegates price/cart/status helpers through the core module.
 
 The first slice must not change UI behavior.
+
+## Second Extraction Slice
+
+Implemented next:
+
+- `tools/hashop_site/home-polish-core.js`
+- `tools/hashop_tests/home-polish-core.test.js`
+- `tools/hashop_site/public-theme.js`
+- `tools/hashop_tests/public-theme.test.js`
+
+This slice removes duplicated presentation logic without changing the visible app flow.
