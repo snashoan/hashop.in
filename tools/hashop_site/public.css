@@ -36,8 +36,8 @@ html[data-hashop-theme="dark"] {
   --public-gold-2: #bca55e;
   --public-cyan: #f7f4ea;
   --public-line: rgba(247, 244, 234, 0.12);
-  --public-action: #f7f4ea;
-  --public-action-text: #050505;
+  --public-action: #10100e;
+  --public-action-text: #d8c47a;
 }
 
 html,
@@ -265,6 +265,19 @@ h1 {
   border-color: var(--public-line);
   background: var(--public-row-soft);
   color: var(--public-text);
+}
+
+html[data-hashop-theme="dark"] .public-mark,
+html[data-hashop-theme="dark"] .public-action {
+  border-color: rgba(188, 165, 94, 0.62);
+  background: #10100e;
+  color: #d8c47a;
+}
+
+html[data-hashop-theme="dark"] .public-action.is-secondary {
+  border-color: rgba(247, 244, 234, 0.14);
+  background: #050505;
+  color: #f7f4ea;
 }
 
 .public-speedline {

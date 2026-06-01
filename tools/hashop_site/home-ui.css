@@ -28700,3 +28700,353 @@ html body .shell.shell-home .shop-list-view-button {
     border-bottom-color: rgba(247, 244, 234, 0.12) !important;
   }
 }
+
+/* Iteration 115: screenshot-led dark surfaces, account scroll, and empty cart mascot. */
+html body .shell.shell-home[data-hashop-screen="account"] {
+  overscroll-behavior-y: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"],
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-list-grid,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-stack {
+  overscroll-behavior-y: none !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-list-grid {
+  padding-bottom: calc(3.35rem + env(safe-area-inset-bottom, 0px)) !important;
+  scroll-padding-bottom: calc(3.35rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-stack {
+  padding-bottom: 0.12rem !important;
+}
+
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-menu-card:last-child,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-signout-card:last-child,
+html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-section:last-child {
+  margin-bottom: 0 !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-card {
+  position: relative !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 0.82rem !important;
+  width: min(100%, 25rem) !important;
+  margin: 0.35rem auto 0 !important;
+  padding: 1.08rem 0.94rem 1rem !important;
+  border: 1px solid rgba(17, 17, 17, 0.1) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #111111 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-card::before,
+html body .shell.shell-home .shop-empty-cart-card::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-visual {
+  position: relative !important;
+  width: 7.3rem !important;
+  height: 5.75rem !important;
+  min-width: 7.3rem !important;
+  min-height: 5.75rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy {
+  position: absolute !important;
+  top: 0.18rem !important;
+  left: 50% !important;
+  z-index: 2 !important;
+  display: block !important;
+  width: 3.75rem !important;
+  height: 3.35rem !important;
+  border: 1.5px solid #8d7b4a !important;
+  border-radius: 42% 42% 38% 38% / 50% 50% 34% 34% !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  box-shadow: 0 0.24rem 0 rgba(141, 123, 74, 0.09) !important;
+  transform: translateX(-50%) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy::before,
+html body .shell.shell-home .shop-empty-cart-buddy::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0.42rem !important;
+  width: 0.36rem !important;
+  height: 0.48rem !important;
+  border: 1px solid rgba(141, 123, 74, 0.7) !important;
+  background: #ffffff !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy::before {
+  left: -0.28rem !important;
+  border-right: 0 !important;
+  border-radius: 0.42rem 0 0 0.42rem !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy::after {
+  right: -0.28rem !important;
+  border-left: 0 !important;
+  border-radius: 0 0.42rem 0.42rem 0 !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy-eye {
+  position: absolute !important;
+  top: 1.22rem !important;
+  display: block !important;
+  width: 0.34rem !important;
+  height: 0.34rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #111111 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy-eye:first-child {
+  left: 1.06rem !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy-eye:nth-child(2) {
+  right: 1.06rem !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-buddy-smile {
+  position: absolute !important;
+  left: 50% !important;
+  top: 1.82rem !important;
+  display: block !important;
+  width: 0.88rem !important;
+  height: 0.44rem !important;
+  border: 1.5px solid #8d7b4a !important;
+  border-top: 0 !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-radius: 0 0 999px 999px !important;
+  background: transparent !important;
+  transform: translateX(-50%) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 0.34rem !important;
+  display: block !important;
+  width: 5.55rem !important;
+  height: 2.15rem !important;
+  border: 1.5px solid #8d7b4a !important;
+  border-top: 0 !important;
+  border-radius: 0 0 0.76rem 0.76rem !important;
+  background: #fbfaf7 !important;
+  background-image: none !important;
+  box-shadow: 0 0.18rem 0 rgba(17, 17, 17, 0.05) !important;
+  transform: translateX(-50%) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0.62rem !important;
+  right: 0.62rem !important;
+  top: -0.46rem !important;
+  height: 0.64rem !important;
+  border: 1.5px solid #8d7b4a !important;
+  border-bottom: 0 !important;
+  border-radius: 999px 999px 0 0 !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  bottom: -0.36rem !important;
+  height: 0.36rem !important;
+  border-radius: 999px !important;
+  background:
+    radial-gradient(circle at 0.18rem 0.18rem, #8d7b4a 0 0.15rem, transparent 0.16rem),
+    radial-gradient(circle at calc(100% - 0.18rem) 0.18rem, #8d7b4a 0 0.15rem, transparent 0.16rem) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket-rib,
+html body .shell.shell-home .shop-empty-cart-basket > span {
+  position: absolute !important;
+  top: 0.38rem !important;
+  display: block !important;
+  width: 1px !important;
+  height: 1.18rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(141, 123, 74, 0.72) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket-rib:first-child {
+  left: 1.54rem !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket-rib:nth-child(2) {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-basket-rib:nth-child(3) {
+  right: 1.54rem !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-copy {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 0.22rem !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-copy strong {
+  max-width: 100% !important;
+  color: #111111 !important;
+  -webkit-text-fill-color: #111111 !important;
+  font-size: 1.08rem !important;
+  line-height: 1.18 !important;
+  overflow-wrap: anywhere !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-copy p {
+  max-width: 18.6rem !important;
+  margin: 0 !important;
+  color: #69665c !important;
+  -webkit-text-fill-color: #69665c !important;
+  font-size: 0.84rem !important;
+  line-height: 1.34 !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-card .shop-state-substate {
+  width: 100% !important;
+  margin: 0.1rem 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-card .shop-state-substate-actions {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+html body .shell.shell-home .shop-empty-cart-card .shop-state-action {
+  min-width: 8.4rem !important;
+  min-height: 2.42rem !important;
+  border: 1px solid #111111 !important;
+  border-radius: 8px !important;
+  background: #111111 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card {
+  border-color: rgba(247, 244, 234, 0.13) !important;
+  background: #10100e !important;
+  color: #f7f4ea !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy::before,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy::after {
+  border-color: rgba(188, 165, 94, 0.72) !important;
+  background: #10100e !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-eye {
+  background: #f7f4ea !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-smile {
+  border-color: #d8c47a !important;
+  border-top: 0 !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket {
+  border-color: rgba(188, 165, 94, 0.72) !important;
+  background: #151410 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket::before {
+  border-color: rgba(188, 165, 94, 0.72) !important;
+  background: transparent !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket::after {
+  background:
+    radial-gradient(circle at 0.18rem 0.18rem, #d8c47a 0 0.15rem, transparent 0.16rem),
+    radial-gradient(circle at calc(100% - 0.18rem) 0.18rem, #d8c47a 0 0.15rem, transparent 0.16rem) !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket-rib,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket > span {
+  background: rgba(216, 196, 122, 0.72) !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-copy strong {
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-copy p {
+  color: #aaa391 !important;
+  -webkit-text-fill-color: #aaa391 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card .shop-state-action {
+  border-color: rgba(188, 165, 94, 0.62) !important;
+  background: #10100e !important;
+  color: #d8c47a !important;
+  -webkit-text-fill-color: #d8c47a !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-meta {
+  border-color: rgba(247, 244, 234, 0.12) !important;
+  background: transparent !important;
+  color: #aaa391 !important;
+  -webkit-text-fill-color: #aaa391 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-login-field,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-account-field,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-setup-address-control {
+  background: #10100e !important;
+  border-color: rgba(247, 244, 234, 0.14) !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+}
+
+html body .shell.shell-home .shop-list-panel[data-pane-mode="setup"] .shop-login-input,
+html body .shell.shell-home .shop-list-panel[data-pane-mode="setup"] .shop-account-textarea {
+  min-height: 2.42rem !important;
+  line-height: 1.25 !important;
+}
+
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-login-input,
+html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-account-textarea {
+  background: #050505 !important;
+  border-color: rgba(247, 244, 234, 0.14) !important;
+  color: #f7f4ea !important;
+  -webkit-text-fill-color: #f7f4ea !important;
+}
