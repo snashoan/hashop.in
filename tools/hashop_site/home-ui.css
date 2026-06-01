@@ -6254,7 +6254,6 @@ button.shop-account-shop::after {
   }
 }
 
-/* Map visibility repair: street map must read clearly inside the dark product frame. */
 .map-screen {
   background: #d7d0bf !important;
   box-shadow: inset 0 -1px 0 rgba(5, 5, 5, 0.18) !important;
@@ -6565,37 +6564,6 @@ button.shop-account-shop::after {
 .shell-home[data-hashop-screen="account"] .home-bottom-link {
   min-height: 2.2rem !important;
   font-size: 0.66rem !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] .map-screen {
-  background: #11100b !important;
-  box-shadow: inset 0 -1px 0 rgba(216, 179, 93, 0.14) !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] .discovery-map,
-.shell-home[data-hashop-map-theme="dark"] .discovery-map > div,
-.shell-home[data-hashop-map-theme="dark"] .discovery-map.is-google-map,
-.shell-home[data-hashop-map-theme="dark"] .discovery-map.is-leaflet-map,
-.shell-home[data-hashop-map-theme="dark"] .leaflet-container,
-.shell-home[data-hashop-map-theme="dark"] .gm-style {
-  background: #11100b !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] .hashop-map-dark-tile,
-.shell-home[data-hashop-map-theme="dark"] .hashop-map-readable-tile,
-.shell-home[data-hashop-map-theme="dark"] .hashop-map-light-tile,
-.shell-home[data-hashop-map-theme="dark"] .hashop-map-standard-tile,
-.shell-home[data-hashop-map-theme="dark"] .hashop-map-labels,
-.shell-home[data-hashop-map-theme="dark"] .leaflet-tile {
-  filter: brightness(0.84) contrast(1.14) saturate(0.82) !important;
-  opacity: 1 !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] .map-screen::before,
-.shell-home[data-hashop-map-theme="dark"] .map-locate-button,
-.shell-home[data-hashop-map-theme="dark"] .map-compass-button {
-  background: rgba(10, 10, 9, 0.9) !important;
-  color: #f7d77f !important;
 }
 
 /* Sleek organization pass: fewer visual weights, cleaner action rhythm. */
@@ -13610,10 +13578,6 @@ body:has(.shell-home) {
   background: #ffffff !important;
 }
 
-body:has(.shell-home[data-hashop-map-theme="dark"]) {
-  background: #000000 !important;
-}
-
 .shell-home {
   --bg: #ffffff !important;
   --panel: #f2f2f2 !important;
@@ -13628,22 +13592,6 @@ body:has(.shell-home[data-hashop-map-theme="dark"]) {
   --shop-color: #111111 !important;
   background: #ffffff !important;
   color: #111111 !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] {
-  --bg: #000000 !important;
-  --panel: #0f0f0f !important;
-  --panel-soft: #171717 !important;
-  --panel-strong: #050505 !important;
-  --line: #303030 !important;
-  --line-strong: #767676 !important;
-  --ink: #f4f4f4 !important;
-  --muted: #a8a8a8 !important;
-  --accent: #ffffff !important;
-  --accent-soft: #d8d8d8 !important;
-  --shop-color: #ffffff !important;
-  background: #000000 !important;
-  color: #f4f4f4 !important;
 }
 
 .shell-home,
@@ -14191,22 +14139,6 @@ body:has(.shell-home) {
   background: #000000 !important;
 }
 
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"] {
-  --bg: #000000 !important;
-  --panel: #050505 !important;
-  --panel-soft: #0d0d0d !important;
-  --panel-raised: #151515 !important;
-  --line: #272727 !important;
-  --line-strong: #4d4d4d !important;
-  --outline-gold: #9b813c !important;
-  --ink: #f6f6f6 !important;
-  --muted: #a7a7a7 !important;
-  --shop-color: #9b813c !important;
-  background: var(--bg) !important;
-  color: var(--ink) !important;
-}
-
 body:has(.shell-home[data-hashop-map-theme="light"]) {
   background: #ffffff !important;
 }
@@ -14568,23 +14500,6 @@ body:has(.shell-home) {
   background: #000000 !important;
 }
 
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"] {
-  --bg: #000000 !important;
-  --panel: #050505 !important;
-  --panel-soft: #0d0d0d !important;
-  --panel-raised: #121212 !important;
-  --line: #242424 !important;
-  --line-strong: #4a4a4a !important;
-  --ink: #f5f5f5 !important;
-  --muted: #a6a6a6 !important;
-  --accent: #ffffff !important;
-  --accent-ink: #000000 !important;
-  --shop-color: #ffffff !important;
-  background: var(--bg) !important;
-  color: var(--ink) !important;
-}
-
 body:has(.shell-home[data-hashop-map-theme="light"]) {
   background: #ffffff !important;
 }
@@ -14931,31 +14846,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
   filter: none !important;
   opacity: 1 !important;
   mix-blend-mode: normal !important;
-}
-
-/* Iteration 038: theme rinse. Black first, dull-gold accents only, cart stays readable. */
-body:has(.shell-home),
-body:has(.shell-home[data-hashop-map-theme="dark"]),
-body:has(.shell-home[data-hashop-map-theme="light"]) {
-  background: #000 !important;
-}
-
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"],
-.shell-home[data-hashop-map-theme="light"] {
-  --bg: #000 !important;
-  --panel: #050505 !important;
-  --panel-soft: #080806 !important;
-  --panel-strong: #000 !important;
-  --line: #242016 !important;
-  --line-strong: #58451f !important;
-  --ink: #e8e1d2 !important;
-  --muted: #8c8474 !important;
-  --accent: #9f7f35 !important;
-  --accent-soft: #6f5928 !important;
-  --shop-color: #9f7f35 !important;
-  background: #000 !important;
-  color: #e8e1d2 !important;
 }
 
 .shell-home h1,
@@ -15420,12 +15310,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
   -webkit-text-fill-color: var(--ink) !important;
 }
 
-/* Iteration 035: flatten list surfaces, including Account listings. */
-.shell-home[data-hashop-map-theme="dark"] .map-screen {
-  background: #000000 !important;
-  background-image: none !important;
-}
-
 .shell-home[data-hashop-map-theme="light"] .map-screen {
   background: #ffffff !important;
   background-image: none !important;
@@ -15476,31 +15360,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
   background: transparent !important;
   background-image: none !important;
   box-shadow: none !important;
-}
-
-/* Iteration 036: black surface, faint-gold brand language, no loose grey listing rows. */
-body:has(.shell-home),
-body:has(.shell-home[data-hashop-map-theme="dark"]),
-body:has(.shell-home[data-hashop-map-theme="light"]) {
-  background: #000000 !important;
-}
-
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"],
-.shell-home[data-hashop-map-theme="light"] {
-  --bg: #000000 !important;
-  --panel: #070603 !important;
-  --panel-soft: #0d0a03 !important;
-  --panel-strong: #000000 !important;
-  --line: #3b300e !important;
-  --line-strong: #7f6727 !important;
-  --ink: #f0ddb0 !important;
-  --muted: #9f8130 !important;
-  --accent: #c2a04a !important;
-  --accent-soft: #8f7430 !important;
-  --shop-color: #c2a04a !important;
-  background: #000000 !important;
-  color: #f0ddb0 !important;
 }
 
 .shell-home,
@@ -15844,21 +15703,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
 /* Iteration 040 terminal layer: utility colors stay black/white; gold is outline/icon only. */
 body:has(.shell-home) {
   background: #000000 !important;
-}
-
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"] {
-  --bg: #000000 !important;
-  --panel: #050505 !important;
-  --panel-soft: #0d0d0d !important;
-  --line: #272727 !important;
-  --line-strong: #4d4d4d !important;
-  --outline-gold: #9b813c !important;
-  --ink: #f6f6f6 !important;
-  --muted: #a7a7a7 !important;
-  --shop-color: #9b813c !important;
-  background: var(--bg) !important;
-  color: var(--ink) !important;
 }
 
 body:has(.shell-home[data-hashop-map-theme="light"]) {
@@ -16317,33 +16161,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
   stroke: var(--outline-gold) !important;
   fill: none !important;
   box-shadow: none !important;
-}
-
-/* Iteration 046: restore normal controls, transparent brand, centered item rows. */
-body:has(.shell-home),
-body:has(.shell-home[data-hashop-map-theme="dark"]),
-body:has(.shell-home[data-hashop-map-theme="light"]) {
-  background: #050402 !important;
-}
-
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"],
-.shell-home[data-hashop-map-theme="light"] {
-  --bg: #050402 !important;
-  --panel: #0d0b06 !important;
-  --panel-soft: #151108 !important;
-  --panel-raised: #1d170b !important;
-  --line: rgba(250, 204, 21, 0.18) !important;
-  --line-strong: rgba(250, 204, 21, 0.34) !important;
-  --outline-gold: #facc15 !important;
-  --ink: #fff7df !important;
-  --muted: #c8b889 !important;
-  --accent: #facc15 !important;
-  --accent-strong: #ffe58a !important;
-  --danger: #ff7b7b !important;
-  --shop-color: #facc15 !important;
-  background: var(--bg) !important;
-  color: var(--ink) !important;
 }
 
 .shell-home,
@@ -18852,22 +18669,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
   }
 }
 
-/* Iteration 062: recovery pass. Neutral utility layer, no card-on-card listing boxes. */
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"],
-.shell-home[data-hashop-map-theme="light"] {
-  --panel: #050505 !important;
-  --panel-soft: #0a0a0a !important;
-  --panel-raised: #101010 !important;
-  --line: rgba(255, 255, 255, 0.1) !important;
-  --line-strong: rgba(255, 255, 255, 0.18) !important;
-  --muted: #a8a8a8 !important;
-  --accent: #b89a4a !important;
-  --accent-strong: #d4ba72 !important;
-  --outline-gold: #b89a4a !important;
-  --shop-color: #b89a4a !important;
-}
-
 .shell-home .shop-list-panel,
 .shell-home .shop-list-grid,
 .shell-home .shop-pane-detail,
@@ -19027,17 +18828,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
 .shell-home .shop-list-grid .shop-item-qty-chip.is-selected {
   color: #d4ba72 !important;
   -webkit-text-fill-color: #d4ba72 !important;
-}
-
-/* Iteration 063: reduce yellow weight in persistent chrome and controls. */
-.shell-home,
-.shell-home[data-hashop-map-theme="dark"],
-.shell-home[data-hashop-map-theme="light"] {
-  --accent: #a88b42 !important;
-  --accent-strong: #c2aa65 !important;
-  --outline-gold: #a88b42 !important;
-  --line: rgba(255, 255, 255, 0.09) !important;
-  --line-strong: rgba(255, 255, 255, 0.16) !important;
 }
 
 .shell-home .home-bottom-nav,
@@ -19757,12 +19547,6 @@ body:has(.shell-home[data-hashop-map-theme="light"]) {
 .shell-home .leaflet-container img.leaflet-tile,
 .shell-home .leaflet-pane img.leaflet-tile {
   filter: grayscale(0.96) saturate(0.28) contrast(1.05) brightness(0.98) !important;
-}
-
-.shell-home[data-hashop-map-theme="dark"] .leaflet-tile,
-.shell-home[data-hashop-map-theme="dark"] .leaflet-container img.leaflet-tile,
-.shell-home[data-hashop-map-theme="dark"] .leaflet-pane img.leaflet-tile {
-  filter: grayscale(1) saturate(0.22) contrast(1.08) brightness(0.84) !important;
 }
 
 .shell-home .shop-empty-cart-card,
@@ -21193,43 +20977,6 @@ html body .shell-home .home-bottom-nav .home-bottom-link.is-active svg {
 .shell-home .shop-empty-items-base,
 .shell-home .shop-state-face {
   display: none !important;
-}
-
-/* Iteration 071 specificity lock: white must beat older black/gold state rules. */
-body:has(.shell.shell-home),
-body:has(.shell.shell-home[data-hashop-map-theme]),
-body:has(.shell.shell-home[data-hashop-map-theme="light"]),
-body:has(.shell.shell-home[data-hashop-map-theme="dark"]) {
-  background: #fff !important;
-  background-color: #fff !important;
-  background-image: none !important;
-  color: #111 !important;
-}
-
-html body .shell.shell-home,
-html body .shell.shell-home[data-hashop-map-theme],
-html body .shell.shell-home[data-hashop-map-theme="light"],
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --accent: #8d7b4a !important;
-  --accent-strong: #6f6038 !important;
-  --outline-gold: #8d7b4a !important;
-  --hashop-feed-accent: #8d7b4a !important;
-  --hashop-feed-line: rgba(0, 0, 0, 0.12) !important;
-  --hashop-feed-muted: #5d5d5d !important;
-  --hashop-feed-ink: #111 !important;
-  --line: rgba(0, 0, 0, 0.12) !important;
-  --line-strong: rgba(0, 0, 0, 0.2) !important;
-  --ink: #111 !important;
-  --muted: #5d5d5d !important;
-  --bg: #fff !important;
-  --panel: #fff !important;
-  --panel-soft: #f7f7f7 !important;
-  --panel-strong: #fff !important;
-  background: #fff !important;
-  background-color: #fff !important;
-  background-image: none !important;
-  color: #111 !important;
-  -webkit-text-fill-color: #111 !important;
 }
 
 html body .shell.shell-home .home-stage,
@@ -24356,17 +24103,6 @@ html body .shell.shell-home {
   --hashop-auth-accent: #8d7b4a;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-auth-bg: #050505;
-  --hashop-auth-panel: #050505;
-  --hashop-auth-ink: #f6f3ea;
-  --hashop-auth-muted: #b9b09a;
-  --hashop-auth-soft: #111111;
-  --hashop-auth-line: rgba(246, 243, 234, 0.14);
-  --hashop-auth-line-strong: rgba(188, 165, 94, 0.48);
-  --hashop-auth-accent: #bca55e;
-}
-
 html body .shell.shell-home[data-hashop-screen="account"] .shop-list-panel,
 html body .shell.shell-home[data-hashop-screen="login"] .shop-list-panel,
 html body .shell.shell-home[data-hashop-screen="setup"] .shop-list-panel,
@@ -24904,12 +24640,6 @@ html body .shell.shell-home {
   --hashop-soft-shadow: 0 10px 28px rgba(17, 17, 17, 0.045);
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-soft-cell: #101010;
-  --hashop-soft-cell-strong: #161616;
-  --hashop-soft-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-}
-
 html body .shell.shell-home .shop-login-form,
 html body .shell.shell-home .shop-buyer-auth-form,
 html body .shell.shell-home .shop-add-form,
@@ -25144,13 +24874,6 @@ html body .shell.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-own
   border-bottom: 0 !important;
   border-radius: 7px !important;
   background: rgba(255, 255, 255, 0.58) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-fact,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-card .shop-cart-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-fact,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card .shop-cart-row {
-  background: rgba(255, 255, 255, 0.04) !important;
 }
 
 html body .shell.shell-home[data-hashop-screen^="owner-"] .shop-owner-action-row > button,
@@ -26068,31 +25791,6 @@ html body .shell.shell-home {
   color-scheme: light;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-ui-bg: #050505;
-  --hashop-ui-panel: #050505;
-  --hashop-ui-cell: #111111;
-  --hashop-ui-ink: #f7f4ea;
-  --hashop-ui-muted: #aaa391;
-  --hashop-ui-line: rgba(247, 244, 234, 0.13);
-  --hashop-ui-line-strong: rgba(188, 165, 94, 0.42);
-  --hashop-ui-accent: #bca55e;
-  --hashop-feed-bg: #050505;
-  --hashop-feed-ink: #f7f4ea;
-  --hashop-feed-muted: #aaa391;
-  --hashop-feed-line: rgba(247, 244, 234, 0.12);
-  --hashop-feed-accent: #bca55e;
-  --hashop-auth-bg: #050505;
-  --hashop-auth-panel: #050505;
-  --hashop-auth-ink: #f7f4ea;
-  --hashop-auth-muted: #aaa391;
-  --hashop-auth-soft: #111111;
-  --hashop-auth-line: rgba(247, 244, 234, 0.13);
-  --hashop-auth-line-strong: rgba(188, 165, 94, 0.42);
-  --hashop-auth-accent: #bca55e;
-  color-scheme: dark;
-}
-
 html body .shell.shell-home,
 html body .shell.shell-home button,
 html body .shell.shell-home input,
@@ -26163,10 +25861,6 @@ html body .shell.shell-home .shop-list-search {
 html body .shell.shell-home .shop-list-search:focus-within {
   border-color: var(--hashop-ui-accent) !important;
   box-shadow: 0 0 0 3px rgba(141, 123, 74, 0.16) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search:focus-within {
-  box-shadow: 0 0 0 3px rgba(188, 165, 94, 0.18) !important;
 }
 
 html body .shell.shell-home .shop-list-search-input {
@@ -26371,616 +26065,6 @@ html body .shell.shell-home .shop-account-toggle-mark.is-on > span {
   transform: translateX(1rem) !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-shop-feed > .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-card {
-  background: var(--hashop-ui-bg) !important;
-  color: var(--hashop-ui-ink) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-payment-qr-image,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-card {
-  background: var(--hashop-ui-cell) !important;
-}
-
-/* Iteration 098: complete dark-mode coverage across all Hashop states. */
-html[data-hashop-theme="dark"],
-html[data-hashop-theme="dark"] body,
-html body[data-hashop-theme="dark"],
-html body:has(.shell.shell-home[data-hashop-map-theme="dark"]) {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  color-scheme: dark !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-ui-bg: #050505;
-  --hashop-ui-panel: #050505;
-  --hashop-ui-cell: #111111;
-  --hashop-ui-cell-strong: #171717;
-  --hashop-ui-ink: #f7f4ea;
-  --hashop-ui-muted: #aaa391;
-  --hashop-ui-line: rgba(247, 244, 234, 0.13);
-  --hashop-ui-line-strong: rgba(188, 165, 94, 0.42);
-  --hashop-ui-accent: #bca55e;
-  --hashop-auth-bg: #050505;
-  --hashop-auth-panel: #050505;
-  --hashop-auth-ink: #f7f4ea;
-  --hashop-auth-muted: #aaa391;
-  --hashop-auth-soft: #111111;
-  --hashop-auth-line: rgba(247, 244, 234, 0.13);
-  --hashop-auth-line-strong: rgba(188, 165, 94, 0.42);
-  --hashop-auth-accent: #bca55e;
-  --hashop-feed-bg: #050505;
-  --hashop-feed-ink: #f7f4ea;
-  --hashop-feed-muted: #aaa391;
-  --hashop-feed-line: rgba(247, 244, 234, 0.12);
-  --hashop-feed-accent: #bca55e;
-  --surface: #050505;
-  --panel: #050505;
-  --panel-bg: #050505;
-  --panel-strong: #111111;
-  --bg: #050505;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-stage,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-chrome,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-head,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-body,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-items,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-shop-feed,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-stack,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-pane,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-setup-pane,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-account-pane,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-stack,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-shell {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-bottom-nav {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: rgba(5, 5, 5, 0.96) !important;
-  background-color: rgba(5, 5, 5, 0.96) !important;
-  background-image: none !important;
-  box-shadow: 0 -1px 0 rgba(247, 244, 234, 0.1) !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-bottom-nav .home-bottom-link {
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-bottom-nav .home-bottom-link.is-active {
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-bottom-nav .home-bottom-link:not(.is-active) > .home-bottom-link-icon {
-  filter: invert(1) brightness(1.35) saturate(0.25) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-bottom-nav .home-bottom-link.is-active > .home-bottom-link-icon {
-  filter: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-brand-name,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .brand-name,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-hash-logo,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-back-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-toggle {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search {
-  border-color: rgba(188, 165, 94, 0.45) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  box-shadow: 0 0 0 3px rgba(188, 165, 94, 0.14) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] select {
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  caret-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea::placeholder {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-  opacity: 0.78 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sortbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-viewbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-tabs,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-quick-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-shop-feed > .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-empty,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-link-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-record-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-location-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-form-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-state-body,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-add-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-fact,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-form-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-payment-qr-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-payment-qr-image,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pay-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-confirm-payment-qr,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-concept-panel,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-concept-row {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-visual,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-visual,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-icon,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-avatar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-chip,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-item,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-chip,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-toggle-mark {
-  border-color: rgba(188, 165, 94, 0.38) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-thumb img,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-payment-qr-image img,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-avatar img {
-  background: #111111 !important;
-  -webkit-text-fill-color: initial !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-title-block strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-head strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-title strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-hero h2,
-html body .shell.shell-home[data-hashop-map-theme="dark"] h1,
-html body .shell.shell-home[data-hashop-map-theme="dark"] h2,
-html body .shell.shell-home[data-hashop-map-theme="dark"] h3 {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-subtitle,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-items,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-items span:not(.shop-card-item),
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail p,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-meta,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-label,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-title span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-meta,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-row span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-count {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links a,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-chip-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-mini-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-action {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-add,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-open,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-step {
-  border-color: rgba(188, 165, 94, 0.48) !important;
-  background: #f7f4ea !important;
-  background-color: #f7f4ea !important;
-  background-image: none !important;
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button.is-active {
-  border-bottom-color: #bca55e !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-qty,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-code,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-code,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-row strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-accounting-row em,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-arrow {
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-status {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .map-locate-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .map-compass-button {
-  border-color: rgba(247, 244, 234, 0.16) !important;
-  background: rgba(5, 5, 5, 0.9) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-/* Iteration 098b: beat older high-specificity list/account/owner state rules in dark mode. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel .shop-list-grid,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view],
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="list"],
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"],
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="tile"] {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] > .shop-list-head,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-head,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel.is-root-view .shop-list-head,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel.is-shop-view .shop-list-head {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view] > .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-item-discovery-card {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card::before,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card::before,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card::before,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card::after,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card::after,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card::after {
-  background: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-menu-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-link-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-record-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="account"] .shop-account-menu-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="account"] .shop-account-link-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="account"] .shop-account-record-row {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-tab-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail .shop-owner-tab-row {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-summary-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-field-wide,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-summary-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field-wide {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-summary-card span,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-field-wide > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-summary-card span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-field-wide > span {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-/* Iteration 098c: keep owner order cards readable in dark mode. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-order-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card em,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-order-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-order-card em,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card em {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card span,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card p,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-order-card span,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-order-card p,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-card p {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-/* Iteration 099: dark state readability and form text alignment. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] .brand,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .brand *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-brand-copy,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-brand-copy *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-brand-name,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-brand-name * {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-panel-bar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-hero,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-bar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-logo-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sortbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-viewbar {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-panel-bar *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-hero *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy-row *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-bar *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-actions *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sortbar *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-viewbar * {
-  color: inherit !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-title-block strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-main strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-form-head strong {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-subtitle,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-items,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-item,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy p,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-form-head span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-logo-copy span {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-logo-preview,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-preview,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-avatar {
-  border-color: rgba(188, 165, 94, 0.28) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab-row .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-mini-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-chip-button {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #101010 !important;
-  background-color: #101010 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab-row .shop-owner-tab.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-open,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-add,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-step {
-  border-color: rgba(188, 165, 94, 0.48) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-  box-shadow: inset 0 0 0 1px rgba(188, 165, 94, 0.24) !important;
-}
-
 html body .shell.shell-home .shop-login-field,
 html body .shell.shell-home .shop-account-field,
 html body .shell.shell-home .shop-owner-field,
@@ -27063,37 +26147,6 @@ html body .shell.shell-home .shop-account-state-body .shop-state-card > span:not
   white-space: nowrap !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #101010 !important;
-  background-color: #101010 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide > span {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form .shop-state-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-add-form .shop-state-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-state-body .shop-state-card {
-  border-color: rgba(188, 165, 94, 0.3) !important;
-  background: #101010 !important;
-  background-color: #101010 !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
 @media (max-width: 420px) {
   html body .shell.shell-home .shop-login-field,
   html body .shell.shell-home .shop-account-field,
@@ -27101,109 +26154,6 @@ html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-state-bo
   html body .shell.shell-home .shop-owner-field-wide {
     grid-template-columns: minmax(6.8rem, 32%) minmax(0, 1fr) !important;
   }
-}
-
-/* Iteration 099b: beat older shop/list dark selectors exactly. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-list-sortbar.shop-list-viewbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-list-sortbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-list-viewbar {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card .shop-card-thumb {
-  border-color: rgba(188, 165, 94, 0.28) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card strong {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-card .shop-card-item,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-discovery-card .shop-card-item,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-grid > .shop-item-discovery-card .shop-card-item {
-  border-color: rgba(188, 165, 94, 0.22) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-bar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-bar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-actions {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-bar *,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-actions *,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-bar *,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-actions * {
-  color: inherit !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-tab-row .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-tab-row .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row .shop-owner-tab {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #101010 !important;
-  background-color: #101010 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-tab-row .shop-owner-tab.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-tab-row .shop-owner-tab.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-tab-row .shop-owner-tab.is-active {
-  border-color: rgba(188, 165, 94, 0.48) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-copy-row .shop-pane-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-copy-row strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-summary-card strong {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-summary-card .shop-owner-summary-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-summary-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-summary-mark {
-  border-color: rgba(188, 165, 94, 0.28) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
 }
 
 html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-logo-row) {
@@ -27217,118 +26167,6 @@ html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-logo-row) > s
 html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-logo-row) .shop-owner-logo-row {
   align-items: center !important;
   min-height: 0 !important;
-}
-
-/* Iteration 099c: owner order primary actions stay dark in dark mode. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-actions > .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-actions > .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-save {
-  border-color: rgba(188, 165, 94, 0.48) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-  box-shadow: inset 0 0 0 1px rgba(188, 165, 94, 0.24) !important;
-}
-
-/* Iteration 099d: buyer auth verification form follows the dark surface. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-actions *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links *,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links * {
-  color: inherit !important;
-  -webkit-text-fill-color: currentColor !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form .shop-login-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form .shop-login-status {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #101010 !important;
-  background-color: #101010 !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-/* Iteration 099e: exact buyer account auth specificity. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-public-links {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-status {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form button,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form a {
-  border-color: rgba(188, 165, 94, 0.32) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-/* Iteration 099f: live owner chips, feed thumbs, and image upload rows. */
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-owner-order-card .shop-owner-order-status,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-owner-order-status {
-  border-color: rgba(188, 165, 94, 0.32) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-shop-feed > .shop-card .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-pane-detail .shop-pane-shop-feed > .shop-card .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen^="owner-"] .shop-list-panel[data-pane-mode^="owner-"] .shop-pane-shop-feed > .shop-card .shop-card-thumb {
-  border-color: rgba(188, 165, 94, 0.28) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
 }
 
 html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-item-gallery),
@@ -27351,112 +26189,12 @@ html body .shell.shell-home .shop-owner-field-wide:has(.shop-owner-media-note) .
   text-align: left !important;
 }
 
-/* Iteration 100: dark mode is a palette replica, not a form restructure. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-form-card {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-field {
-  border-color: rgba(247, 244, 234, 0.1) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field > span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide > span {
-  color: #b9b3a5 !important;
-  -webkit-text-fill-color: #b9b3a5 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-input {
-  border-color: transparent !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input::placeholder,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea::placeholder {
-  color: #8d8779 !important;
-  -webkit-text-fill-color: #8d8779 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-login-submit {
-  border-color: #f7f4ea !important;
-  background: #f7f4ea !important;
-  background-color: #f7f4ea !important;
-  background-image: none !important;
-  color: #050505 !important;
-  -webkit-text-fill-color: #050505 !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-links,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-public-links {
-  border-color: transparent !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-links button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-public-links a,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-links button,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-public-links a {
-  border-color: rgba(247, 244, 234, 0.08) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
 /* Iteration 101: cart list cards, opaque inventory descriptions, nested action bands. */
 html body .shell.shell-home {
   --hashop-action-bg: #f6f5f0;
   --hashop-action-line: rgba(17, 17, 17, 0.1);
   --hashop-action-ink: #111111;
   --hashop-action-accent: #8d7b4a;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-action-bg: #111111;
-  --hashop-action-line: rgba(247, 244, 234, 0.12);
-  --hashop-action-ink: #f7f4ea;
-  --hashop-action-accent: #bca55e;
 }
 
 html body .shell.shell-home .shop-pane-cart-feed,
@@ -27666,100 +26404,6 @@ html body .shell.shell-home .shop-owner-description-field .shop-owner-textarea {
   box-shadow: none !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-feed,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-confirm-items,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-order-compact-items {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-feed > .shop-cart-list-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-confirm-items > .shop-cart-list-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-order-compact-items > .shop-cart-list-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-shop-feed[data-list-view="list"] > .shop-cart-list-card {
-  border-bottom-color: rgba(247, 244, 234, 0.12) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card .shop-cart-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-shop-feed[data-list-view="list"] .shop-cart-list-card .shop-cart-thumb {
-  border-color: rgba(188, 165, 94, 0.28) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card .shop-card-title-block strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card .shop-card-item:first-child {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card .shop-card-subtitle,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card .shop-card-item {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-foot,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-mode-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-notice,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pay-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-draft-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-library-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-select,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-section-body,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-action-frame,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-action-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-mode-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-confirm-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-quick-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-actions {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-description-field {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: #111111 !important;
-  background-color: #111111 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-description-field .shop-owner-textarea {
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  caret-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-description-field .shop-owner-textarea::placeholder {
-  color: #8d8779 !important;
-  -webkit-text-fill-color: #8d8779 !important;
-}
-
 @media (max-width: 430px) {
   html body .shell.shell-home .shop-pane-cart-feed > .shop-cart-list-card,
   html body .shell.shell-home .shop-pane-confirm-items > .shop-cart-list-card,
@@ -27890,19 +26534,6 @@ html body .shell.shell-home .shop-cart-list-card > .shop-card-main {
   min-width: 0 !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate {
-  border-top-color: rgba(247, 244, 234, 0.12) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate-label {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
 @media (max-width: 430px) {
   html body .shell.shell-home .shop-state-substate-actions > .shop-state-action {
     min-width: 0 !important;
@@ -27920,11 +26551,6 @@ html body .shell.shell-home .map-user-marker.is-map-point {
 html body .shell.shell-home .map-user-marker.is-map-point::before,
 html body .shell.shell-home .map-user-marker.is-map-point::after {
   border-color: rgba(208, 166, 75, 0.5) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .map-user-marker.is-map-point {
-  background: #050505 !important;
-  border-color: #d0a64b !important;
 }
 
 /* Iteration 104: buyer-first surface hygiene and motion. */
@@ -27948,14 +26574,6 @@ html body .shell.shell-home {
   max-width: 100% !important;
   min-width: 0 !important;
   overflow: hidden !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-polish-bg: #050505;
-  --hashop-polish-ink: #f7f4ea;
-  --hashop-polish-muted: #aaa391;
-  --hashop-polish-line: rgba(247, 244, 234, 0.12);
-  --hashop-polish-accent: #bca55e;
 }
 
 html body .shell.shell-home .home-stage,
@@ -28148,7 +26766,6 @@ html body .shell.shell-home.is-state-transitioning .shop-owner-stack > * {
   }
 }
 
-/* Iteration 106: account toggles, profile view, and dark-mode surface seal. */
 html body .shell.shell-home .shop-account-menu-row.shop-account-manage-toggle::before,
 html body .shell.shell-home .shop-account-menu-row.shop-account-manage-toggle::after {
   content: none !important;
@@ -28271,344 +26888,6 @@ html body .shell.shell-home .shop-list-panel .shop-list-grid > .shop-list-viewba
   border-top: 0 !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"],
-html body .shell.shell-home[data-hashop-map-theme="dark"] .home-stage,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-stack {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  transition: none !important;
-  color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-head,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid > .shop-list-sortbar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid > .shop-list-viewbar {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow:
-    0 -0.8rem 0 0.8rem #050505,
-    0 0.5rem 0 0 #050505 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search {
-  border-color: rgba(247, 244, 234, 0.16) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-search-input::placeholder {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-head .shop-list-search,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel[data-pane-mode] .shop-list-head .shop-list-search-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel.is-root-view .shop-list-head .shop-list-search,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen] .shop-list-panel.is-root-view .shop-list-head .shop-list-search-input {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  transition: none !important;
-  box-shadow:
-    0 -0.8rem 0 0.8rem #050505,
-    0 0.5rem 0 0 #050505 !important;
-}
-
-/* Iteration 107: complete dark-mode contract. No light fills inside the app frame. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] {
-  --hashop-ui-bg: #050505 !important;
-  --hashop-ui-ink: #f7f4ea !important;
-  --hashop-ui-muted: #aaa391 !important;
-  --hashop-ui-cell: #10100e !important;
-  --hashop-ui-cell-strong: #151410 !important;
-  --hashop-ui-line: rgba(247, 244, 234, 0.12) !important;
-  --hashop-ui-line-strong: rgba(247, 244, 234, 0.2) !important;
-  --hashop-ui-accent: #bca55e !important;
-  --hashop-feed-accent: #bca55e !important;
-  --hashop-polish-bg: #050505 !important;
-  --hashop-polish-ink: #f7f4ea !important;
-  --hashop-polish-muted: #aaa391 !important;
-  --hashop-polish-line: rgba(247, 244, 234, 0.12) !important;
-  --hashop-polish-accent: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-grid,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-detail,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-stack,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-stack,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-pane,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-buyer-auth-form,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-form-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-state-body,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-view,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-section-body,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-summary-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-foot,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-mode-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-notice,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pay-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-action-frame,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-substate,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-action-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-mode-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-confirm-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-cart-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-quick-actions,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-actions {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-item-discovery-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-list-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-draft-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-library-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-record-row,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-location-card {
-  background: #10100e !important;
-  background-color: #10100e !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-pay,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-open,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-add,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-mini-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-upload-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-upload-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-chip-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-setup-map-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-mode-card,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pay-card {
-  background: #10100e !important;
-  background-color: #10100e !important;
-  background-image: none !important;
-  border-color: rgba(247, 244, 234, 0.18) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-action.is-primary,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-add,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-pay.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-sort-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-view-button.is-active,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-tab.is-active {
-  border-color: rgba(188, 165, 94, 0.7) !important;
-  color: #d8c47a !important;
-  -webkit-text-fill-color: #d8c47a !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-avatar,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-thumb,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-visual,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-items-visual,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-state-mark,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-logo-preview,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-item-preview,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-payment-qr-preview {
-  background: #151410 !important;
-  background-color: #151410 !important;
-  background-image: none !important;
-  border-color: rgba(188, 165, 94, 0.3) !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-eye,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-smile,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket-rib {
-  background: #bca55e !important;
-  background-color: #bca55e !important;
-  border-color: #bca55e !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-field-wide,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-description-field {
-  background: #10100e !important;
-  background-color: #10100e !important;
-  background-image: none !important;
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-login-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] textarea,
-html body .shell.shell-home[data-hashop-map-theme="dark"] select {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-  caret-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-title-block strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-copy strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-head strong,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy strong {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-subtitle,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-card-item,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-meta,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-profile-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-cart-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-order-meta,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy span,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-pane-copy p {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-avatar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-profile-hero .shop-account-avatar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-media-field .shop-account-avatar,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-account-stack .shop-account-avatar {
-  background: #151410 !important;
-  background-color: #151410 !important;
-  background-image: none !important;
-  border-color: rgba(188, 165, 94, 0.35) !important;
-  color: #bca55e !important;
-  -webkit-text-fill-color: #bca55e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-form-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-account-state-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-account-stack .shop-account-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-account-stack .shop-account-form-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-account-stack .shop-account-state-actions .shop-owner-save,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-login-form.shop-buyer-auth-form .shop-login-submit {
-  background: #10100e !important;
-  background-color: #10100e !important;
-  background-image: none !important;
-  border: 1px solid rgba(188, 165, 94, 0.62) !important;
-  color: #d8c47a !important;
-  -webkit-text-fill-color: #d8c47a !important;
-  box-shadow: none !important;
-}
-
-/* Iteration 108: keep the dark contract on the map shell too. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] .map-screen,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .discovery-map,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-owner-pickup-map {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  background-image: none !important;
-  color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .leaflet-container,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .gm-style {
-  background: #11100b !important;
-  background-color: #11100b !important;
-}
-
-/* Iteration 109: signed-out account buttons must obey dark mode too. */
-html[data-hashop-theme="dark"] body .shop-login-submit,
-html body[data-hashop-theme="dark"] .shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] button.shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-auth-actions button.shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] button.shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form button.shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .shop-login-form.shop-buyer-auth-form .shop-account-auth-actions button.shop-login-submit,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] button.shop-login-submit:hover,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] button.shop-login-submit:focus,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] button.shop-login-submit:focus-visible,
-html body .shell.shell-home[data-hashop-map-theme="dark"][data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] button.shop-login-submit:active {
-  background: #10100e !important;
-  background-color: #10100e !important;
-  background-image: none !important;
-  border: 1px solid rgba(188, 165, 94, 0.62) !important;
-  color: #d8c47a !important;
-  -webkit-text-fill-color: #d8c47a !important;
-  box-shadow: none !important;
-  transition: none !important;
-}
-
-html[data-hashop-theme="dark"] body .shop-login-submit::before,
-html[data-hashop-theme="dark"] body .shop-login-submit::after,
-html body[data-hashop-theme="dark"] .shop-login-submit::before,
-html body[data-hashop-theme="dark"] .shop-login-submit::after {
-  content: none !important;
-  display: none !important;
-  background: transparent !important;
-  background-image: none !important;
-}
-
-/* Iteration 111: navigation chrome stays dark in owner panes. */
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-back-action,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-back-action.is-visible {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border-color: rgba(188, 165, 94, 0.42) !important;
-  color: #d8c47a !important;
-  -webkit-text-fill-color: #d8c47a !important;
-  box-shadow: none !important;
-}
-
 /* Iteration 112: mobile feed cards should read as rows, not squeezed columns. */
 html body .shell.shell-home .shop-list-sort-button,
 html body .shell.shell-home .shop-list-view-button {
@@ -28693,15 +26972,8 @@ html body .shell.shell-home .shop-list-view-button {
     min-height: 2rem !important;
     padding-inline: 0.2rem !important;
   }
-
-  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-card,
-  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-discovery-card,
-  html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-item-discovery-card {
-    border-bottom-color: rgba(247, 244, 234, 0.12) !important;
-  }
 }
 
-/* Iteration 115: screenshot-led dark surfaces, account scroll, and empty cart mascot. */
 html body .shell.shell-home[data-hashop-screen="account"] {
   overscroll-behavior-y: none !important;
 }
@@ -28956,102 +27228,13 @@ html body .shell.shell-home .shop-empty-cart-card .shop-state-action {
   box-shadow: none !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card {
-  border-color: rgba(247, 244, 234, 0.13) !important;
-  background: #10100e !important;
-  color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy::before,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy::after {
-  border-color: rgba(188, 165, 94, 0.72) !important;
-  background: #10100e !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-eye {
-  background: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-buddy-smile {
-  border-color: #d8c47a !important;
-  border-top: 0 !important;
-  border-left-color: transparent !important;
-  border-right-color: transparent !important;
-  background: transparent !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket {
-  border-color: rgba(188, 165, 94, 0.72) !important;
-  background: #151410 !important;
-  box-shadow: none !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket::before {
-  border-color: rgba(188, 165, 94, 0.72) !important;
-  background: transparent !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket::after {
-  background:
-    radial-gradient(circle at 0.18rem 0.18rem, #d8c47a 0 0.15rem, transparent 0.16rem),
-    radial-gradient(circle at calc(100% - 0.18rem) 0.18rem, #d8c47a 0 0.15rem, transparent 0.16rem) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket-rib,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-basket > span {
-  background: rgba(216, 196, 122, 0.72) !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-copy strong {
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-copy p {
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-empty-cart-card .shop-state-action {
-  border-color: rgba(188, 165, 94, 0.62) !important;
-  background: #10100e !important;
-  color: #d8c47a !important;
-  -webkit-text-fill-color: #d8c47a !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-account-menu-meta {
-  border-color: rgba(247, 244, 234, 0.12) !important;
-  background: transparent !important;
-  color: #aaa391 !important;
-  -webkit-text-fill-color: #aaa391 !important;
-}
-
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-login-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-account-field,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-setup-address-control {
-  background: #10100e !important;
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
 html body .shell.shell-home .shop-list-panel[data-pane-mode="setup"] .shop-login-input,
 html body .shell.shell-home .shop-list-panel[data-pane-mode="setup"] .shop-account-textarea {
   min-height: 2.42rem !important;
   line-height: 1.25 !important;
 }
 
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-login-input,
-html body .shell.shell-home[data-hashop-map-theme="dark"] .shop-list-panel[data-pane-mode="setup"] .shop-account-textarea {
-  background: #050505 !important;
-  border-color: rgba(247, 244, 234, 0.14) !important;
-  color: #f7f4ea !important;
-  -webkit-text-fill-color: #f7f4ea !important;
-}
-
-/* Iteration 116: dark mode is token conversion, not a second component system. */
+/* Iteration 119: dark mode is token conversion, not a second component system. */
 html {
   --hashop-theme-bg: #ffffff;
   --hashop-theme-panel: #ffffff;
@@ -29498,4 +27681,106 @@ html body .shell.shell-home.shell-home.shell-home .shop-empty-cart-copy strong {
 html body .shell.shell-home.shell-home.shell-home .shop-empty-cart-copy p {
   color: var(--hashop-theme-muted) !important;
   -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+}
+
+html[data-hashop-theme="light"] body,
+body[data-hashop-theme="light"],
+html[data-hashop-theme="dark"] body,
+body[data-hashop-theme="dark"] {
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+}
+
+html[data-hashop-theme] body:has(.shell.shell-home),
+html[data-hashop-theme="light"] body:has(.shell.shell-home),
+html[data-hashop-theme="dark"] body:has(.shell.shell-home),
+body[data-hashop-theme]:has(.shell.shell-home),
+body:has(.shell.shell-home[data-hashop-map-theme]) {
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-item-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-item-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="tile"] > .shop-item-discovery-card {
+  opacity: 1 !important;
+  filter: none !important;
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card .shop-card-thumb,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card .shop-card-thumb,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card .shop-card-thumb {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-thumb) !important;
+  background-color: var(--hashop-theme-thumb) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: currentColor !important;
+  filter: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card .shop-card-title-block strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card .shop-card-title-block strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card .shop-card-title-block strong {
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-card .shop-card-item,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-discovery-card .shop-card-item,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view] > .shop-item-discovery-card .shop-card-item {
+  border-color: var(--hashop-theme-line) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-login-form .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home .shop-login-form .shop-account-auth-public-links,
+html body .shell.shell-home.shell-home.shell-home .shop-buyer-auth-form .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home .shop-buyer-auth-form .shop-account-auth-public-links {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-login-form .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home .shop-login-form .shop-account-auth-public-links a,
+html body .shell.shell-home.shell-home.shell-home .shop-buyer-auth-form .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home .shop-buyer-auth-form .shop-account-auth-public-links a {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-soft) !important;
+  background-color: var(--hashop-theme-soft) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
 }
