@@ -1,6 +1,6 @@
 # Hashop End-to-End Tutorial
 
-Last updated: 2026-05-31
+Last updated: 2026-06-02
 
 This tutorial explains how to run Hashop locally, use it as a buyer, create a buyer account, add a shop, manage stock, and process orders.
 
@@ -155,7 +155,31 @@ python tools/hashop_hub.py \
   --uploads-dir tools/hashop_uploads
 ```
 
-## 10. Acceptance Checklist
+## 10. Practical Demo Screenshots
+
+The screenshots below show a local end-to-end demo using one shop, one buyer cart, one pending order, and one completed order.
+
+Buyer browse:
+
+![Hashop buyer browse demo](assets/hashop-demo-buyer-browse.png)
+
+Buyer cart:
+
+![Hashop buyer cart demo](assets/hashop-demo-buyer-cart.png)
+
+Vendor manage:
+
+![Hashop vendor manage demo](assets/hashop-demo-vendor-manage.png)
+
+Vendor orders:
+
+![Hashop vendor orders demo](assets/hashop-demo-vendor-orders.png)
+
+Vendor sales:
+
+![Hashop vendor sales demo](assets/hashop-demo-vendor-sales.png)
+
+## 11. Acceptance Checklist
 
 Before calling a build ready:
 

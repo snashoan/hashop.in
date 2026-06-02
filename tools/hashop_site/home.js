@@ -4060,6 +4060,30 @@
       '</section>';
   }
 
+  function ownerWorkspaceNavMarkup(state, consoleData, activeKey) {
+    const orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
+    const pendingCount = pendingOwnerOrdersCount(orders);
+    const active = String(activeKey || "").trim() || "manage";
+    const entries = [
+      { key: "manage", label: "Manage", attr: 'data-owner-main-manage="true"' },
+      { key: "orders", label: pendingCount ? (pendingCount + " pending") : "Orders", attr: 'data-owner-main-open-history="orders"' },
+      { key: "items", label: "Inventory", attr: 'data-owner-main-open-history="items"' },
+      { key: "sales", label: "Sales", attr: 'data-owner-main-open-history="sales"' }
+    ];
+    return '' +
+      '<nav class="shop-owner-workspace-nav" aria-label="Shop workspace">' +
+        entries.map(function (entry) {
+          const isActive = entry.key === active;
+          return '' +
+            '<button class="shop-owner-workspace-button shop-owner-tab' + (isActive ? ' is-active' : '') + '" type="button"' +
+              (isActive ? ' aria-current="page" aria-pressed="true"' : ' ' + entry.attr) + '>' +
+              '<span class="shop-owner-workspace-icon is-' + escapeHtml(entry.key) + '" aria-hidden="true"></span>' +
+              '<span class="shop-owner-workspace-copy">' + escapeHtml(entry.label) + '</span>' +
+            '</button>';
+        }).join('') +
+      '</nav>';
+  }
+
   function ownerSettingsMarkup(state, detail, consoleData) {
     if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "settings") return "";
     const section = normalizeOwnerSettingsSection(state && state.ownerPanel && state.ownerPanel.section);
@@ -4160,6 +4184,7 @@
       '<section class="shop-owner-stack">' +
         ownerStatusMarkup(state) +
         ownerManageSummaryMarkup(state, detail, consoleData, section === "payments" ? "Payments" : "Manage") +
+        ownerWorkspaceNavMarkup(state, consoleData, "manage") +
         settingsTabsMarkup +
         bodyMarkup +
       '</section>';
@@ -4180,12 +4205,6 @@
     }
     let bodyMarkup = "";
     const sectionLabel = section === "items" ? "Inventory" : section === "sales" ? "Sales" : "Orders";
-    const historyTabsMarkup = '' +
-      '<div class="shop-owner-tab-row shop-owner-history-tabs">' +
-        '<button class="shop-owner-tab' + (section === "orders" ? ' is-active' : '') + '" type="button" data-owner-history-section="orders">Orders</button>' +
-        '<button class="shop-owner-tab' + (section === "items" ? ' is-active' : '') + '" type="button" data-owner-history-section="items">Items</button>' +
-        '<button class="shop-owner-tab' + (section === "sales" ? ' is-active' : '') + '" type="button" data-owner-history-section="sales">Sales</button>' +
-      '</div>';
 
     if (section === "orders") {
       const draft = ownerOrderDraft(state, state.activeShopId);
@@ -4472,7 +4491,7 @@
       '<section class="shop-owner-stack">' +
         ownerStatusMarkup(state) +
         ownerManageSummaryMarkup(state, detail, consoleData, sectionLabel) +
-        historyTabsMarkup +
+        ownerWorkspaceNavMarkup(state, consoleData, section) +
         bodyMarkup +
       '</section>';
   }
