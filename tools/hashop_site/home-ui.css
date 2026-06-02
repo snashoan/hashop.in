@@ -28236,3 +28236,282 @@ html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list
   font-weight: 950 !important;
   text-align: right !important;
 }
+
+/* Iteration 124: branding mark stays transparent, not boxed. */
+html body .shell.shell-home.shell-home.shell-home .home-chrome .brand,
+html body .shell.shell-home.shell-home.shell-home .brand {
+  gap: 0.42rem !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-hash-logo,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .home-hash-logo,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"] .home-hash-logo {
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  min-width: 1.9rem !important;
+  min-height: 1.9rem !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  font-size: 1.36rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-hash-logo::before,
+html body .shell.shell-home.shell-home.shell-home .home-hash-logo::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-brand-name,
+html body .shell.shell-home.shell-home.shell-home .brand-name {
+  font-size: 1.08rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Iteration 124: search and navigation chrome use one stable text contract. */
+html body .shell.shell-home.shell-home.shell-home .shop-list-search,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-list-search {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: var(--hashop-search-h, 2.68rem) !important;
+  min-height: var(--hashop-search-h, 2.68rem) !important;
+  padding: 0 0.78rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 10px !important;
+  outline: 0 !important;
+  background: var(--hashop-theme-panel) !important;
+  background-color: var(--hashop-theme-panel) !important;
+  background-image: none !important;
+  background-clip: padding-box !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-search::before,
+html body .shell.shell-home.shell-home.shell-home .shop-list-search::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-search:focus-within {
+  border-color: var(--hashop-theme-accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--hashop-theme-accent) 18%, transparent) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-search-input,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-list-search-input {
+  flex: 1 1 auto !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  box-shadow: none !important;
+  font-size: 0.94rem !important;
+  font-weight: 820 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-search-input::-webkit-search-decoration,
+html body .shell.shell-home.shell-home.shell-home .shop-list-search-input::-webkit-search-cancel-button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-search-input::-webkit-search-results-button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-search-input::-webkit-search-results-decoration {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+  gap: 0.08rem !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 3.52rem !important;
+  margin: 0 !important;
+  padding: 0.22rem !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 10px !important;
+  outline: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav::before,
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-list-panel:not(.is-shop-view) .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"] .shop-list-panel[data-pane-mode="account"] .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-list-panel[data-pane-mode="login"] .home-bottom-nav {
+  left: var(--hashop-sheet-x, 0.56rem) !important;
+  right: var(--hashop-sheet-x, 0.56rem) !important;
+  bottom: var(--hashop-sheet-bottom, calc(0.42rem + env(safe-area-inset-bottom, 0px))) !important;
+  width: auto !important;
+  max-width: none !important;
+  height: 3.52rem !important;
+  min-height: 3.52rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link,
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link.is-active,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav],
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-rows: 1.46rem 0.92rem !important;
+  align-items: center !important;
+  justify-items: center !important;
+  gap: 0.04rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 2.88rem !important;
+  margin: 0 !important;
+  padding: 0.18rem 0.06rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  font: inherit !important;
+  font-size: 0.66rem !important;
+  font-weight: 880 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-align: center !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link.is-active,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav].is-active {
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link > span:not(.home-bottom-link-icon),
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span:not(.home-bottom-link-icon) {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 0.66rem !important;
+  font-weight: 880 !important;
+  line-height: 0.86rem !important;
+  letter-spacing: 0 !important;
+  text-align: center !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen] .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] > span.home-bottom-link-icon {
+  align-self: center !important;
+  justify-self: center !important;
+  width: 1.42rem !important;
+  height: 1.42rem !important;
+  min-width: 1.42rem !important;
+  min-height: 1.42rem !important;
+  max-width: 1.42rem !important;
+  max-height: 1.42rem !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: currentColor !important;
+  background-color: currentColor !important;
+  background-image: none !important;
+  -webkit-mask: var(--hashop-nav-icon) center / 1.28rem 1.28rem no-repeat !important;
+  mask: var(--hashop-nav-icon) center / 1.28rem 1.28rem no-repeat !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon::before,
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link > span.home-bottom-link-icon::after {
+  content: none !important;
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-back-action,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-toggle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-sort-button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-view-button,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-tab {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-sortbar,
+html body .shell.shell-home.shell-home.shell-home .shop-list-viewbar,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-tab-row {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}

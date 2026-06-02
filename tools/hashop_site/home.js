@@ -8730,7 +8730,7 @@
     const browseNavActive = isRootScreenMode(screenMode) && !state.debugPaneView && !state.activeShopId;
     const ownerMode = isOwnerAccountMode(state);
     const navLabels = ownerMode
-      ? { shops: "Shops", items: "Inventory", cart: "Orders", account: "Account" }
+      ? { shops: "Shops", items: "Stock", cart: "Orders", account: "Account" }
       : { shops: "Shops", items: "Items", cart: "Cart", account: "Account" };
     if (state.primaryActionsNode) {
       state.primaryActionsNode.hidden = !rootView;
