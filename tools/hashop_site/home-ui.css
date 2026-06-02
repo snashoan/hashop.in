@@ -27955,3 +27955,284 @@ html body .shell.shell-home.shell-home.shell-home .shop-pane-copy-mark {
   -webkit-text-fill-color: var(--hashop-theme-accent) !important;
   box-shadow: none !important;
 }
+
+/* Iteration 122: List is the compact listing; Feed is the image-led browse view. */
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"],
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-content: start !important;
+  gap: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="list"] > .shop-item-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] > .shop-item-discovery-card {
+  display: grid !important;
+  grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+  grid-template-rows: auto !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 6.65rem !important;
+  margin: 0 !important;
+  padding: 0.72rem 0.08rem 0.74rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-thumb,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-thumb {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 5.5rem !important;
+  height: 5.5rem !important;
+  min-width: 5.5rem !important;
+  min-height: 5.5rem !important;
+  max-width: 5.5rem !important;
+  max-height: 5.5rem !important;
+  aspect-ratio: 1 / 1 !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 7px !important;
+  background: var(--hashop-theme-thumb) !important;
+  background-color: var(--hashop-theme-thumb) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-main,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-main {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
+  display: grid !important;
+  gap: 0.22rem !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-topline,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-topline {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 0.58rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-title-block strong,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-title-block strong {
+  display: -webkit-box !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  line-height: 1.18 !important;
+  text-overflow: ellipsis !important;
+  white-space: normal !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-item,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-item {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: 0.76rem !important;
+  line-height: 1.22 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-open,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-add,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-item-qty-chip,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-open,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-add,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-item-qty-chip {
+  justify-self: end !important;
+  align-self: start !important;
+  min-width: 2.65rem !important;
+  min-height: 2rem !important;
+  max-width: 5rem !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0.18rem 0.36rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-action-bg) !important;
+  background-color: var(--hashop-theme-action-bg) !important;
+  color: var(--hashop-theme-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
+  font-size: 0.74rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"],
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(10.75rem, 100%), 1fr)) !important;
+  align-content: start !important;
+  align-items: start !important;
+  gap: 1.08rem 0.92rem !important;
+  padding-top: 0.72rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] > .shop-list-sortbar,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] > .shop-list-viewbar {
+  grid-column: 1 / -1 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid[data-list-view="feed"] > .shop-item-discovery-card,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] > .shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] > .shop-item-discovery-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto !important;
+  align-items: start !important;
+  gap: 0.52rem !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 0 0.78rem !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-thumb,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-thumb {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  aspect-ratio: 4 / 3 !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 8px !important;
+  background: var(--hashop-theme-thumb) !important;
+  background-color: var(--hashop-theme-thumb) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-thumb img,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-thumb span,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-thumb img,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-thumb span,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-thumb img,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="list"] .shop-card-thumb span,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-thumb img,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="list"] .shop-card-thumb span {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: cover !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-thumb span,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-thumb span {
+  font-size: clamp(2rem, 10vw, 3rem) !important;
+  font-weight: 950 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-main,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-main {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  display: grid !important;
+  gap: 0.2rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-topline,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-topline {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 0.44rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-title-block strong,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-title-block strong {
+  display: -webkit-box !important;
+  overflow: hidden !important;
+  font-size: 0.94rem !important;
+  font-weight: 900 !important;
+  line-height: 1.18 !important;
+  white-space: normal !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-item,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-subtitle,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-item {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: 0.74rem !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-open,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-card-add,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid[data-list-view="feed"] .shop-item-qty-chip,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-open,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-card-add,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-shop-feed[data-list-view="feed"] .shop-item-qty-chip {
+  justify-self: end !important;
+  align-self: start !important;
+  min-width: 0 !important;
+  min-height: 1.4rem !important;
+  max-width: 4.4rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+  font-size: 0.72rem !important;
+  font-weight: 950 !important;
+  text-align: right !important;
+}
