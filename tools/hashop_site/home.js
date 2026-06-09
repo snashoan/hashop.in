@@ -251,7 +251,7 @@
     if (mode === "owner-add") return "Add";
     if (mode === "owner-manage") return "Edit shop";
     if (mode === "owner-orders") return "Orders";
-    if (mode === "owner-items") return "Inventory";
+    if (mode === "owner-items") return "Stock";
     return "Home";
   }
 
@@ -2101,6 +2101,17 @@
       return String(state.activeShopId || "").trim();
     }
     return String(preferredOwnerShopId(state.accountSession, state.ownerShopId) || "").trim();
+  }
+
+  function ownerManagedShopId(state) {
+    if (!state) return "";
+    if (isOwnerViewingShop(state)) {
+      return String(state.activeShopId || "").trim();
+    }
+    const preferredShopId = String(ownerOrdersNavShopId(state) || "").trim();
+    if (preferredShopId) return preferredShopId;
+    const ownerShops = ownerAccountShops(state);
+    return ownerShops.length ? String(ownerShops[0].shopId || "").trim() : "";
   }
 
   function ownerPendingOrdersNavCount(state) {
@@ -4067,7 +4078,7 @@
     const entries = [
       { key: "manage", label: "Manage", attr: 'data-owner-main-manage="true"' },
       { key: "orders", label: pendingCount ? (pendingCount + " pending") : "Orders", attr: 'data-owner-main-open-history="orders"' },
-      { key: "items", label: "Inventory", attr: 'data-owner-main-open-history="items"' },
+      { key: "items", label: "Stock", attr: 'data-owner-main-open-history="items"' },
       { key: "sales", label: "Sales", attr: 'data-owner-main-open-history="sales"' }
     ];
     return '' +
@@ -4190,6 +4201,59 @@
       '</section>';
   }
 
+  function ownerInventoryAccessMarkup(state, detail, consoleData) {
+    const ownerShops = ownerAccountShops(state);
+    const activeShopId = String(state && state.activeShopId || "").trim();
+    const activeOwnerShop = ownerShops.find(function (shop) {
+      return String(shop && shop.shopId || "").trim() === activeShopId;
+    }) || null;
+    const listings = Array.isArray(consoleData && consoleData.listings) ? consoleData.listings : [];
+    const shopName = String(
+      (detail && (detail.name || detail.display_name || detail.displayName))
+      || (activeOwnerShop && activeOwnerShop.shopName)
+      || activeShopId
+      || "This shop"
+    ).trim();
+    const ownedCount = Math.max(ownerShops.length, activeShopId ? 1 : 0);
+    const ownedLabel = ownedCount === 1 ? "1 shop" : (ownedCount + " shops");
+    const itemLabel = listings.length === 1 ? "1 item" : (listings.length + " items");
+    const permissions = [
+      { label: "Add", detail: "New listings" },
+      { label: "Edit", detail: "Prices and qty" },
+      { label: "Remove", detail: "Delete stock" },
+      { label: "Allocate", detail: "This shop" }
+    ];
+    return '' +
+      '<section class="shop-owner-form shop-owner-inventory-access" aria-label="Inventory access">' +
+        '<div class="shop-owner-access-head">' +
+          '<span class="shop-owner-inline-label">Stock permissions</span>' +
+          '<strong>Inventory access</strong>' +
+          '<span>' + escapeHtml("Merged Hashop is " + ownedLabel + ". Changes below apply to " + shopName + ".") + '</span>' +
+        '</div>' +
+        '<div class="shop-owner-access-grid">' +
+          '<article class="shop-owner-access-card">' +
+            '<span>Merged Hashop</span>' +
+            '<strong>' + escapeHtml(ownedLabel) + '</strong>' +
+            '<em>Buyer-facing hub</em>' +
+          '</article>' +
+          '<article class="shop-owner-access-card">' +
+            '<span>This shop</span>' +
+            '<strong>' + escapeHtml(shopName) + '</strong>' +
+            '<em>' + escapeHtml(itemLabel + " allocated") + '</em>' +
+          '</article>' +
+        '</div>' +
+        '<div class="shop-owner-permission-row">' +
+          permissions.map(function (permission) {
+            return '' +
+              '<span class="shop-owner-permission-chip">' +
+                '<strong>' + escapeHtml(permission.label) + '</strong>' +
+                '<em>' + escapeHtml(permission.detail) + '</em>' +
+              '</span>';
+          }).join('') +
+        '</div>' +
+      '</section>';
+  }
+
   function ownerHistoryMarkup(state, detail, consoleData) {
     if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "history") return "";
     const section = normalizeOwnerHistorySection(state && state.ownerPanel && state.ownerPanel.section);
@@ -4204,7 +4268,7 @@
       state.ownerPanel.itemId = String(selectedItem.id || "").trim();
     }
     let bodyMarkup = "";
-    const sectionLabel = section === "items" ? "Inventory" : section === "sales" ? "Sales" : "Orders";
+    const sectionLabel = section === "items" ? "Stock" : section === "sales" ? "Sales" : "Orders";
 
     if (section === "orders") {
       const draft = ownerOrderDraft(state, state.activeShopId);
@@ -4408,6 +4472,7 @@
           && matchesSearch([item.title, item.description, item.shopName, item.shopId, item.price], query);
       }).slice(0, 40);
       bodyMarkup = '' +
+        ownerInventoryAccessMarkup(state, detail, consoleData) +
         '<section class="shop-owner-form" data-owner-form="item">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Add item</strong>' +
@@ -9945,6 +10010,10 @@
     openOwnerHistoryPane(state, Object.assign({}, options || {}, { section: "orders" }));
   }
 
+  function openOwnerInventoryPane(state, options) {
+    openOwnerHistoryPane(state, Object.assign({}, options || {}, { section: "items" }));
+  }
+
   function openAccountPane(state, options) {
     if (!state) return;
     const settings = options && typeof options === "object" ? options : {};
@@ -12174,10 +12243,10 @@
       const ownerMode = isOwnerAccountMode(state);
       if (nav === "items") {
         if (ownerMode) {
-          const shopId = ownerOrdersNavShopId(state);
+          const shopId = ownerManagedShopId(state);
           if (shopId) {
             setPreferredOwnerShop(state, shopId);
-            openOwnerHistoryPane(state, { shopId: shopId, section: "items", force: true });
+            openOwnerInventoryPane(state, { shopId: shopId, force: true });
             return;
           }
           openRootBrowseMode(state, "shops");
@@ -12188,10 +12257,10 @@
       }
       if (nav === "cart") {
         if (ownerMode) {
-          const ownerShops = ownerAccountShops(state);
-          if (ownerShops.length === 1) {
-            setPreferredOwnerShop(state, ownerShops[0].shopId);
-            openOwnerOrdersPane(state, { shopId: ownerShops[0].shopId, force: true });
+          const shopId = ownerManagedShopId(state);
+          if (shopId) {
+            setPreferredOwnerShop(state, shopId);
+            openOwnerOrdersPane(state, { shopId: shopId, force: true });
             return;
           }
           openRootBrowseMode(state, "shops");
@@ -12256,7 +12325,7 @@
           refreshOwnerOrdersNavData(state, { force: true });
           return;
         }
-        openOwnerOrdersPane(state, { force: true });
+        openOwnerOrdersPane(state, { shopId: ownerManagedShopId(state), force: true });
         return;
       }
       openAccountPane(state);

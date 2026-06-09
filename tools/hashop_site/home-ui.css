@@ -29637,3 +29637,192 @@ html body .shell.shell-home.shell-home.shell-home .shop-order-compact-items .sho
   font-size: 0.68rem !important;
   line-height: 1.18 !important;
 }
+
+/* Iteration 127: owner state routing uses the shared theme surface. */
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-nav,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-access,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-head,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-row {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  color: var(--hashop-owner-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-nav {
+  position: relative !important;
+  z-index: 1 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 0.28rem !important;
+  margin: 0 !important;
+  padding: 0.24rem !important;
+  border-color: var(--hashop-owner-line) !important;
+  background: var(--hashop-owner-soft) !important;
+  background-color: var(--hashop-owner-soft) !important;
+  background-image: none !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-button {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 2.7rem !important;
+  padding: 0.42rem 0.3rem !important;
+  border-color: var(--hashop-owner-line) !important;
+  background: var(--hashop-owner-panel) !important;
+  background-color: var(--hashop-owner-panel) !important;
+  background-image: none !important;
+  color: var(--hashop-owner-text) !important;
+  -webkit-text-fill-color: var(--hashop-owner-text) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-button.is-active {
+  border-color: var(--hashop-owner-line-strong) !important;
+  background: var(--hashop-owner-action-bg) !important;
+  background-color: var(--hashop-owner-action-bg) !important;
+  color: var(--hashop-owner-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-owner-action-text) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-copy {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-size: 0.74rem !important;
+  line-height: 1.08 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-access {
+  display: grid !important;
+  gap: 0.72rem !important;
+  border-color: var(--hashop-owner-line) !important;
+  background: var(--hashop-owner-surface) !important;
+  background-color: var(--hashop-owner-surface) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode^="owner-"] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen^="owner-"] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-stack {
+  scroll-padding-bottom: calc(5.2rem + env(safe-area-inset-bottom)) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-stack {
+  padding-bottom: calc(4.4rem + env(safe-area-inset-bottom)) !important;
+  background: var(--hashop-owner-bg) !important;
+  background-color: var(--hashop-owner-bg) !important;
+  background-image: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-head {
+  display: grid !important;
+  gap: 0.18rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-head strong,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-card strong,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-chip strong {
+  min-width: 0 !important;
+  color: var(--hashop-owner-text) !important;
+  -webkit-text-fill-color: var(--hashop-owner-text) !important;
+  font-weight: 920 !important;
+  line-height: 1.12 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-head span,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-card span,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-card em,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-chip em {
+  min-width: 0 !important;
+  color: var(--hashop-owner-muted) !important;
+  -webkit-text-fill-color: var(--hashop-owner-muted) !important;
+  font-style: normal !important;
+  line-height: 1.18 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-access-card,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-chip {
+  box-sizing: border-box !important;
+  display: grid !important;
+  gap: 0.2rem !important;
+  min-width: 0 !important;
+  padding: 0.62rem !important;
+  border: 1px solid var(--hashop-owner-line) !important;
+  border-radius: 8px !important;
+  background: var(--hashop-owner-soft) !important;
+  background-color: var(--hashop-owner-soft) !important;
+  background-image: none !important;
+  color: var(--hashop-owner-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-row {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0.34rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-chip {
+  min-height: 3rem !important;
+  padding: 0.5rem !important;
+}
+
+@media (max-width: 520px) {
+  html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-nav,
+  html body .shell.shell-home.shell-home.shell-home .shop-owner-permission-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-button {
+    min-height: 2.55rem !important;
+    padding-inline: 0.36rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  html body .shell.shell-home.shell-home.shell-home .shop-owner-access-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
