@@ -22,6 +22,7 @@
   const SETUP_CONTACT_VERIFICATION_STORAGE_KEY = "hashop_setup_contact_verification";
   const LISTING_VIEW_STORAGE_KEY = "hashop_listing_view_v2";
   const HASHOP_THEME_STORAGE_KEY = "hashop_theme";
+  const HASHOP_LANGUAGE_STORAGE_KEY = "hashop_language";
   const HASHOP_GOOGLE_LIGHT_MAP_STYLES = [
     { elementType: "geometry", stylers: [{ color: "#d5d5d5" }] },
     { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -98,6 +99,57 @@
       });
     }
     return theme;
+  }
+
+  function accountLanguageOptions() {
+    return [
+      { key: "EN", flag: "🇬🇧", label: "English" },
+      { key: "HI", flag: "🇮🇳", label: "Hindi" },
+      { key: "KN", flag: "🇮🇳", label: "Kannada" }
+    ];
+  }
+
+  function normalizeHashopLanguage(value) {
+    const safeValue = String(value || "").trim().toUpperCase();
+    return accountLanguageOptions().some(function (option) {
+      return option.key === safeValue;
+    }) ? safeValue : "EN";
+  }
+
+  function loadHashopLanguage() {
+    try {
+      return normalizeHashopLanguage(window.localStorage.getItem(HASHOP_LANGUAGE_STORAGE_KEY));
+    } catch (error) {}
+    return "EN";
+  }
+
+  function saveHashopLanguage(state, value) {
+    const language = normalizeHashopLanguage(value);
+    if (state) state.accountLanguage = language;
+    try {
+      window.localStorage.setItem(HASHOP_LANGUAGE_STORAGE_KEY, language);
+    } catch (error) {}
+    try {
+      document.documentElement.setAttribute("lang", language === "HI" ? "hi" : language === "KN" ? "kn" : "en");
+      document.documentElement.setAttribute("data-hashop-language", language);
+    } catch (error) {}
+    return language;
+  }
+
+  function accountLanguageOption(state) {
+    const language = normalizeHashopLanguage(state && state.accountLanguage || loadHashopLanguage());
+    return accountLanguageOptions().find(function (option) {
+      return option.key === language;
+    }) || accountLanguageOptions()[0];
+  }
+
+  function cycleHashopLanguage(state) {
+    const options = accountLanguageOptions();
+    const current = accountLanguageOption(state).key;
+    const currentIndex = options.findIndex(function (option) {
+      return option.key === current;
+    });
+    return saveHashopLanguage(state, options[(currentIndex + 1 + options.length) % options.length].key);
   }
 
   function hashopDebugEnabled() {
@@ -1188,6 +1240,14 @@
 
   function isOwnerAccountMode(state) {
     return accountActiveRole(state) === "owner" && ownerAccountShops(state).length > 0;
+  }
+
+  function canManageOwnedShop(state, shopId) {
+    const safeShopId = String(shopId || "").trim();
+    if (!safeShopId || !isOwnerAccountMode(state)) return false;
+    return ownerAccountShops(state).some(function (shop) {
+      return String(shop && shop.shopId || "").trim() === safeShopId;
+    });
   }
 
   function ownerShopIdSet(state) {
@@ -3466,7 +3526,7 @@
   }
 
   function isOwnerViewingShop(state) {
-    return !!(state && state.activeShopId && state.ownerShopId && state.activeShopId === state.ownerShopId);
+    return !!(state && state.activeShopId && state.ownerShopId && state.activeShopId === state.ownerShopId && canManageOwnedShop(state, state.activeShopId));
   }
 
   function parseGpsValue(value) {
@@ -7158,6 +7218,15 @@
           (accountAvatarUrl ? '<img src="' + escapeHtml(accountAvatarUrl) + '" alt="">' : escapeHtml(accountInitial)) +
         '</span>';
     }
+    function accountLanguageButtonMarkup() {
+      const language = accountLanguageOption(state);
+      return '' +
+        '<button class="shop-account-language-button" type="button" data-account-language-cycle="true" aria-label="' + escapeHtml("Language: " + language.label) + '">' +
+          '<span class="shop-account-language-flag" aria-hidden="true">' + escapeHtml(language.flag) + '</span>' +
+          '<span class="shop-account-language-code">' + escapeHtml(language.key) + '</span>' +
+          '<span class="shop-account-language-name">' + escapeHtml(language.label) + '</span>' +
+        '</button>';
+    }
     const ownerShopRows = ownerShops.map(function (shop) {
       const shopId = String(shop && shop.shopId || "").trim();
       const isPreferred = shopId && shopId === preferredOwnerShopId(session, state.ownerShopId);
@@ -7523,6 +7592,13 @@
       supportRows.push(accountMenuRowMarkup({ icon: "!", title: "Sign out", subtitle: "Leave this device", attr: ' data-account-signout="true"', danger: true }));
     }
     const menuSectionMarkup = '' +
+      '<div class="shop-account-frontbar">' +
+        '<div class="shop-account-frontbar-copy">' +
+          '<span>Hashop account</span>' +
+          '<strong>' + escapeHtml(buyerAccountLabel || "Account") + '</strong>' +
+        '</div>' +
+        accountLanguageButtonMarkup() +
+      '</div>' +
       '<div class="shop-account-menu-label">Buying</div>' +
       '<section class="shop-account-menu-card">' + buyingRows.join('') + '</section>' +
       (authRows.length ? '<div class="shop-account-menu-label">Access</div><section class="shop-account-menu-card">' + authRows.join('') + '</section>' : '') +
@@ -10193,7 +10269,7 @@
     } else if (kind === "account") {
       openAccountPane(state, { accountPaneMode: route.accountPaneMode });
     } else if (kind === "manage") {
-      openAccountPane(state, { accountPaneMode: "shops" });
+      openAccountPane(state, { accountPaneMode: isOwnerAccountMode(state) ? "shops" : "" });
     } else if (kind === "orders") {
       if (shouldUseOwnerOrdersNav(state)) {
         openOwnerOrdersPane(state);
@@ -11404,7 +11480,8 @@
       resetPaneScroll(state);
       return;
     }
-    const ownerTab = String(options && options.ownerTab || "").trim();
+    const requestedOwnerTab = String(options && options.ownerTab || "").trim();
+    const ownerTab = canManageOwnedShop(state, shopId) ? requestedOwnerTab : "";
     let ownerSection = String(options && options.ownerSection || "").trim();
     let shopView = String(options && options.shopView || "").trim();
     if (ownerTab === "settings") {
@@ -12047,6 +12124,7 @@
     map: null,
     mapProvider: "",
     mapTheme: detectMapTheme(),
+    accountLanguage: loadHashopLanguage(),
     shopPoints: [],
     userPoint: lastLocation ? [lastLocation.lat, lastLocation.lng] : null,
     userPointSource: lastLocation ? String(lastLocation.source || "location").trim() : "",
@@ -12214,6 +12292,7 @@
   });
   state.buildVersion = BUILD_VERSION;
   exposeHashopDebug(state, bootstrap);
+  saveHashopLanguage(state, state.accountLanguage);
   setConnectionStatus(state, state.isOnline);
   setBuyerProfile(state, state.buyerProfile);
   setAccountSession(state, state.accountSession);
@@ -12983,12 +13062,24 @@
         renderShopList(state);
         return;
       }
+      const accountLanguageButton = target.closest("[data-account-language-cycle]");
+      if (accountLanguageButton) {
+        event.preventDefault();
+        cycleHashopLanguage(state);
+        renderShopList(state);
+        return;
+      }
       const accountOwnerToggleButton = target.closest("[data-account-owner-toggle]");
       if (accountOwnerToggleButton) {
         event.preventDefault();
         const ownerModeOn = isOwnerAccountMode(state);
         if (ownerModeOn) {
           setAccountActiveRole(state, "buyer");
+          state.ownerPanel.tab = "";
+          state.ownerPanel.section = "";
+          state.ownerPanel.addMenuOpen = false;
+          state.ownerPanel.orderDraftOpen = false;
+          state.ownerPanel.itemAddOpen = false;
           state.accountPaneMode = "";
           updateSearchField(state);
           syncActionButton(state);
