@@ -688,16 +688,7 @@
     return '' +
       '<div class="shop-empty-cart-card" role="status">' +
         '<div class="shop-empty-cart-visual" aria-hidden="true">' +
-          '<span class="shop-empty-cart-buddy">' +
-            '<span class="shop-empty-cart-buddy-eye"></span>' +
-            '<span class="shop-empty-cart-buddy-eye"></span>' +
-            '<span class="shop-empty-cart-buddy-smile"></span>' +
-          '</span>' +
-          '<span class="shop-empty-cart-basket">' +
-            '<span class="shop-empty-cart-basket-rib"></span>' +
-            '<span class="shop-empty-cart-basket-rib"></span>' +
-            '<span class="shop-empty-cart-basket-rib"></span>' +
-          '</span>' +
+          '<span class="shop-empty-cart-code">cart: []</span>' +
         '</div>' +
         '<div class="shop-empty-cart-copy">' +
           '<strong>' + escapeHtml(title) + '</strong>' +
@@ -1495,6 +1486,7 @@
     state.ownerPanel.tone = "";
     state.ownerPanel.addMenuOpen = false;
     state.ownerPanel.orderDraftOpen = false;
+    state.ownerPanel.itemAddOpen = false;
     syncLegacyOwnerIdentity(null);
     syncMapUiState(state);
   }
@@ -4095,6 +4087,36 @@
       '</nav>';
   }
 
+  function ownerCurrencyOptions() {
+    return [
+      { value: "Rs", label: "INR - Rs" },
+      { value: "$", label: "USD - $" },
+      { value: "EUR", label: "EUR" },
+      { value: "GBP", label: "GBP" },
+      { value: "AED", label: "AED" },
+      { value: "SAR", label: "SAR" }
+    ];
+  }
+
+  function ownerCurrencyFieldMarkup(value) {
+    const current = String(value || "").trim();
+    const options = ownerCurrencyOptions();
+    const hasCurrent = options.some(function (option) {
+      return option.value === current;
+    });
+    const optionMarkup = options.map(function (option) {
+      return '<option value="' + escapeHtml(option.value) + '"' + (option.value === current ? ' selected' : '') + '>' + escapeHtml(option.label) + '</option>';
+    }).join('');
+    return '' +
+      '<label class="shop-owner-field">' +
+        '<span>Currency</span>' +
+        '<select class="shop-owner-input shop-owner-select" name="currencyPrefix">' +
+          (current && !hasCurrent ? '<option value="' + escapeHtml(current) + '" selected>' + escapeHtml("Current - " + current) + '</option>' : '') +
+          optionMarkup +
+        '</select>' +
+      '</label>';
+  }
+
   function ownerSettingsMarkup(state, detail, consoleData) {
     if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "settings") return "";
     const section = normalizeOwnerSettingsSection(state && state.ownerPanel && state.ownerPanel.section);
@@ -4172,7 +4194,7 @@
             '<label class="shop-owner-field"><span>Location</span><input class="shop-owner-input" name="location" value="' + escapeHtml(profile.location || detail.location || "") + '" autocomplete="street-address" /></label>' +
             '<label class="shop-owner-field"><span>Contact</span><input class="shop-owner-input" type="tel" inputmode="tel" autocomplete="tel" name="contact" value="' + escapeHtml(profile.contact || detail.contact || "") + '" /></label>' +
             ownerHoursFieldMarkup(profile.hours || detail.hours || "") +
-            '<label class="shop-owner-field"><span>Currency prefix</span><input class="shop-owner-input" name="currencyPrefix" value="' + escapeHtml(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "") + '" placeholder="Rs" /></label>' +
+            ownerCurrencyFieldMarkup(profile.currencyPrefix || (detail.pricing && detail.pricing.prefix) || "Rs") +
             '<input type="hidden" name="gps" value="' + escapeHtml(profile.gps || "") + '">' +
             '<div class="shop-owner-field shop-owner-field-wide shop-owner-pickup">' +
               '<span>Pickup location</span>' +
@@ -4217,32 +4239,33 @@
     const ownedCount = Math.max(ownerShops.length, activeShopId ? 1 : 0);
     const ownedLabel = ownedCount === 1 ? "1 shop" : (ownedCount + " shops");
     const itemLabel = listings.length === 1 ? "1 item" : (listings.length + " items");
+    const itemAddOpen = !!(state && state.ownerPanel && state.ownerPanel.itemAddOpen);
     const permissions = [
-      { label: "Add", detail: "New listings" },
-      { label: "Edit", detail: "Prices and qty" },
-      { label: "Remove", detail: "Delete stock" },
-      { label: "Allocate", detail: "This shop" }
+      { label: "Edit stock", detail: "Tap an item below" },
+      { label: "Remove stock", detail: "Delete from this shop" },
+      { label: "Reuse stock", detail: "Import from local library" }
     ];
     return '' +
       '<section class="shop-owner-form shop-owner-inventory-access" aria-label="Inventory access">' +
         '<div class="shop-owner-access-head">' +
-          '<span class="shop-owner-inline-label">Stock permissions</span>' +
-          '<strong>Inventory access</strong>' +
-          '<span>' + escapeHtml("Merged Hashop is " + ownedLabel + ". Changes below apply to " + shopName + ".") + '</span>' +
+          '<strong>Stock</strong>' +
+          '<span>' + escapeHtml(shopName + " controls " + itemLabel + " in the merged Hashop experience.") + '</span>' +
         '</div>' +
         '<div class="shop-owner-access-grid">' +
           '<article class="shop-owner-access-card">' +
-            '<span>Merged Hashop</span>' +
-            '<strong>' + escapeHtml(ownedLabel) + '</strong>' +
-            '<em>Buyer-facing hub</em>' +
+            '<strong>Merged Hashop</strong>' +
+            '<span>' + escapeHtml(ownedLabel + " visible in the buyer hub") + '</span>' +
           '</article>' +
           '<article class="shop-owner-access-card">' +
-            '<span>This shop</span>' +
-            '<strong>' + escapeHtml(shopName) + '</strong>' +
-            '<em>' + escapeHtml(itemLabel + " allocated") + '</em>' +
+            '<strong>This shop</strong>' +
+            '<span>' + escapeHtml(itemLabel + " allocated here") + '</span>' +
           '</article>' +
         '</div>' +
-        '<div class="shop-owner-permission-row">' +
+        '<button class="shop-owner-stock-action" type="button" data-owner-item-add-toggle="true" aria-expanded="' + (itemAddOpen ? 'true' : 'false') + '">' +
+          '<strong>' + escapeHtml(itemAddOpen ? "Close add item" : "Add item") + '</strong>' +
+          '<span>' + escapeHtml(itemAddOpen ? "Hide the item form" : "Open the item form when needed") + '</span>' +
+        '</button>' +
+        '<div class="shop-owner-permission-list">' +
           permissions.map(function (permission) {
             return '' +
               '<span class="shop-owner-permission-chip">' +
@@ -4471,12 +4494,12 @@
         return String(item && item.shopId || "").trim() !== String(state.activeShopId || "").trim()
           && matchesSearch([item.title, item.description, item.shopName, item.shopId, item.price], query);
       }).slice(0, 40);
-      bodyMarkup = '' +
-        ownerInventoryAccessMarkup(state, detail, consoleData) +
+      const itemAddOpen = !!(state && state.ownerPanel && state.ownerPanel.itemAddOpen);
+      const itemAddFormMarkup = itemAddOpen ? (
         '<section class="shop-owner-form" data-owner-form="item">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Add item</strong>' +
-            '<span>Create a new listing for this shop.</span>' +
+            '<button class="shop-owner-chip-button" type="button" data-owner-item-add-toggle="true">Close</button>' +
           '</div>' +
           '<div class="shop-owner-grid">' +
             '<label class="shop-owner-field"><span>Item name</span><input class="shop-owner-input" name="title" placeholder="Kitkat" /></label>' +
@@ -4485,9 +4508,13 @@
             '<label class="shop-owner-field shop-owner-field-wide shop-owner-description-field"><span>Description</span><textarea class="shop-owner-textarea" name="description" rows="3" placeholder="Quick note for buyers"></textarea></label>' +
           '</div>' +
           '<div class="shop-owner-action-row">' +
-            '<button class="shop-owner-save" type="button" data-owner-save="item">Add item</button>' +
+            '<button class="shop-owner-save" type="button" data-owner-save="item">Save item</button>' +
           '</div>' +
-        '</section>' +
+        '</section>'
+      ) : "";
+      bodyMarkup = '' +
+        ownerInventoryAccessMarkup(state, detail, consoleData) +
+        itemAddFormMarkup +
         '<section class="shop-owner-form">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Your inventory</strong>' +
@@ -4651,6 +4678,7 @@
       createdAt: Date.now()
     });
     state.ownerPanel.itemId = newItemId;
+    state.ownerPanel.itemAddOpen = false;
     consoleData.listings = listings;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Item added.");
   }
@@ -9946,10 +9974,12 @@
     }
     const section = normalizeOwnerHistorySection(options && options.section || "orders");
     const openDraft = section === "orders" && !!(options && options.openDraft);
+    const openItemAdd = section === "items" && !!(options && options.openAdd);
     if (state.activeShopId === shopId && isOwnerViewingShop(state)) {
       const previousTab = String(state.ownerPanel.tab || "").trim();
       const previousSection = String(state.ownerPanel.section || "").trim();
       const wasInSameOrdersState = state.ownerPanel.tab === "history" && state.ownerPanel.section === "orders";
+      const wasInSameItemsState = state.ownerPanel.tab === "history" && state.ownerPanel.section === "items";
       state.debugPaneView = "";
       state.activeShopView = "items";
       state.detailLoading = false;
@@ -9963,6 +9993,7 @@
         state.ownerPanel.itemId = "";
       }
       state.ownerPanel.orderDraftOpen = section === "orders" && (openDraft || (wasInSameOrdersState && !!state.ownerPanel.orderDraftOpen));
+      state.ownerPanel.itemAddOpen = section === "items" && (openItemAdd || (wasInSameItemsState && !!state.ownerPanel.itemAddOpen));
       state.panelNode.classList.add("is-shop-view");
       state.panelNode.classList.remove("is-login-view");
       updateSearchField(state);
@@ -9982,7 +10013,8 @@
       shopId: shopId,
       ownerTab: "history",
       ownerSection: section,
-      ownerOrderDraftOpen: openDraft
+      ownerOrderDraftOpen: openDraft,
+      ownerItemAddOpen: openItemAdd
     });
   }
 
@@ -11401,6 +11433,7 @@
     state.ownerPanel.message = "";
     state.ownerPanel.tone = "";
     state.ownerPanel.orderDraftOpen = ownerTab === "history" && ownerSection === "orders" && !!(options && options.ownerOrderDraftOpen);
+    state.ownerPanel.itemAddOpen = ownerTab === "history" && ownerSection === "items" && !!(options && options.ownerItemAddOpen);
     state.searchQuery = "";
     state.detailLoading = !previewDetail;
     setOrderConfirmation(state, shopId, null);
@@ -12094,7 +12127,8 @@
       tone: "",
       saving: false,
       addMenuOpen: false,
-      orderDraftOpen: false
+      orderDraftOpen: false,
+      itemAddOpen: false
     },
     cartByShop: {},
     selectedPaymentByShop: {},
@@ -13605,7 +13639,8 @@
           openOwnerHistoryPane(state, {
             shopId: state.activeShopId,
             section: "items",
-            force: true
+            force: true,
+            openAdd: true
           });
           return;
         }
@@ -13667,6 +13702,16 @@
         state.ownerPanel.section = "orders";
         renderShopList(state);
         resetPaneScroll(state);
+        return;
+      }
+      const ownerItemAddToggle = target.closest("[data-owner-item-add-toggle]");
+      if (ownerItemAddToggle) {
+        event.preventDefault();
+        if (!state.activeShopId || !state.ownerPanel) return;
+        state.ownerPanel.tab = "history";
+        state.ownerPanel.section = "items";
+        state.ownerPanel.itemAddOpen = !state.ownerPanel.itemAddOpen;
+        renderShopList(state);
         return;
       }
       const ownerOrderPaymentButton = target.closest("[data-owner-order-payment]");
