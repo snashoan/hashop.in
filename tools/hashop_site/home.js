@@ -5348,7 +5348,7 @@
       priceLabel: display.price,
       stockLabel: display.stock,
       subtitle: metaParts.join(" · "),
-      metaItems: [display.price, showLineTotal ? display.lineTotal : "", display.stock, display.description],
+      metaItems: [display.description],
       actionMarkup: settings.controls === false ? '<span class="shop-card-open">' + escapeHtml(totalLabel) + '</span>' : "",
       color: settings.color
     });
