@@ -3,6 +3,9 @@
 
   const polishCore = window.HashopHomePolishCore || {};
   const attributeNames = polishCore.DEFAULT_ATTRIBUTE_NAMES || ['aria-label', 'title', 'placeholder', 'value'];
+  const motionAttributeNames = ['data-hashop-screen', 'data-hashop-pane', 'data-pane-mode', 'data-pane-expanded', 'data-account-state', 'data-account-role'];
+  const observedAttributeNames = attributeNames.concat(motionAttributeNames);
+  const STATE_MOTION_MS = 520;
   let scheduled = false;
   let lastMotionSignature = '';
   let motionTimer = 0;
@@ -82,7 +85,7 @@
       window.clearTimeout(motionTimer);
       motionTimer = window.setTimeout(function () {
         shell.classList.remove('is-state-transitioning');
-      }, 260);
+      }, STATE_MOTION_MS);
     });
   }
 
@@ -110,6 +113,6 @@
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: attributeNames
+    attributeFilter: observedAttributeNames
   });
 }());

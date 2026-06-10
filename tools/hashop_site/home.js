@@ -3222,6 +3222,14 @@
     return COMMERCE_CORE.cartCount(getShopCart(state, shopId));
   }
 
+  function buyerCartCount(state) {
+    if (!state || !state.cartByShop) return 0;
+    return Object.keys(state.cartByShop).reduce(function (total, shopId) {
+      const cart = state.cartByShop[shopId];
+      return total + COMMERCE_CORE.cartCount(cart || {});
+    }, 0);
+  }
+
   function cartItems(detail, cart) {
     return COMMERCE_CORE.cartItems(detail, cart);
   }
@@ -8917,6 +8925,7 @@
     const rootView = isRootUtilityState(state, screenMode);
     const browseNavActive = isRootScreenMode(screenMode) && !state.debugPaneView && !state.activeShopId;
     const ownerMode = isOwnerAccountMode(state);
+    const cartTotal = ownerMode ? 0 : buyerCartCount(state);
     const navLabels = ownerMode
       ? { shops: "Shops", items: "Stock", cart: "Orders", account: "Account" }
       : { shops: "Shops", items: "Items", cart: "Cart", account: "Account" };
@@ -8931,7 +8940,12 @@
     (state.homeNavButtons || []).forEach(function (button) {
       if (!(button instanceof HTMLElement)) return;
       const nav = String(button.getAttribute("data-home-nav") || "").trim();
-      const labelNode = button.querySelector("span:last-child");
+      const labelNode = Array.prototype.find.call(button.children, function (child) {
+        return child instanceof HTMLElement
+          && child.tagName === "SPAN"
+          && !child.classList.contains("home-bottom-link-icon")
+          && !child.classList.contains("home-bottom-link-badge");
+      });
       const navLabel = navLabels[nav] || "";
       if (labelNode && navLabel) {
         labelNode.textContent = navLabel;
@@ -8944,6 +8958,31 @@
       if (iconNode && nav === "cart") {
         iconNode.classList.toggle("is-cart", !ownerMode);
         iconNode.classList.toggle("is-orders", ownerMode);
+      }
+      if (nav === "cart") {
+        let badgeNode = button.querySelector(".home-bottom-link-badge");
+        const badgeLabel = cartTotal > 99 ? "99+" : String(cartTotal);
+        if (!ownerMode && cartTotal > 0) {
+          if (!badgeNode) {
+            badgeNode = document.createElement("span");
+            badgeNode.className = "home-bottom-link-badge";
+            badgeNode.setAttribute("aria-hidden", "true");
+            button.appendChild(badgeNode);
+          }
+          if (badgeNode.textContent !== badgeLabel) {
+            badgeNode.textContent = badgeLabel;
+            badgeNode.setAttribute("data-badge-pop", "true");
+            window.setTimeout(function () {
+              if (badgeNode) badgeNode.removeAttribute("data-badge-pop");
+            }, 220);
+          }
+          button.classList.add("has-cart-badge");
+          button.setAttribute("data-cart-count", badgeLabel);
+        } else {
+          if (badgeNode) badgeNode.remove();
+          button.classList.remove("has-cart-badge");
+          button.removeAttribute("data-cart-count");
+        }
       }
       let active = false;
       if (nav === "cart") {
@@ -8960,6 +8999,10 @@
           : (browseNavActive && normalizeRootMode(state.rootMode) !== "items");
       }
       button.classList.toggle("is-active", active);
+      if (nav === "cart" && !ownerMode && cartTotal > 0) {
+        button.setAttribute("aria-label", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
+        button.setAttribute("title", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
+      }
     });
   }
 
