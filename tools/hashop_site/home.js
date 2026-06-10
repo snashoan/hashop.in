@@ -152,6 +152,22 @@
     return saveHashopLanguage(state, options[(currentIndex + 1 + options.length) % options.length].key);
   }
 
+  function syncHashopLanguageButtons(state) {
+    const language = accountLanguageOption(state);
+    const label = "Language: " + language.label;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-account-language-cycle]"), function (button) {
+      if (!(button instanceof HTMLElement)) return;
+      button.setAttribute("aria-label", label);
+      button.setAttribute("title", label);
+      const flagNode = button.querySelector(".shop-account-language-flag");
+      const codeNode = button.querySelector(".shop-account-language-code");
+      const nameNode = button.querySelector(".shop-account-language-name");
+      if (flagNode) flagNode.textContent = language.flag;
+      if (codeNode) codeNode.textContent = language.key;
+      if (nameNode) nameNode.textContent = language.label;
+    });
+  }
+
   function hashopDebugEnabled() {
     try {
       const params = new URLSearchParams(window.location.search || "");
@@ -4291,60 +4307,6 @@
       '</section>';
   }
 
-  function ownerInventoryAccessMarkup(state, detail, consoleData) {
-    const ownerShops = ownerAccountShops(state);
-    const activeShopId = String(state && state.activeShopId || "").trim();
-    const activeOwnerShop = ownerShops.find(function (shop) {
-      return String(shop && shop.shopId || "").trim() === activeShopId;
-    }) || null;
-    const listings = Array.isArray(consoleData && consoleData.listings) ? consoleData.listings : [];
-    const shopName = String(
-      (detail && (detail.name || detail.display_name || detail.displayName))
-      || (activeOwnerShop && activeOwnerShop.shopName)
-      || activeShopId
-      || "This shop"
-    ).trim();
-    const ownedCount = Math.max(ownerShops.length, activeShopId ? 1 : 0);
-    const ownedLabel = ownedCount === 1 ? "1 shop" : (ownedCount + " shops");
-    const itemLabel = listings.length === 1 ? "1 item" : (listings.length + " items");
-    const itemAddOpen = !!(state && state.ownerPanel && state.ownerPanel.itemAddOpen);
-    const permissions = [
-      { label: "Edit stock", detail: "Tap an item below" },
-      { label: "Remove stock", detail: "Delete from this shop" },
-      { label: "Reuse stock", detail: "Import from local library" }
-    ];
-    return '' +
-      '<section class="shop-owner-form shop-owner-inventory-access" aria-label="Inventory access">' +
-        '<div class="shop-owner-access-head">' +
-          '<strong>Stock</strong>' +
-          '<span>' + escapeHtml(shopName + " controls " + itemLabel + " in the merged Hashop experience.") + '</span>' +
-        '</div>' +
-        '<div class="shop-owner-access-grid">' +
-          '<article class="shop-owner-access-card">' +
-            '<strong>Merged Hashop</strong>' +
-            '<span>' + escapeHtml(ownedLabel + " visible in the buyer hub") + '</span>' +
-          '</article>' +
-          '<article class="shop-owner-access-card">' +
-            '<strong>This shop</strong>' +
-            '<span>' + escapeHtml(itemLabel + " allocated here") + '</span>' +
-          '</article>' +
-        '</div>' +
-        '<button class="shop-owner-stock-action" type="button" data-owner-item-add-toggle="true" aria-expanded="' + (itemAddOpen ? 'true' : 'false') + '">' +
-          '<strong>' + escapeHtml(itemAddOpen ? "Close add item" : "Add item") + '</strong>' +
-          '<span>' + escapeHtml(itemAddOpen ? "Hide the item form" : "Open the item form when needed") + '</span>' +
-        '</button>' +
-        '<div class="shop-owner-permission-list">' +
-          permissions.map(function (permission) {
-            return '' +
-              '<span class="shop-owner-permission-chip">' +
-                '<strong>' + escapeHtml(permission.label) + '</strong>' +
-                '<em>' + escapeHtml(permission.detail) + '</em>' +
-              '</span>';
-          }).join('') +
-        '</div>' +
-      '</section>';
-  }
-
   function ownerHistoryMarkup(state, detail, consoleData) {
     if (String(state && state.ownerPanel && state.ownerPanel.tab || "").trim() !== "history") return "";
     const section = normalizeOwnerHistorySection(state && state.ownerPanel && state.ownerPanel.section);
@@ -4563,6 +4525,7 @@
           && matchesSearch([item.title, item.description, item.shopName, item.shopId, item.price], query);
       }).slice(0, 40);
       const itemAddOpen = !!(state && state.ownerPanel && state.ownerPanel.itemAddOpen);
+      const itemAddToggleMarkup = '<button class="shop-owner-chip-button shop-owner-add-item-chip" type="button" data-owner-item-add-toggle="true" aria-expanded="' + (itemAddOpen ? 'true' : 'false') + '">' + escapeHtml(itemAddOpen ? "Close" : "Add item") + '</button>';
       const itemAddFormMarkup = itemAddOpen ? (
         '<section class="shop-owner-form" data-owner-form="item">' +
           '<div class="shop-owner-form-head">' +
@@ -4581,12 +4544,14 @@
         '</section>'
       ) : "";
       bodyMarkup = '' +
-        ownerInventoryAccessMarkup(state, detail, consoleData) +
         itemAddFormMarkup +
         '<section class="shop-owner-form">' +
           '<div class="shop-owner-form-head">' +
-            '<strong>Your inventory</strong>' +
-            '<span>' + escapeHtml(listings.length ? "Tap an item to edit it below" : "No items saved yet") + '</span>' +
+            '<span>' +
+              '<strong>Your inventory</strong>' +
+              '<em>' + escapeHtml(listings.length ? "Tap an item to edit it below" : "No items saved yet") + '</em>' +
+            '</span>' +
+            itemAddToggleMarkup +
           '</div>' +
           '<div class="shop-owner-item-list">' +
             (visibleItems.length ? (
@@ -7226,15 +7191,6 @@
           (accountAvatarUrl ? '<img src="' + escapeHtml(accountAvatarUrl) + '" alt="">' : escapeHtml(accountInitial)) +
         '</span>';
     }
-    function accountLanguageButtonMarkup() {
-      const language = accountLanguageOption(state);
-      return '' +
-        '<button class="shop-account-language-button" type="button" data-account-language-cycle="true" aria-label="' + escapeHtml("Language: " + language.label) + '">' +
-          '<span class="shop-account-language-flag" aria-hidden="true">' + escapeHtml(language.flag) + '</span>' +
-          '<span class="shop-account-language-code">' + escapeHtml(language.key) + '</span>' +
-          '<span class="shop-account-language-name">' + escapeHtml(language.label) + '</span>' +
-        '</button>';
-    }
     const ownerShopRows = ownerShops.map(function (shop) {
       const shopId = String(shop && shop.shopId || "").trim();
       const isPreferred = shopId && shopId === preferredOwnerShopId(session, state.ownerShopId);
@@ -7605,7 +7561,6 @@
           '<span>Hashop account</span>' +
           '<strong>' + escapeHtml(buyerAccountLabel || "Account") + '</strong>' +
         '</div>' +
-        accountLanguageButtonMarkup() +
       '</div>' +
       '<div class="shop-account-menu-label">Buying</div>' +
       '<section class="shop-account-menu-card">' + buyingRows.join('') + '</section>' +
@@ -9004,6 +8959,7 @@
         button.setAttribute("title", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
       }
     });
+    syncHashopLanguageButtons(state);
   }
 
   function renderLucideIcons(root) {
@@ -12233,10 +12189,11 @@
     mapLocateButton: document.getElementById("homeMapLocateAction"),
     mapCompassButton: document.getElementById("homeMapCompassAction"),
     ordersButton: null,
-    navLocateButton: null,
-    backButton: document.getElementById("shopBackAction"),
-    toggleButton: document.getElementById("shopPaneToggle"),
-    loginNode: document.querySelector(".home-login-fab"),
+      navLocateButton: null,
+      backButton: document.getElementById("shopBackAction"),
+      toggleButton: document.getElementById("shopPaneToggle"),
+      languageButton: document.getElementById("homeLanguageAction"),
+      loginNode: document.querySelector(".home-login-fab"),
     accountSession: initialAccountSession,
     ownerShopId: preferredOwnerShopId(initialAccountSession),
     googleMapsApiKey: String(bootstrap.google_maps_api_key || window.__HASHOP_GOOGLE_MAPS_API_KEY__ || "").trim(),
@@ -12500,6 +12457,15 @@
         return;
       }
       locateUser(state, true);
+    });
+  }
+
+  if (state.languageButton) {
+    state.languageButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      cycleHashopLanguage(state);
+      syncHashopLanguageButtons(state);
+      renderShopList(state);
     });
   }
 
@@ -13109,6 +13075,7 @@
       if (accountLanguageButton) {
         event.preventDefault();
         cycleHashopLanguage(state);
+        syncHashopLanguageButtons(state);
         renderShopList(state);
         return;
       }

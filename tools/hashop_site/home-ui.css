@@ -30658,3 +30658,126 @@ html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .sh
     max-height: 4.85rem !important;
   }
 }
+
+/* Iteration 133: language belongs to the brand bar; Stock starts at inventory. */
+html body .shell.shell-home.shell-home.shell-home .home-chrome {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome-tools {
+  order: 2 !important;
+  justify-self: end !important;
+  align-self: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: end !important;
+  gap: 0.42rem !important;
+  min-width: 0 !important;
+  max-width: min(16rem, 62vw) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .brand {
+  order: 1 !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+  flex: 0 0 auto !important;
+  display: inline-grid !important;
+  grid-template-columns: auto auto !important;
+  grid-template-areas: "flag code" !important;
+  align-items: center !important;
+  justify-content: center !important;
+  column-gap: 0.34rem !important;
+  width: auto !important;
+  min-width: 3.42rem !important;
+  max-width: 4.3rem !important;
+  min-height: 2.18rem !important;
+  padding: 0.28rem 0.48rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-soft) !important;
+  background-color: var(--hashop-theme-soft) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-flag {
+  grid-area: flag !important;
+  font-size: 0.98rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-code {
+  grid-area: code !important;
+  font-size: 0.76rem !important;
+  font-weight: 920 !important;
+  line-height: 1 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-name {
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-account-frontbar {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-form-head > span {
+  display: grid !important;
+  gap: 0.14rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-form-head > span > strong {
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-form-head > span > em {
+  overflow: hidden !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+  font-size: 0.74rem !important;
+  font-style: normal !important;
+  font-weight: 760 !important;
+  line-height: 1.16 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-form-head .shop-owner-add-item-chip {
+  justify-self: end !important;
+  align-self: center !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 4.72rem !important;
+  min-height: 2.18rem !important;
+  padding: 0.28rem 0.58rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-action-bg) !important;
+  background-color: var(--hashop-theme-action-bg) !important;
+  color: var(--hashop-theme-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
+  font-size: 0.76rem !important;
+  font-weight: 920 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .home-chrome-tools {
+    gap: 0.34rem !important;
+    max-width: 58vw !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+    min-width: 3.12rem !important;
+    max-width: 3.72rem !important;
+    padding-inline: 0.38rem !important;
+  }
+}
