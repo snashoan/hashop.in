@@ -152,19 +152,60 @@
     return saveHashopLanguage(state, options[(currentIndex + 1 + options.length) % options.length].key);
   }
 
+  function setHashopLanguageRollerOpen(state, open) {
+    if (state) state.languageRollerOpen = !!open;
+    syncHashopLanguageButtons(state);
+  }
+
+  function selectHashopLanguage(state, value) {
+    saveHashopLanguage(state, value);
+    if (state) state.languageRollerOpen = false;
+    syncHashopLanguageButtons(state);
+  }
+
   function syncHashopLanguageButtons(state) {
     const language = accountLanguageOption(state);
     const label = "Language: " + language.label;
-    Array.prototype.forEach.call(document.querySelectorAll("[data-account-language-cycle]"), function (button) {
+    const isOpen = !!(state && state.languageRollerOpen);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-account-language-cycle], [data-account-language-toggle]"), function (button) {
       if (!(button instanceof HTMLElement)) return;
       button.setAttribute("aria-label", label);
       button.setAttribute("title", label);
+      if (button.hasAttribute("aria-expanded")) {
+        button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      }
+      button.classList.toggle("is-open", isOpen);
       const flagNode = button.querySelector(".shop-account-language-flag");
       const codeNode = button.querySelector(".shop-account-language-code");
       const nameNode = button.querySelector(".shop-account-language-name");
       if (flagNode) flagNode.textContent = language.flag;
       if (codeNode) codeNode.textContent = language.key;
       if (nameNode) nameNode.textContent = language.label;
+    });
+    const roller = document.getElementById("homeLanguageRoller");
+    if (roller) {
+      roller.hidden = !isOpen;
+      roller.classList.toggle("is-open", isOpen);
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("[data-account-language-select]"), function (button) {
+      if (!(button instanceof HTMLElement)) return;
+      const optionKey = normalizeHashopLanguage(button.getAttribute("data-account-language-select"));
+      const option = accountLanguageOptions().find(function (candidate) {
+        return candidate.key === optionKey;
+      }) || accountLanguageOptions()[0];
+      const selected = option.key === language.key;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-selected", selected ? "true" : "false");
+      button.tabIndex = isOpen ? 0 : -1;
+      const flagNode = button.querySelector(".home-language-option-flag");
+      const copyNode = button.querySelector(".home-language-option-copy");
+      if (flagNode) flagNode.textContent = option.flag;
+      if (copyNode) {
+        const strongNode = copyNode.querySelector("strong");
+        const codeNode = copyNode.querySelector("em");
+        if (strongNode) strongNode.textContent = option.label;
+        if (codeNode) codeNode.textContent = option.key;
+      }
     });
   }
 
@@ -4321,7 +4362,6 @@
       state.ownerPanel.itemId = String(selectedItem.id || "").trim();
     }
     let bodyMarkup = "";
-    const sectionLabel = section === "items" ? "Stock" : section === "sales" ? "Sales" : "Orders";
 
     if (section === "orders") {
       const draft = ownerOrderDraft(state, state.activeShopId);
@@ -4614,8 +4654,6 @@
 
     return '' +
       '<section class="shop-owner-stack">' +
-        ownerStatusMarkup(state) +
-        ownerManageSummaryMarkup(state, detail, consoleData, sectionLabel) +
         ownerWorkspaceNavMarkup(state, consoleData, section) +
         bodyMarkup +
       '</section>';
@@ -12193,6 +12231,9 @@
       backButton: document.getElementById("shopBackAction"),
       toggleButton: document.getElementById("shopPaneToggle"),
       languageButton: document.getElementById("homeLanguageAction"),
+      languagePickerNode: document.getElementById("homeLanguagePicker"),
+      languageRollerNode: document.getElementById("homeLanguageRoller"),
+      languageRollerOpen: false,
       loginNode: document.querySelector(".home-login-fab"),
     accountSession: initialAccountSession,
     ownerShopId: preferredOwnerShopId(initialAccountSession),
@@ -12460,14 +12501,38 @@
     });
   }
 
-  if (state.languageButton) {
-    state.languageButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      cycleHashopLanguage(state);
-      syncHashopLanguageButtons(state);
-      renderShopList(state);
+  if (state.languagePickerNode) {
+    state.languagePickerNode.addEventListener("click", function (event) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const selectButton = target.closest("[data-account-language-select]");
+      if (selectButton) {
+        event.preventDefault();
+        selectHashopLanguage(state, selectButton.getAttribute("data-account-language-select"));
+        renderShopList(state);
+        return;
+      }
+      const toggleButton = target.closest("[data-account-language-toggle], [data-account-language-cycle]");
+      if (toggleButton) {
+        event.preventDefault();
+        setHashopLanguageRollerOpen(state, !state.languageRollerOpen);
+      }
     });
   }
+
+  document.addEventListener("click", function (event) {
+    if (!state.languageRollerOpen) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (state.languagePickerNode && state.languagePickerNode.contains(target)) return;
+    setHashopLanguageRollerOpen(state, false);
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Escape" || !state.languageRollerOpen) return;
+    setHashopLanguageRollerOpen(state, false);
+    if (state.languageButton) state.languageButton.focus();
+  });
 
   if (state.backButton) {
     state.backButton.addEventListener("click", function () {

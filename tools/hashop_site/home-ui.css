@@ -30781,3 +30781,195 @@ html body .shell.shell-home.shell-home.shell-home .shop-owner-form-head .shop-ow
     padding-inline: 0.38rem !important;
   }
 }
+
+/* Iteration 134: language roller and cleaner owner tabs. */
+html body .shell.shell-home.shell-home.shell-home .home-language-picker {
+  position: relative !important;
+  z-index: 1400 !important;
+  flex: 0 0 auto !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome {
+  z-index: 1350 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+  grid-template-columns: auto auto auto !important;
+  grid-template-areas: "flag code caret" !important;
+  column-gap: 0.28rem !important;
+  min-width: 4.08rem !important;
+  max-width: 4.92rem !important;
+  padding-inline: 0.46rem 0.38rem !important;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button:where(:hover, :focus-visible, .is-open) {
+  border-color: color-mix(in srgb, var(--hashop-theme-accent) 62%, var(--hashop-theme-line-strong)) !important;
+  background: color-mix(in srgb, var(--hashop-theme-accent) 10%, var(--hashop-theme-soft)) !important;
+  background-color: color-mix(in srgb, var(--hashop-theme-accent) 10%, var(--hashop-theme-soft)) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-chevron {
+  grid-area: caret !important;
+  width: 0.82rem !important;
+  height: 0.82rem !important;
+  color: var(--hashop-theme-muted) !important;
+  stroke-width: 2.35 !important;
+  transition: transform 180ms ease, color 180ms ease !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-button.is-open .home-language-chevron {
+  color: var(--hashop-theme-accent) !important;
+  transform: rotate(180deg) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-roller {
+  position: absolute !important;
+  top: calc(100% + 0.42rem) !important;
+  right: 0 !important;
+  z-index: 1500 !important;
+  display: grid !important;
+  gap: 0.18rem !important;
+  width: min(12.2rem, calc(100vw - 1rem)) !important;
+  max-height: 10.8rem !important;
+  padding: 0.36rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 12px !important;
+  background: var(--hashop-theme-surface) !important;
+  background-color: var(--hashop-theme-surface) !important;
+  color: var(--hashop-theme-text) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scroll-snap-type: y mandatory !important;
+  transform-origin: top right !important;
+  animation: hashop-language-roller-in 180ms cubic-bezier(0.18, 0.82, 0.18, 1) both !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-roller[hidden] {
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option {
+  scroll-snap-align: start !important;
+  display: grid !important;
+  grid-template-columns: 1.9rem minmax(0, 1fr) 0.5rem !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  min-height: 2.58rem !important;
+  width: 100% !important;
+  padding: 0.34rem 0.42rem !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  text-align: left !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option::after {
+  content: "" !important;
+  justify-self: center !important;
+  width: 0.44rem !important;
+  height: 0.44rem !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option:where(:hover, :focus-visible) {
+  background: var(--hashop-theme-soft) !important;
+  background-color: var(--hashop-theme-soft) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option.is-selected {
+  background: color-mix(in srgb, var(--hashop-theme-accent) 12%, var(--hashop-theme-soft)) !important;
+  background-color: color-mix(in srgb, var(--hashop-theme-accent) 12%, var(--hashop-theme-soft)) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option.is-selected::after {
+  background: var(--hashop-theme-accent) !important;
+  border-color: var(--hashop-theme-accent) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option-flag {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 1.9rem !important;
+  height: 1.9rem !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-soft) !important;
+  background-color: var(--hashop-theme-soft) !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option-copy {
+  display: grid !important;
+  gap: 0.1rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option-copy strong,
+html body .shell.shell-home.shell-home.shell-home .home-language-option-copy em {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option-copy strong {
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  font-size: 0.86rem !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option-copy em {
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+  font-size: 0.68rem !important;
+  font-style: normal !important;
+  font-weight: 820 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+
+@keyframes hashop-language-roller-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.22rem) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+    min-width: 3.9rem !important;
+    max-width: 4.32rem !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .home-language-roller {
+    right: -0.06rem !important;
+    width: min(11.7rem, calc(100vw - 0.9rem)) !important;
+  }
+}
