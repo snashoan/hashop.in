@@ -31031,3 +31031,27 @@ html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-bu
     padding-inline: 0.4rem 0.34rem !important;
   }
 }
+
+/* Iteration 136: language lives only in Account. */
+html body .shell.shell-home.shell-home.shell-home .home-language-picker,
+html body .shell.shell-home.shell-home.shell-home .home-language-picker[hidden] {
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"] .home-language-picker:not([hidden]) {
+  display: inline-grid !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-current {
+  min-width: 2.68rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-flag {
+  margin-right: 0.16rem !important;
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-current {
+    min-width: 2.58rem !important;
+  }
+}

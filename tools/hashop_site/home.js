@@ -7594,12 +7594,6 @@
       supportRows.push(accountMenuRowMarkup({ icon: "!", title: "Sign out", subtitle: "Leave this device", attr: ' data-account-signout="true"', danger: true }));
     }
     const menuSectionMarkup = '' +
-      '<div class="shop-account-frontbar">' +
-        '<div class="shop-account-frontbar-copy">' +
-          '<span>Hashop account</span>' +
-          '<strong>' + escapeHtml(buyerAccountLabel || "Account") + '</strong>' +
-        '</div>' +
-      '</div>' +
       '<div class="shop-account-menu-label">Buying</div>' +
       '<section class="shop-account-menu-card">' + buyingRows.join('') + '</section>' +
       (authRows.length ? '<div class="shop-account-menu-label">Access</div><section class="shop-account-menu-card">' + authRows.join('') + '</section>' : '') +
@@ -8919,6 +8913,7 @@
     const browseNavActive = isRootScreenMode(screenMode) && !state.debugPaneView && !state.activeShopId;
     const ownerMode = isOwnerAccountMode(state);
     const cartTotal = ownerMode ? 0 : buyerCartCount(state);
+    const languageAvailable = screenMode === "account";
     const navLabels = ownerMode
       ? { shops: "Shops", items: "Stock", cart: "Orders", account: "Account" }
       : { shops: "Shops", items: "Items", cart: "Cart", account: "Account" };
@@ -8997,6 +8992,13 @@
         button.setAttribute("title", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
       }
     });
+    if (!languageAvailable && state.languageRollerOpen) {
+      state.languageRollerOpen = false;
+    }
+    if (state.languagePickerNode) {
+      state.languagePickerNode.hidden = !languageAvailable;
+      state.languagePickerNode.setAttribute("aria-hidden", languageAvailable ? "false" : "true");
+    }
     syncHashopLanguageButtons(state);
   }
 
