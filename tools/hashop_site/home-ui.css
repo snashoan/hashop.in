@@ -30973,3 +30973,61 @@ html body .shell.shell-home.shell-home.shell-home .home-language-option-copy em 
     width: min(11.7rem, calc(100vw - 0.9rem)) !important;
   }
 }
+
+/* Iteration 135: keep the language string on one chrome line. */
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.28rem !important;
+  min-width: 4.06rem !important;
+  max-width: 4.72rem !important;
+  min-height: 2.18rem !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-current {
+  flex: 0 0 auto !important;
+  display: inline-block !important;
+  min-width: 2.42rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-flag,
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-code,
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .home-language-chevron {
+  flex: 0 0 auto !important;
+  grid-area: auto !important;
+  align-self: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-flag {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  width: 1.05rem !important;
+  min-width: 1.05rem !important;
+  transform: translateY(-0.01rem) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button .shop-account-language-code {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  min-width: 1.05rem !important;
+  text-align: center !important;
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-button {
+    min-width: 3.82rem !important;
+    max-width: 4.08rem !important;
+    padding-inline: 0.4rem 0.34rem !important;
+  }
+}
