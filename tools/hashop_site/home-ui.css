@@ -31055,3 +31055,229 @@ html body .shell.shell-home.shell-home.shell-home .home-chrome .home-language-bu
     min-width: 2.58rem !important;
   }
 }
+
+/* Iteration 137: theme-native cart counts, owner orders, and non-shop manage panes. */
+html body .shell.shell-home.shell-home.shell-home:is([data-hashop-screen="owner-manage"], [data-hashop-screen="owner-items"], [data-hashop-screen="owner-orders"], [data-hashop-screen="owner-add"]) .home-stage {
+  grid-template-rows: minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home:is([data-hashop-screen="owner-manage"], [data-hashop-screen="owner-items"], [data-hashop-screen="owner-orders"], [data-hashop-screen="owner-add"]) .map-screen {
+  display: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home:is([data-hashop-screen="owner-manage"], [data-hashop-screen="owner-items"], [data-hashop-screen="owner-orders"], [data-hashop-screen="owner-add"]) .shop-list-panel.is-shop-view {
+  grid-row: 1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border-radius: 10px !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-item-selection {
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.18, 0.82, 0.18, 1) !important;
+  animation: hashop-cart-control-in 190ms cubic-bezier(0.18, 0.82, 0.18, 1) both !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-item-qty {
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  opacity: 1 !important;
+  transition:
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.18, 0.82, 0.18, 1) !important;
+  animation: hashop-cart-quantity-in 180ms cubic-bezier(0.18, 0.82, 0.18, 1) both !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-item-step,
+html body .shell.shell-home.shell-home.shell-home .shop-card-add.shop-item-add {
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  background: var(--hashop-theme-action-bg) !important;
+  background-color: var(--hashop-theme-action-bg) !important;
+  color: var(--hashop-theme-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 160ms cubic-bezier(0.18, 0.82, 0.18, 1) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-item-step:active,
+html body .shell.shell-home.shell-home.shell-home .shop-card-add.shop-item-add:active {
+  transform: scale(0.96) !important;
+  background: var(--hashop-theme-accent) !important;
+  background-color: var(--hashop-theme-accent) !important;
+  color: var(--hashop-theme-bg) !important;
+  -webkit-text-fill-color: var(--hashop-theme-bg) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-list-card,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card {
+  display: grid !important;
+  grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+  grid-template-rows: auto !important;
+  align-items: center !important;
+  gap: 0.72rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  min-height: 6.65rem !important;
+  margin: 0 !important;
+  padding: 0.72rem 0.08rem 0.74rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-list-card > .shop-cart-thumb,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card > .shop-cart-thumb,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card > .shop-cart-thumb {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  justify-self: stretch !important;
+  align-self: center !important;
+  width: 5.5rem !important;
+  height: 5.5rem !important;
+  min-width: 5.5rem !important;
+  min-height: 5.5rem !important;
+  max-width: 5.5rem !important;
+  max-height: 5.5rem !important;
+  aspect-ratio: 1 / 1 !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 7px !important;
+  background: var(--hashop-theme-thumb) !important;
+  background-color: var(--hashop-theme-thumb) !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card .shop-card-topline,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card .shop-card-topline {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 0.58rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card .shop-card-items,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card .shop-card-items {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.16rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card .shop-item-selection,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card .shop-item-selection {
+  justify-self: end !important;
+  align-self: start !important;
+  width: auto !important;
+  min-width: 4.58rem !important;
+  max-width: 5.2rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-button {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-badge {
+  position: absolute !important;
+  top: 0.16rem !important;
+  right: 0.16rem !important;
+  z-index: 2 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 1.08rem !important;
+  height: 1.08rem !important;
+  padding: 0 0.26rem !important;
+  border: 1px solid var(--hashop-theme-bg) !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-accent) !important;
+  background-color: var(--hashop-theme-accent) !important;
+  color: var(--hashop-theme-bg) !important;
+  -webkit-text-fill-color: var(--hashop-theme-bg) !important;
+  box-shadow: 0 0 0 1px var(--hashop-theme-accent) !important;
+  font-size: 0.58rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  animation: hashop-cart-badge-pop 220ms cubic-bezier(0.18, 0.82, 0.18, 1) both !important;
+  pointer-events: none !important;
+}
+
+@keyframes hashop-cart-control-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.16rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hashop-cart-quantity-in {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-list-card,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card {
+    grid-template-columns: 4.85rem minmax(0, 1fr) !important;
+    gap: 0.62rem !important;
+    min-height: 6rem !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-list-card > .shop-cart-thumb,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="cart"] .shop-cart-list-card > .shop-cart-thumb,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="cart"] .shop-cart-list-card > .shop-cart-thumb {
+    width: 4.85rem !important;
+    height: 4.85rem !important;
+    min-width: 4.85rem !important;
+    min-height: 4.85rem !important;
+    max-width: 4.85rem !important;
+    max-height: 4.85rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body .shell.shell-home.shell-home.shell-home .shop-item-selection,
+  html body .shell.shell-home.shell-home.shell-home .shop-item-qty,
+  html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-badge {
+    animation: none !important;
+    transition: none !important;
+  }
+}

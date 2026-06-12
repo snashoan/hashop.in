@@ -143,6 +143,276 @@
     }) || accountLanguageOptions()[0];
   }
 
+  const HASHOP_LANGUAGE_TRANSLATIONS = {
+    HI: {
+      "English": "अंग्रेज़ी",
+      "Hindi": "हिंदी",
+      "Kannada": "कन्नड़",
+      "Language: English": "भाषा: अंग्रेज़ी",
+      "Language: Hindi": "भाषा: हिंदी",
+      "Language: Kannada": "भाषा: कन्नड़",
+      "Shops": "दुकानें",
+      "Items": "सामान",
+      "Cart": "कार्ट",
+      "Account": "खाता",
+      "Stock": "स्टॉक",
+      "Orders": "ऑर्डर",
+      "Sales": "बिक्री",
+      "Manage": "मैनेज",
+      "Add": "जोड़ें",
+      "Add item": "सामान जोड़ें",
+      "Add shop": "दुकान जोड़ें",
+      "Back": "वापस",
+      "Open": "खोलें",
+      "Open now": "अभी खुला",
+      "Closed": "बंद",
+      "Available": "उपलब्ध",
+      "Profile": "प्रोफ़ाइल",
+      "Addresses": "पते",
+      "Payments": "भुगतान",
+      "Payment": "भुगतान",
+      "Payment Methods": "भुगतान तरीके",
+      "Help & Support": "सहायता",
+      "About Hashop": "Hashop के बारे में",
+      "Privacy & Policies": "गोपनीयता और नियम",
+      "Dark mode": "डार्क मोड",
+      "Day interface": "दिन मोड",
+      "Night interface": "रात मोड",
+      "Sign out": "साइन आउट",
+      "Sign in": "साइन इन",
+      "Create account": "खाता बनाएं",
+      "Continue": "जारी रखें",
+      "Refresh": "रिफ्रेश",
+      "Pickup": "पिकअप",
+      "Delivery": "डिलीवरी",
+      "Receive order": "ऑर्डर कैसे लें",
+      "Pay on receive": "मिलने पर भुगतान",
+      "Pay before": "पहले भुगतान",
+      "Place order": "ऑर्डर करें",
+      "Continue to payment": "भुगतान पर जाएं",
+      "Select payment method": "भुगतान तरीका चुनें",
+      "Your details": "आपकी जानकारी",
+      "Finish details": "जानकारी पूरी करें",
+      "Name": "नाम",
+      "Contact": "संपर्क",
+      "Address": "पता",
+      "Location": "स्थान",
+      "Search shops": "दुकानें खोजें",
+      "Search items": "सामान खोजें",
+      "Search cart": "कार्ट खोजें",
+      "Search history": "इतिहास खोजें",
+      "Search stock": "स्टॉक खोजें",
+      "Search orders": "ऑर्डर खोजें",
+      "Search sales": "बिक्री खोजें",
+      "Search my shops": "मेरी दुकानें खोजें",
+      "Search items or shops": "सामान या दुकान खोजें",
+      "Search shops you can call": "कॉल वाली दुकानें खोजें",
+      "No items yet.": "अभी सामान नहीं है।",
+      "No orders yet.": "अभी ऑर्डर नहीं हैं।",
+      "No recent orders": "हाल के ऑर्डर नहीं हैं",
+      "No pending": "कोई लंबित नहीं",
+      "No payments": "भुगतान सेट नहीं",
+      "Payments set": "भुगतान सेट",
+      "Shop": "दुकान",
+      "Shop settings": "दुकान सेटिंग",
+      "Shop workspace": "दुकान कार्यक्षेत्र",
+      "Inventory": "इन्वेंटरी",
+      "Your inventory": "आपकी इन्वेंटरी",
+      "Order history": "ऑर्डर इतिहास",
+      "Sales accounting": "बिक्री हिसाब",
+      "Start order": "ऑर्डर शुरू करें",
+      "Save order": "ऑर्डर सेव करें",
+      "Save shop": "दुकान सेव करें",
+      "Save item": "सामान सेव करें",
+      "Save payments": "भुगतान सेव करें",
+      "Upload image": "चित्र अपलोड करें",
+      "Replace logo": "लोगो बदलें",
+      "Upload logo": "लोगो अपलोड करें",
+      "Close": "बंद करें",
+      "Copy": "कॉपी",
+      "Ready": "तैयार",
+      "Accept": "स्वीकार",
+      "Complete": "पूरा",
+      "Confirm payment": "भुगतान पक्का करें",
+      "Cancel": "रद्द करें",
+      "Locate me": "मेरा स्थान",
+      "Reset map view": "मैप रीसेट करें"
+    },
+    KN: {
+      "English": "ಇಂಗ್ಲಿಷ್",
+      "Hindi": "ಹಿಂದಿ",
+      "Kannada": "ಕನ್ನಡ",
+      "Language: English": "ಭಾಷೆ: ಇಂಗ್ಲಿಷ್",
+      "Language: Hindi": "ಭಾಷೆ: ಹಿಂದಿ",
+      "Language: Kannada": "ಭಾಷೆ: ಕನ್ನಡ",
+      "Shops": "ಅಂಗಡಿಗಳು",
+      "Items": "ವಸ್ತುಗಳು",
+      "Cart": "ಕಾರ್ಟ್",
+      "Account": "ಖಾತೆ",
+      "Stock": "ಸ್ಟಾಕ್",
+      "Orders": "ಆರ್ಡರ್‌ಗಳು",
+      "Sales": "ಮಾರಾಟ",
+      "Manage": "ನಿರ್ವಹಿಸಿ",
+      "Add": "ಸೇರಿಸಿ",
+      "Add item": "ವಸ್ತು ಸೇರಿಸಿ",
+      "Add shop": "ಅಂಗಡಿ ಸೇರಿಸಿ",
+      "Back": "ಹಿಂದೆ",
+      "Open": "ತೆರೆಯಿರಿ",
+      "Open now": "ಈಗ ತೆರೆದಿದೆ",
+      "Closed": "ಮುಚ್ಚಿದೆ",
+      "Available": "ಲಭ್ಯ",
+      "Profile": "ಪ್ರೊಫೈಲ್",
+      "Addresses": "ವಿಳಾಸಗಳು",
+      "Payments": "ಪಾವತಿಗಳು",
+      "Payment": "ಪಾವತಿ",
+      "Payment Methods": "ಪಾವತಿ ವಿಧಾನಗಳು",
+      "Help & Support": "ಸಹಾಯ",
+      "About Hashop": "Hashop ಬಗ್ಗೆ",
+      "Privacy & Policies": "ಗೌಪ್ಯತೆ ಮತ್ತು ನಿಯಮಗಳು",
+      "Dark mode": "ಡಾರ್ಕ್ ಮೋಡ್",
+      "Day interface": "ದಿನ ಮೋಡ್",
+      "Night interface": "ರಾತ್ರಿ ಮೋಡ್",
+      "Sign out": "ಸೈನ್ ಔಟ್",
+      "Sign in": "ಸೈನ್ ಇನ್",
+      "Create account": "ಖಾತೆ ರಚಿಸಿ",
+      "Continue": "ಮುಂದುವರಿಸಿ",
+      "Refresh": "ರಿಫ್ರೆಶ್",
+      "Pickup": "ಪಿಕಪ್",
+      "Delivery": "ಡೆಲಿವರಿ",
+      "Receive order": "ಆರ್ಡರ್ ಪಡೆಯುವುದು",
+      "Pay on receive": "ಸ್ವೀಕರಿಸಿದಾಗ ಪಾವತಿ",
+      "Pay before": "ಮೊದಲು ಪಾವತಿ",
+      "Place order": "ಆರ್ಡರ್ ಮಾಡಿ",
+      "Continue to payment": "ಪಾವತಿಗೆ ಮುಂದುವರಿಸಿ",
+      "Select payment method": "ಪಾವತಿ ವಿಧಾನ ಆರಿಸಿ",
+      "Your details": "ನಿಮ್ಮ ವಿವರಗಳು",
+      "Finish details": "ವಿವರಗಳನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ",
+      "Name": "ಹೆಸರು",
+      "Contact": "ಸಂಪರ್ಕ",
+      "Address": "ವಿಳಾಸ",
+      "Location": "ಸ್ಥಳ",
+      "Search shops": "ಅಂಗಡಿಗಳನ್ನು ಹುಡುಕಿ",
+      "Search items": "ವಸ್ತುಗಳನ್ನು ಹುಡುಕಿ",
+      "Search cart": "ಕಾರ್ಟ್ ಹುಡುಕಿ",
+      "Search history": "ಇತಿಹಾಸ ಹುಡುಕಿ",
+      "Search stock": "ಸ್ಟಾಕ್ ಹುಡುಕಿ",
+      "Search orders": "ಆರ್ಡರ್ ಹುಡುಕಿ",
+      "Search sales": "ಮಾರಾಟ ಹುಡುಕಿ",
+      "Search my shops": "ನನ್ನ ಅಂಗಡಿಗಳನ್ನು ಹುಡುಕಿ",
+      "Search items or shops": "ವಸ್ತು ಅಥವಾ ಅಂಗಡಿ ಹುಡುಕಿ",
+      "Search shops you can call": "ಕಾಲ್ ಮಾಡಬಹುದಾದ ಅಂಗಡಿಗಳನ್ನು ಹುಡುಕಿ",
+      "No items yet.": "ಇನ್ನೂ ವಸ್ತುಗಳಿಲ್ಲ.",
+      "No orders yet.": "ಇನ್ನೂ ಆರ್ಡರ್‌ಗಳಿಲ್ಲ.",
+      "No recent orders": "ಇತ್ತೀಚಿನ ಆರ್ಡರ್‌ಗಳಿಲ್ಲ",
+      "No pending": "ಯಾವುದು ಬಾಕಿಯಿಲ್ಲ",
+      "No payments": "ಪಾವತಿ ಸೆಟ್ ಇಲ್ಲ",
+      "Payments set": "ಪಾವತಿ ಸೆಟ್ ಆಗಿದೆ",
+      "Shop": "ಅಂಗಡಿ",
+      "Shop settings": "ಅಂಗಡಿ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+      "Shop workspace": "ಅಂಗಡಿ ಕೆಲಸದ ಸ್ಥಳ",
+      "Inventory": "ಇನ್ವೆಂಟರಿ",
+      "Your inventory": "ನಿಮ್ಮ ಇನ್ವೆಂಟರಿ",
+      "Order history": "ಆರ್ಡರ್ ಇತಿಹಾಸ",
+      "Sales accounting": "ಮಾರಾಟ ಲೆಕ್ಕ",
+      "Start order": "ಆರ್ಡರ್ ಆರಂಭಿಸಿ",
+      "Save order": "ಆರ್ಡರ್ ಉಳಿಸಿ",
+      "Save shop": "ಅಂಗಡಿ ಉಳಿಸಿ",
+      "Save item": "ವಸ್ತು ಉಳಿಸಿ",
+      "Save payments": "ಪಾವತಿ ಉಳಿಸಿ",
+      "Upload image": "ಚಿತ್ರ ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+      "Replace logo": "ಲೋಗೋ ಬದಲಿಸಿ",
+      "Upload logo": "ಲೋಗೋ ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+      "Close": "ಮುಚ್ಚಿ",
+      "Copy": "ಕಾಪಿ",
+      "Ready": "ಸಿದ್ಧ",
+      "Accept": "ಸ್ವೀಕರಿಸಿ",
+      "Complete": "ಪೂರ್ಣಗೊಳಿಸಿ",
+      "Confirm payment": "ಪಾವತಿ ದೃಢೀಕರಿಸಿ",
+      "Cancel": "ರದ್ದು",
+      "Locate me": "ನನ್ನ ಸ್ಥಳ",
+      "Reset map view": "ನಕ್ಷೆ ರಿಸೆಟ್ ಮಾಡಿ"
+    }
+  };
+
+  function hashopLanguageTranslationMap(language) {
+    return HASHOP_LANGUAGE_TRANSLATIONS[normalizeHashopLanguage(language)] || {};
+  }
+
+  function hashopTranslatedText(state, value) {
+    const raw = String(value == null ? "" : value);
+    const trimmed = raw.trim();
+    if (!trimmed) return raw;
+    const language = accountLanguageOption(state).key;
+    if (language === "EN") return raw;
+    const translation = hashopLanguageTranslationMap(language)[trimmed];
+    if (!translation) return raw;
+    const leading = (raw.match(/^\s*/) || [""])[0];
+    const trailing = (raw.match(/\s*$/) || [""])[0];
+    return leading + translation + trailing;
+  }
+
+  function syncHashopLanguageTextNode(state, node) {
+    if (!node) return;
+    const current = String(node.nodeValue || "");
+    const previousTranslation = node.__hashopI18nTranslated || "";
+    if (!node.__hashopI18nSource || (previousTranslation && current !== previousTranslation)) {
+      node.__hashopI18nSource = current;
+    }
+    const nextText = hashopTranslatedText(state, node.__hashopI18nSource || current);
+    node.__hashopI18nTranslated = nextText;
+    if (current !== nextText) {
+      node.nodeValue = nextText;
+    }
+  }
+
+  function syncHashopLanguageAttribute(state, node, attrName) {
+    if (!node || !node.hasAttribute(attrName)) return;
+    const sourceKey = "__hashopI18nAttrSource_" + attrName;
+    const translatedKey = "__hashopI18nAttrTranslated_" + attrName;
+    const current = String(node.getAttribute(attrName) || "");
+    const previousTranslation = node[translatedKey] || "";
+    if (!node[sourceKey] || (previousTranslation && current !== previousTranslation)) {
+      node[sourceKey] = current;
+    }
+    const nextValue = hashopTranslatedText(state, node[sourceKey] || current);
+    node[translatedKey] = nextValue;
+    if (current !== nextValue) {
+      node.setAttribute(attrName, nextValue);
+    }
+  }
+
+  function syncHashopLanguageSurface(state) {
+    const root = state && state.shellNode || document.querySelector(".shell-home");
+    if (!root || typeof document.createTreeWalker !== "function") return;
+    const filter = window.NodeFilter || { SHOW_TEXT: 4, FILTER_ACCEPT: 1, FILTER_REJECT: 2 };
+    const walker = document.createTreeWalker(root, filter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        if (!node || !String(node.nodeValue || "").trim()) return filter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent) return filter.FILTER_REJECT;
+        if (parent.closest("script, style, textarea, input, select, option, [data-no-hashop-i18n]")) {
+          return filter.FILTER_REJECT;
+        }
+        return filter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    let node = walker.nextNode();
+    while (node) {
+      nodes.push(node);
+      node = walker.nextNode();
+    }
+    nodes.forEach(function (textNode) {
+      syncHashopLanguageTextNode(state, textNode);
+    });
+    Array.prototype.forEach.call(root.querySelectorAll("[placeholder], [aria-label], [title]"), function (element) {
+      if (!(element instanceof HTMLElement)) return;
+      syncHashopLanguageAttribute(state, element, "placeholder");
+      syncHashopLanguageAttribute(state, element, "aria-label");
+      syncHashopLanguageAttribute(state, element, "title");
+    });
+  }
+
   function cycleHashopLanguage(state) {
     const options = accountLanguageOptions();
     const current = accountLanguageOption(state).key;
@@ -207,6 +477,7 @@
         if (codeNode) codeNode.textContent = option.key;
       }
     });
+    syncHashopLanguageSurface(state);
   }
 
   function hashopDebugEnabled() {
@@ -4194,7 +4465,7 @@
     const active = String(activeKey || "").trim() || "manage";
     const entries = [
       { key: "manage", label: "Manage", attr: 'data-owner-main-manage="true"' },
-      { key: "orders", label: pendingCount ? (pendingCount + " pending") : "Orders", attr: 'data-owner-main-open-history="orders"' },
+      { key: "orders", label: "Orders", count: pendingCount, attr: 'data-owner-main-open-history="orders"' },
       { key: "items", label: "Stock", attr: 'data-owner-main-open-history="items"' },
       { key: "sales", label: "Sales", attr: 'data-owner-main-open-history="sales"' }
     ];
@@ -4207,6 +4478,7 @@
               (isActive ? ' aria-current="page" aria-pressed="true"' : ' ' + entry.attr) + '>' +
               '<span class="shop-owner-workspace-icon is-' + escapeHtml(entry.key) + '" aria-hidden="true"></span>' +
               '<span class="shop-owner-workspace-copy">' + escapeHtml(entry.label) + '</span>' +
+              (entry.count ? '<span class="shop-owner-workspace-badge" aria-hidden="true">' + escapeHtml(entry.count > 99 ? "99+" : String(entry.count)) + '</span>' : '') +
             '</button>';
         }).join('') +
       '</nav>';
@@ -4341,7 +4613,6 @@
     return '' +
       '<section class="shop-owner-stack">' +
         ownerStatusMarkup(state) +
-        ownerManageSummaryMarkup(state, detail, consoleData, section === "payments" ? "Payments" : "Manage") +
         ownerWorkspaceNavMarkup(state, consoleData, "manage") +
         settingsTabsMarkup +
         bodyMarkup +
@@ -8912,7 +9183,8 @@
     const rootView = isRootUtilityState(state, screenMode);
     const browseNavActive = isRootScreenMode(screenMode) && !state.debugPaneView && !state.activeShopId;
     const ownerMode = isOwnerAccountMode(state);
-    const cartTotal = ownerMode ? 0 : buyerCartCount(state);
+    const cartTotal = ownerMode ? ownerPendingOrdersNavCount(state) : buyerCartCount(state);
+    const cartBadgeKind = ownerMode ? "order" : "item";
     const languageAvailable = screenMode === "account";
     const navLabels = ownerMode
       ? { shops: "Shops", items: "Stock", cart: "Orders", account: "Account" }
@@ -8950,7 +9222,7 @@
       if (nav === "cart") {
         let badgeNode = button.querySelector(".home-bottom-link-badge");
         const badgeLabel = cartTotal > 99 ? "99+" : String(cartTotal);
-        if (!ownerMode && cartTotal > 0) {
+        if (cartTotal > 0) {
           if (!badgeNode) {
             badgeNode = document.createElement("span");
             badgeNode.className = "home-bottom-link-badge";
@@ -8966,10 +9238,16 @@
           }
           button.classList.add("has-cart-badge");
           button.setAttribute("data-cart-count", badgeLabel);
+          if (ownerMode) {
+            button.setAttribute("data-order-count", badgeLabel);
+          } else {
+            button.removeAttribute("data-order-count");
+          }
         } else {
           if (badgeNode) badgeNode.remove();
           button.classList.remove("has-cart-badge");
           button.removeAttribute("data-cart-count");
+          button.removeAttribute("data-order-count");
         }
       }
       let active = false;
@@ -8987,9 +9265,9 @@
           : (browseNavActive && normalizeRootMode(state.rootMode) !== "items");
       }
       button.classList.toggle("is-active", active);
-      if (nav === "cart" && !ownerMode && cartTotal > 0) {
-        button.setAttribute("aria-label", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
-        button.setAttribute("title", navLabel + ", " + cartTotal + " item" + (cartTotal === 1 ? "" : "s"));
+      if (nav === "cart" && cartTotal > 0) {
+        button.setAttribute("aria-label", navLabel + ", " + cartTotal + " " + cartBadgeKind + (cartTotal === 1 ? "" : "s"));
+        button.setAttribute("title", navLabel + ", " + cartTotal + " " + cartBadgeKind + (cartTotal === 1 ? "" : "s"));
       }
     });
     if (!languageAvailable && state.languageRollerOpen) {
@@ -9023,6 +9301,7 @@
     state.iconRenderFrame = window.requestAnimationFrame(function () {
       state.iconRenderFrame = 0;
       renderLucideIcons(state.shellNode || document);
+      syncHashopLanguageSurface(state);
     });
   }
 
@@ -9116,6 +9395,7 @@
     if (state.searchInput.value !== String(state.searchQuery || "")) {
       state.searchInput.value = String(state.searchQuery || "");
     }
+    syncHashopLanguageSurface(state);
   }
 
   function setLocateButtonState(button, mode, label, options) {
