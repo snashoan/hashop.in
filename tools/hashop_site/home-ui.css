@@ -31281,3 +31281,328 @@ html body .shell.shell-home.shell-home.shell-home .shop-owner-workspace-badge {
     transition: none !important;
   }
 }
+
+/* Iteration 139: shared chrome alignment, regional language menu, and themed compass. */
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode],
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel.is-root-view {
+  --hashop-sheet-x: max(0.56rem, env(safe-area-inset-left, 0px)) !important;
+  --hashop-sheet-right: max(0.56rem, env(safe-area-inset-right, 0px)) !important;
+  --hashop-sheet-top: 0.42rem !important;
+  --hashop-state-bar-h: 2.46rem !important;
+  --hashop-search-h: 2.68rem !important;
+  --hashop-row-gap: 0.44rem !important;
+  --hashop-nav-h: 3.5rem !important;
+  --hashop-sheet-bottom: calc(0.42rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"] {
+  --hashop-state-bar-h: 0rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-panel-bar,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-panel-bar {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  left: var(--hashop-sheet-x) !important;
+  right: var(--hashop-sheet-right) !important;
+  top: var(--hashop-sheet-top) !important;
+  z-index: 58 !important;
+  display: grid !important;
+  grid-template-columns: minmax(4.4rem, max-content) minmax(0, 1fr) minmax(2.64rem, max-content) !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  width: auto !important;
+  max-width: none !important;
+  height: var(--hashop-state-bar-h) !important;
+  min-height: var(--hashop-state-bar-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  pointer-events: auto !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"] .shop-panel-bar {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-back-action,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-back-action,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-back-action {
+  box-sizing: border-box !important;
+  justify-self: start !important;
+  align-self: center !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: auto !important;
+  min-width: 4.08rem !important;
+  max-width: min(8.2rem, 34vw) !important;
+  height: var(--hashop-state-bar-h) !important;
+  min-height: var(--hashop-state-bar-h) !important;
+  margin: 0 !important;
+  padding: 0 0.68rem !important;
+  overflow: hidden !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: var(--hashop-theme-soft) !important;
+  background-color: var(--hashop-theme-soft) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-back-action.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-back-action:not(.is-visible) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-pane-toggle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-pane-toggle,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-pane-toggle {
+  box-sizing: border-box !important;
+  grid-column: 2 !important;
+  justify-self: center !important;
+  align-self: center !important;
+  width: min(5.1rem, 100%) !important;
+  max-width: 5.1rem !important;
+  height: var(--hashop-state-bar-h) !important;
+  min-height: var(--hashop-state-bar-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-head,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-list-head,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel.is-root-view .shop-list-head {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  left: var(--hashop-sheet-x) !important;
+  right: var(--hashop-sheet-right) !important;
+  top: calc(var(--hashop-sheet-top) + var(--hashop-state-bar-h) + var(--hashop-row-gap)) !important;
+  z-index: 54 !important;
+  display: block !important;
+  width: auto !important;
+  max-width: none !important;
+  height: var(--hashop-search-h) !important;
+  min-height: var(--hashop-search-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  box-shadow:
+    0 -0.48rem 0 0.48rem var(--hashop-theme-bg),
+    0 0.44rem 0 0 var(--hashop-theme-bg) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel.has-hidden-search .shop-list-head,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-head[hidden],
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-list-head[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  pointer-events: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel.is-root-view .shop-list-grid {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  left: var(--hashop-sheet-x) !important;
+  right: var(--hashop-sheet-right) !important;
+  top: calc(var(--hashop-sheet-top) + var(--hashop-state-bar-h) + var(--hashop-row-gap) + var(--hashop-search-h) + var(--hashop-row-gap)) !important;
+  bottom: calc(var(--hashop-sheet-bottom) + var(--hashop-nav-h) + var(--hashop-row-gap)) !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 0 0.32rem !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel.has-hidden-search .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"] .shop-list-grid {
+  top: calc(var(--hashop-sheet-top) + var(--hashop-state-bar-h) + var(--hashop-row-gap)) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel .home-bottom-nav,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .home-bottom-nav {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  left: var(--hashop-sheet-x) !important;
+  right: var(--hashop-sheet-right) !important;
+  top: auto !important;
+  bottom: var(--hashop-sheet-bottom) !important;
+  z-index: 60 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 0.08rem !important;
+  width: auto !important;
+  max-width: none !important;
+  height: var(--hashop-nav-h) !important;
+  min-height: var(--hashop-nav-h) !important;
+  margin: 0 !important;
+  padding: 0.22rem !important;
+  overflow: hidden !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-bottom-nav button.home-bottom-link,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode] .home-bottom-nav button.home-bottom-link[data-home-nav] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-roller {
+  width: min(14rem, calc(100vw - 1rem)) !important;
+  max-height: min(18rem, calc(100dvh - 5.5rem)) !important;
+  gap: 0.12rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-region-label {
+  display: block !important;
+  min-width: 0 !important;
+  padding: 0.34rem 0.46rem 0.16rem !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+  font-size: 0.64rem !important;
+  font-weight: 920 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  text-transform: uppercase !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .home-language-option {
+  grid-template-columns: 1.9rem minmax(0, 1fr) 0.62rem !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .map-screen .map-compass-button {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  top: max(0.78rem, env(safe-area-inset-top, 0px)) !important;
+  right: max(0.72rem, env(safe-area-inset-right, 0px)) !important;
+  left: auto !important;
+  z-index: 42 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 2.78rem !important;
+  height: 2.78rem !important;
+  min-width: 2.78rem !important;
+  min-height: 2.78rem !important;
+  padding: 0 !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--hashop-theme-bg) 92%, transparent) !important;
+  background-color: color-mix(in srgb, var(--hashop-theme-bg) 92%, transparent) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hashop-theme-bg) 72%, transparent) !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .map-screen .map-compass-button::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0.42rem !important;
+  border: 1px solid color-mix(in srgb, var(--hashop-theme-accent) 36%, transparent) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .map-screen .map-compass-needle {
+  position: absolute !important;
+  left: 50% !important;
+  top: 0.54rem !important;
+  width: 0.48rem !important;
+  height: 1.18rem !important;
+  margin-left: -0.24rem !important;
+  border-radius: 999px 999px 0.18rem 0.18rem !important;
+  background: currentColor !important;
+  clip-path: polygon(50% 0, 86% 100%, 50% 78%, 14% 100%) !important;
+  transform: rotate(var(--hashop-map-heading, 0deg)) !important;
+  transform-origin: 50% 82% !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .map-screen .map-compass-label {
+  position: relative !important;
+  z-index: 1 !important;
+  margin-top: 0.8rem !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  font-size: 0.66rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+@media (max-width: 430px) {
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode],
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel.is-root-view {
+    --hashop-sheet-x: max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+    --hashop-sheet-right: max(0.5rem, env(safe-area-inset-right, 0px)) !important;
+    --hashop-row-gap: 0.38rem !important;
+    --hashop-nav-h: 3.44rem !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .shop-back-action,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel .shop-back-action {
+    min-width: 3.86rem !important;
+    max-width: 7.1rem !important;
+    padding-inline: 0.56rem !important;
+    font-size: 0.74rem !important;
+  }
+
+  html body .shell.shell-home.shell-home.shell-home .home-language-roller {
+    width: min(13.2rem, calc(100vw - 0.9rem)) !important;
+  }
+}

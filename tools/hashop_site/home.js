@@ -103,8 +103,10 @@
 
   function accountLanguageOptions() {
     return [
-      { key: "EN-US", code: "US", flag: "🇺🇸", label: "English (US)", lang: "en-US" },
-      { key: "EN-GB", code: "UK", flag: "🇬🇧", label: "English (UK)", lang: "en-GB" }
+      { key: "EN-US", code: "US", flag: "🇺🇸", label: "English", region: "United States", group: "English", lang: "en-US" },
+      { key: "EN-GB", code: "UK", flag: "🇬🇧", label: "English", region: "United Kingdom", group: "English", lang: "en-GB" },
+      { key: "HI-IN", code: "HI", flag: "🇮🇳", label: "Hindi", region: "India", group: "Regional", lang: "hi-IN" },
+      { key: "KN-IN", code: "KN", flag: "🇮🇳", label: "Kannada", region: "Karnataka", group: "Regional", lang: "kn-IN" }
     ];
   }
 
@@ -112,6 +114,8 @@
     const safeValue = String(value || "").trim().toUpperCase().replace(/_/g, "-");
     if (safeValue === "EN" || safeValue === "US" || safeValue === "EN-US") return "EN-US";
     if (safeValue === "UK" || safeValue === "GB" || safeValue === "EN-UK" || safeValue === "EN-GB") return "EN-GB";
+    if (safeValue === "HI" || safeValue === "HINDI" || safeValue === "HI-IN") return "HI-IN";
+    if (safeValue === "KN" || safeValue === "KANNADA" || safeValue === "KN-IN") return "KN-IN";
     return accountLanguageOptions().some(function (option) {
       return option.key === safeValue;
     }) ? safeValue : "EN-US";
@@ -173,7 +177,7 @@
 
   function syncHashopLanguageButtons(state) {
     const language = accountLanguageOption(state);
-    const label = "Language: " + language.label;
+    const label = "Language: " + language.label + (language.region ? ", " + language.region : "");
     const isOpen = !!(state && state.languageRollerOpen);
     Array.prototype.forEach.call(document.querySelectorAll("[data-account-language-cycle], [data-account-language-toggle]"), function (button) {
       if (!(button instanceof HTMLElement)) return;
@@ -188,7 +192,7 @@
       const nameNode = button.querySelector(".shop-account-language-name");
       if (flagNode) flagNode.textContent = language.flag;
       if (codeNode) codeNode.textContent = language.code || language.key;
-      if (nameNode) nameNode.textContent = language.label;
+      if (nameNode) nameNode.textContent = language.region ? (language.label + " · " + language.region) : language.label;
     });
     const roller = document.getElementById("homeLanguageRoller");
     if (roller) {
@@ -212,7 +216,7 @@
         const strongNode = copyNode.querySelector("strong");
         const codeNode = copyNode.querySelector("em");
         if (strongNode) strongNode.textContent = option.label;
-        if (codeNode) codeNode.textContent = option.code || option.key;
+        if (codeNode) codeNode.textContent = option.region || option.code || option.key;
       }
     });
     syncHashopLanguageSurface(state);
@@ -8151,7 +8155,9 @@
       return { resetScroll: true };
     }
     if (type === "CONCEPT_LANGUAGE_CYCLED") {
-      const options = ["EN-US", "EN-GB"];
+      const options = accountLanguageOptions().map(function (option) {
+        return option.key;
+      });
       const currentIndex = options.indexOf(normalizeHashopLanguage(state.conceptLanguage || "EN-US"));
       state.conceptLanguage = options[(currentIndex + 1 + options.length) % options.length];
       return { resetScroll: false };
@@ -8201,7 +8207,10 @@
 
   function conceptLanguageLabel(state) {
     const value = normalizeHashopLanguage(state && state.conceptLanguage || "EN-US");
-    return value === "EN-GB" ? "UK" : "US";
+    const option = accountLanguageOptions().find(function (candidate) {
+      return candidate.key === value;
+    });
+    return option ? option.code : "US";
   }
 
   function conceptLanguageButtonMarkup(state) {
@@ -9102,6 +9111,10 @@
       || (isOwnerViewingShop(state) && state.ownerPanel.tab === "settings");
     if (searchHead) {
       searchHead.hidden = hidden;
+    }
+    if (state.panelNode) {
+      state.panelNode.classList.toggle("has-hidden-search", hidden);
+      state.panelNode.classList.toggle("has-visible-search", !hidden);
     }
     state.searchInput.disabled = hidden;
     syncHomeUtilityUi(state);
@@ -12201,7 +12214,7 @@
     conceptName: CONCEPT_NAME,
     conceptAccountStep: "account",
     conceptWorkspaceTab: "orders",
-    conceptLanguage: "EN",
+    conceptLanguage: "EN-US",
     conceptShopDraft: {
       name: "",
       location: "",
