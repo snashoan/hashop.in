@@ -3985,11 +3985,11 @@
     const orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
     const pendingOrders = pendingOwnerOrdersCount(orders);
     const selectedItemId = String(state && state.ownerPanel && state.ownerPanel.itemId || "").trim();
-    const selectedItem = listings.find(function (item) {
+    const selectedItem = selectedItemId ? (listings.find(function (item) {
       return String(item && item.id || "").trim() === selectedItemId;
-    }) || listings[0] || null;
-    if (selectedItem && state && state.ownerPanel) {
-      state.ownerPanel.itemId = String(selectedItem.id || "").trim();
+    }) || null) : null;
+    if (!selectedItem && selectedItemId && state && state.ownerPanel) {
+      state.ownerPanel.itemId = "";
     }
     const payments = Array.isArray(consoleData && consoleData.payments) ? consoleData.payments : [];
     let paymentDetails = "";
@@ -4132,11 +4132,11 @@
     const orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
     const pendingOrders = pendingOwnerOrdersCount(orders);
     const selectedItemId = String(state && state.ownerPanel && state.ownerPanel.itemId || "").trim();
-    const selectedItem = listings.find(function (item) {
+    const selectedItem = selectedItemId ? (listings.find(function (item) {
       return String(item && item.id || "").trim() === selectedItemId;
-    }) || listings[0] || null;
-    if (selectedItem && state && state.ownerPanel) {
-      state.ownerPanel.itemId = String(selectedItem.id || "").trim();
+    }) || null) : null;
+    if (!selectedItem && selectedItemId && state && state.ownerPanel) {
+      state.ownerPanel.itemId = "";
     }
     const payments = Array.isArray(consoleData && consoleData.payments) ? consoleData.payments : [];
     let paymentDetails = "";
@@ -4558,11 +4558,11 @@
     const listings = Array.isArray(consoleData && consoleData.listings) ? consoleData.listings : [];
     const orders = Array.isArray(consoleData && consoleData.orders) ? consoleData.orders : [];
     const selectedItemId = String(state && state.ownerPanel && state.ownerPanel.itemId || "").trim();
-    const selectedItem = listings.find(function (item) {
+    const selectedItem = selectedItemId ? (listings.find(function (item) {
       return String(item && item.id || "").trim() === selectedItemId;
-    }) || listings[0] || null;
-    if (selectedItem && state && state.ownerPanel) {
-      state.ownerPanel.itemId = String(selectedItem.id || "").trim();
+    }) || null) : null;
+    if (!selectedItem && selectedItemId && state && state.ownerPanel) {
+      state.ownerPanel.itemId = "";
     }
     let bodyMarkup = "";
 
@@ -4587,7 +4587,7 @@
       });
       const draftOpen = !!(state && state.ownerPanel && state.ownerPanel.orderDraftOpen);
       const draftSectionMarkup = draftOpen ? (
-        '<section class="shop-owner-form">' +
+        '<section class="shop-owner-form shop-owner-order-draft-form">' +
             '<div class="shop-owner-form-head">' +
               '<strong>Start order</strong>' +
               '<button class="shop-owner-chip-button" type="button" data-owner-walkin-toggle="true">Close</button>' +
@@ -4634,7 +4634,7 @@
             '</div>' +
           '</section>'
       ) : (
-        '<section class="shop-owner-form shop-owner-compact-task">' +
+        '<section class="shop-owner-form shop-owner-compact-task shop-owner-list-section">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Orders</strong>' +
             '<button class="shop-owner-save" type="button" data-owner-walkin-toggle="true">Start order</button>' +
@@ -4642,7 +4642,7 @@
         '</section>'
       );
       bodyMarkup = draftSectionMarkup +
-        '<section class="shop-owner-form">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-orders-section">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Order history</strong>' +
             '<span>' + escapeHtml(filteredOrders.length ? (filteredOrders.length + " visible") : "No matching orders") + '</span>' +
@@ -4677,7 +4677,7 @@
         return status === "paid" || status === "completed";
       }).slice(0, 8);
       bodyMarkup = '' +
-        '<section class="shop-owner-form shop-owner-accounting">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-accounting">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Sales accounting</strong>' +
             '<span>' + escapeHtml(accountingOrders.length ? (accountingOrders.length + " orders counted") : "No orders counted") + '</span>' +
@@ -4705,7 +4705,7 @@
             '</article>' +
           '</div>' +
         '</section>' +
-        '<section class="shop-owner-form shop-owner-accounting">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-accounting">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Payment split</strong>' +
             '<span>' + escapeHtml(paymentRows.length ? "By collection method" : "No payments yet") + '</span>' +
@@ -4723,7 +4723,7 @@
             '</div>'
           ) : '<div class="shop-list-empty">Payments will show here after orders are saved.</div>') +
         '</section>' +
-        '<section class="shop-owner-form shop-owner-accounting">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-accounting">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Item movement</strong>' +
             '<span>' + escapeHtml(itemRows.length ? "Top sold items" : "No items sold yet") + '</span>' +
@@ -4741,7 +4741,7 @@
             '</div>'
           ) : '<div class="shop-list-empty">Sold item totals will appear here.</div>') +
         '</section>' +
-        '<section class="shop-owner-form shop-owner-accounting">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-accounting">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Settled orders</strong>' +
             '<span>' + escapeHtml(settledOrders.length ? (settledOrders.length + " recent") : "None settled yet") + '</span>' +
@@ -4844,7 +4844,7 @@
         : '<div class="shop-list-empty">' + escapeHtml(query ? "No library items match this search." : "No reusable items found in the local DB yet.") + '</div>';
       bodyMarkup = '' +
         itemAddFormMarkup +
-        '<section class="shop-owner-form">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-inventory-section">' +
           '<div class="shop-owner-form-head">' +
             '<span>' +
               '<strong>Your inventory</strong>' +
@@ -4857,7 +4857,7 @@
             ownerSelectedItemEditorMarkup(selectedItem) +
           '</div>' +
         '</section>' +
-        '<section class="shop-owner-form">' +
+        '<section class="shop-owner-form shop-owner-list-section shop-owner-library-section">' +
           '<div class="shop-owner-form-head">' +
             '<strong>Local item library</strong>' +
             '<span>Reuse listings already saved in the local server DB.</span>' +
@@ -4962,7 +4962,7 @@
       imageFiles: [],
       createdAt: Date.now()
     });
-    state.ownerPanel.itemId = newItemId;
+    state.ownerPanel.itemId = "";
     state.ownerPanel.itemAddOpen = false;
     consoleData.listings = listings;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Item added.");
@@ -5004,7 +5004,7 @@
     const nextListings = listings.filter(function (item) {
       return String(item && item.id || "").trim() !== itemId;
     });
-    state.ownerPanel.itemId = nextListings.length ? String(nextListings[0].id || "").trim() : "";
+    state.ownerPanel.itemId = "";
     consoleData.listings = nextListings;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Item removed.");
   }
@@ -5050,7 +5050,7 @@
       imageFiles: Array.isArray(sourceItem.imageFiles) ? sourceItem.imageFiles.slice(0, 8) : [],
       createdAt: Date.now()
     });
-    state.ownerPanel.itemId = newItemId;
+    state.ownerPanel.itemId = "";
     consoleData.listings = listings;
     saveOwnerConsole(state, state.activeShopId, consoleData, "Item imported.");
   }

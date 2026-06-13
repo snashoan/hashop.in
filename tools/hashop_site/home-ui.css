@@ -31678,3 +31678,130 @@ html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed .shop
   max-width: 6.2rem !important;
   text-align: center !important;
 }
+
+/* Iteration 141: listings extend in place; edit surfaces appear only after selection. */
+html body .shell.shell-home.shell-home.shell-home .shop-owner-list-section {
+  padding: 0.16rem 0 0.28rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-list-section + .shop-owner-list-section {
+  padding-top: 0.84rem !important;
+  border-top: 1px solid var(--hashop-theme-line) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-list-section > .shop-owner-form-head {
+  margin: 0 0 0.44rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-item-list,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-order-list,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-accounting-list,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-draft-list {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-order-list > .shop-owner-order-card,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-draft-list > .shop-owner-draft-card,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-accounting-list > .shop-owner-accounting-row {
+  padding: 0.78rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-order-list > .shop-owner-order-card:last-child,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-draft-list > .shop-owner-draft-card:last-child,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-accounting-list > .shop-owner-accounting-row:last-child {
+  border-bottom: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-item-editor {
+  margin: 0.86rem 0 0 !important;
+  padding: 0.82rem 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-item-editor > .shop-owner-item-card {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-item-editor > .shop-owner-inline-label {
+  display: block !important;
+  margin: 0 0 0.52rem !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-account-menu-card,
+html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-account-menu-card > .shop-account-menu-row,
+html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card > .shop-account-menu-row,
+html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-account-menu-card > .shop-account-record-row,
+html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card > .shop-account-record-row {
+  padding: 0.82rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-account-menu-card > .shop-account-menu-row:last-child,
+html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card > .shop-account-menu-row:last-child,
+html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-account-menu-card > .shop-account-record-row:last-child,
+html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card > .shop-account-record-row:last-child {
+  border-bottom: 0 !important;
+}
