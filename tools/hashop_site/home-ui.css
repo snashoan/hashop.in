@@ -31606,3 +31606,75 @@ html body .shell.shell-home.shell-home.shell-home .map-screen .map-compass-label
     width: min(13.2rem, calc(100vw - 0.9rem)) !important;
   }
 }
+
+/* Iteration 140: owner listings reuse the buyer feed/list card contract. */
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-feed,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed[data-list-view="list"] > .shop-owner-library-card {
+  padding: 0.72rem 0.08rem 0.74rem 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hashop-theme-line) !important;
+  border-radius: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed[data-list-view="feed"] > .shop-owner-library-card {
+  padding: 0 0 0.78rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-feed > .shop-owner-inventory-card,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed > .shop-owner-library-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid > .shop-owner-stock-card {
+  cursor: pointer !important;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-feed > .shop-owner-inventory-card.is-selected {
+  position: relative !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-feed > .shop-owner-inventory-card.is-selected::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0.72rem !important;
+  bottom: 0.72rem !important;
+  width: 3px !important;
+  border-radius: 999px !important;
+  background: var(--hashop-theme-accent) !important;
+  background-color: var(--hashop-theme-accent) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-inventory-feed > .shop-owner-inventory-card:focus-visible,
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed .shop-owner-library-import:focus-visible,
+html body .shell.shell-home.shell-home.shell-home .shop-list-grid > .shop-owner-stock-card:focus-visible {
+  outline: 2px solid var(--hashop-theme-accent) !important;
+  outline-offset: 2px !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-owner-library-feed .shop-owner-library-import {
+  min-width: 4.9rem !important;
+  max-width: 6.2rem !important;
+  text-align: center !important;
+}

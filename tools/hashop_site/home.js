@@ -151,8 +151,198 @@
     }) || accountLanguageOptions()[0];
   }
 
-  function syncHashopLanguageSurface() {
-    // English variants only for now; regional translations will be added after the core flow settles.
+  const hashopTranslationTextSources = new WeakMap();
+  const hashopTranslationAttributeSources = new WeakMap();
+  const hashopAutoTranslationCache = new Map();
+  let hashopAutoTranslationRun = 0;
+
+  function hashopLanguageBaseCode(language) {
+    return String(language || "").trim().toLowerCase().split("-")[0] || "en";
+  }
+
+  function shouldAutoTranslateHashopLanguage(option) {
+    return hashopLanguageBaseCode(option && option.lang || option && option.key || "en-US") !== "en";
+  }
+
+  function shouldSkipHashopAutoTranslationNode(parent) {
+    if (!parent || !(parent instanceof HTMLElement)) return true;
+    if (parent.closest("script,style,noscript,template,input,textarea,select,option,[data-no-translate]")) return true;
+    if (parent.closest(".brand,.home-hash-logo,.brand-name,.home-brand-name")) return true;
+    if (parent.closest(".shop-card-title-block strong,.shop-owner-summary-copy strong,.shop-owner-draft-copy strong,.shop-owner-item-card-copy strong")) return true;
+    return false;
+  }
+
+  function sourceTextForHashopTranslation(node) {
+    if (!hashopTranslationTextSources.has(node)) {
+      hashopTranslationTextSources.set(node, String(node && node.nodeValue || ""));
+    }
+    return hashopTranslationTextSources.get(node) || "";
+  }
+
+  function sourceAttributeForHashopTranslation(node, name) {
+    let sources = hashopTranslationAttributeSources.get(node);
+    if (!sources) {
+      sources = {};
+      hashopTranslationAttributeSources.set(node, sources);
+    }
+    if (!Object.prototype.hasOwnProperty.call(sources, name)) {
+      sources[name] = String(node.getAttribute(name) || "");
+    }
+    return sources[name] || "";
+  }
+
+  function restoreHashopAutoTranslationSurface(root) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        return hashopTranslationTextSources.has(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach(function (node) {
+      const source = sourceTextForHashopTranslation(node);
+      if (node.nodeValue !== source) node.nodeValue = source;
+    });
+    Array.prototype.forEach.call(root.querySelectorAll("[placeholder], [aria-label], [title]"), function (node) {
+      const sources = hashopTranslationAttributeSources.get(node);
+      if (!sources) return;
+      Object.keys(sources).forEach(function (name) {
+        if (node.getAttribute(name) !== sources[name]) node.setAttribute(name, sources[name]);
+      });
+    });
+  }
+
+  function collectHashopAutoTranslationJobs(root) {
+    const jobs = [];
+    if (!root) return jobs;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        const parent = node && node.parentElement;
+        if (shouldSkipHashopAutoTranslationNode(parent)) return NodeFilter.FILTER_REJECT;
+        const source = sourceTextForHashopTranslation(node);
+        return /[A-Za-z]/.test(source) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      jobs.push({
+        kind: "text",
+        node: node,
+        source: sourceTextForHashopTranslation(node)
+      });
+    }
+    Array.prototype.forEach.call(root.querySelectorAll("[placeholder], [aria-label], [title]"), function (node) {
+      if (!(node instanceof HTMLElement)) return;
+      if (shouldSkipHashopAutoTranslationNode(node)) return;
+      ["placeholder", "aria-label", "title"].forEach(function (name) {
+        if (!node.hasAttribute(name)) return;
+        const source = sourceAttributeForHashopTranslation(node, name);
+        if (!/[A-Za-z]/.test(source)) return;
+        jobs.push({
+          kind: "attribute",
+          node: node,
+          name: name,
+          source: source
+        });
+      });
+    });
+    return jobs;
+  }
+
+  function createHashopAutoTranslator(sourceLanguage, targetLanguage) {
+    if (typeof window.hashopTranslateText === "function") {
+      return Promise.resolve({
+        translate: function (text) {
+          return window.hashopTranslateText(text, {
+            sourceLanguage: sourceLanguage,
+            targetLanguage: targetLanguage
+          });
+        }
+      });
+    }
+    if (window.Translator && typeof window.Translator.create === "function") {
+      return window.Translator.create({
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage
+      });
+    }
+    if (window.ai && window.ai.translator && typeof window.ai.translator.create === "function") {
+      return window.ai.translator.create({
+        sourceLanguage: sourceLanguage,
+        targetLanguage: targetLanguage
+      });
+    }
+    return Promise.resolve(null);
+  }
+
+  function translateHashopSourceText(translator, source, targetLanguage) {
+    const text = String(source || "");
+    const key = targetLanguage + "\n" + text;
+    if (hashopAutoTranslationCache.has(key)) return Promise.resolve(hashopAutoTranslationCache.get(key));
+    return Promise.resolve(translator.translate(text)).then(function (translated) {
+      const value = String(translated || "").trim() ? String(translated) : text;
+      hashopAutoTranslationCache.set(key, value);
+      return value;
+    });
+  }
+
+  function requestHashopAutoTranslation(state, root, language) {
+    const targetLanguage = hashopLanguageBaseCode(language && language.lang || language && language.key || "en-US");
+    const runId = ++hashopAutoTranslationRun;
+    root.setAttribute("data-hashop-auto-translate", "pending");
+    createHashopAutoTranslator("en", targetLanguage)
+      .then(function (translator) {
+        if (runId !== hashopAutoTranslationRun) return;
+        if (!translator || typeof translator.translate !== "function") {
+          root.setAttribute("data-hashop-auto-translate", "browser");
+          return;
+        }
+        const jobs = collectHashopAutoTranslationJobs(root).slice(0, 220);
+        return jobs.reduce(function (chain, job) {
+          return chain.then(function () {
+            if (runId !== hashopAutoTranslationRun) return null;
+            return translateHashopSourceText(translator, job.source, targetLanguage).then(function (translated) {
+              if (runId !== hashopAutoTranslationRun) return;
+              if (job.kind === "text") {
+                job.node.nodeValue = translated;
+              } else if (job.node instanceof HTMLElement && job.name) {
+                job.node.setAttribute(job.name, translated);
+              }
+            });
+          });
+        }, Promise.resolve()).then(function () {
+          if (runId === hashopAutoTranslationRun) {
+            root.setAttribute("data-hashop-auto-translate", "translated");
+          }
+        });
+      })
+      .catch(function () {
+        if (runId === hashopAutoTranslationRun) {
+          root.setAttribute("data-hashop-auto-translate", "browser");
+        }
+      });
+  }
+
+  function syncHashopLanguageSurface(state) {
+    const language = accountLanguageOption(state);
+    const languageKey = language.key;
+    const root = state && state.shellNode instanceof HTMLElement ? state.shellNode : document.body;
+    if (!root) return;
+    try {
+      document.documentElement.setAttribute("lang", language.lang || "en-US");
+      document.documentElement.setAttribute("data-hashop-language", languageKey);
+      document.documentElement.setAttribute("data-hashop-translation-mode", shouldAutoTranslateHashopLanguage(language) ? "auto" : "source");
+      root.setAttribute("translate", "yes");
+      root.setAttribute("data-hashop-translate-target", language.lang || "en-US");
+    } catch (error) {}
+    restoreHashopAutoTranslationSurface(root);
+    if (!shouldAutoTranslateHashopLanguage(language)) {
+      ++hashopAutoTranslationRun;
+      root.removeAttribute("data-hashop-auto-translate");
+      return;
+    }
+    requestHashopAutoTranslation(state, root, language);
   }
 
   function cycleHashopLanguage(state) {
@@ -4596,6 +4786,62 @@
           '</div>' +
         '</section>'
       ) : "";
+      const inventoryListMarkup = visibleItems.length ? (
+        listingViewControlsMarkup(state, visibleItems.length, "Items") +
+        '<div class="shop-pane-items shop-pane-shop-feed shop-owner-inventory-feed" data-list-view="' + escapeHtml(normalizeListingViewMode(state.listingViewMode)) + '">' +
+          visibleItems.map(function (item) {
+            const itemId = String(item.id || "").trim();
+            const isSelected = !!(selectedItem && itemId === String(selectedItem.id || "").trim());
+            const priceLabel = formatPrice(item.price, detail && detail.pricing) || "Price not set";
+            const quantity = Math.max(0, Number(item.quantity || 0));
+            return shopItemCardMarkup(state, detail, item, state.shopById && state.shopById[state.activeShopId] || {}, {
+              shopId: state.activeShopId,
+              itemId: itemId,
+              showShopName: false,
+              subtitle: "Inventory",
+              ownerMode: true,
+              openShop: false,
+              cardClass: "shop-owner-inventory-card" + (isSelected ? " is-selected" : ""),
+              cardAttrs: 'data-owner-item-select="' + escapeHtml(itemId) + '" role="button" tabindex="0" aria-label="' + escapeHtml((isSelected ? "Editing " : "Edit ") + (item.title || "item")) + '"',
+              actionMarkup: '<span class="shop-card-open">' + escapeHtml(isSelected ? "Editing" : "Tap to edit") + '</span>',
+              metaItems: [priceLabel, "Qty " + quantity, item.description || "No description"]
+            });
+          }).join('') +
+        '</div>'
+      ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No items match this search." : "No items yet.") + '</div>';
+      const libraryListMarkup = state.itemLibraryLoading
+        ? '<div class="shop-list-empty">Loading saved items...</div>'
+        : state.itemLibraryError
+        ? '<div class="shop-pane-notice is-error">' + escapeHtml(state.itemLibraryError) + '</div>'
+        : libraryItems.length
+        ? (
+          listingViewControlsMarkup(state, libraryItems.length, "Items") +
+          '<div class="shop-pane-items shop-pane-shop-feed shop-owner-inventory-feed shop-owner-library-feed" data-list-view="' + escapeHtml(normalizeListingViewMode(state.listingViewMode)) + '">' +
+            libraryItems.map(function (item) {
+              const libraryId = String(item.libraryId || "").trim();
+              const libraryShopId = String(item.shopId || "").trim();
+              const libraryShop = state.shopById && state.shopById[libraryShopId] || {};
+              const libraryDetail = state.shopDetails && state.shopDetails[libraryShopId] || {
+                name: String(item.shopName || libraryShopId || "Shop").trim(),
+                pricing: detail && detail.pricing
+              };
+              const priceLabel = formatPrice(item.price, detail && detail.pricing) || "Not set";
+              const quantity = Math.max(0, Number(item.quantity || 0));
+              return shopItemCardMarkup(state, libraryDetail, item, libraryShop, {
+                shopId: libraryShopId,
+                itemId: libraryId || String(item.id || "").trim(),
+                shopName: String(item.shopName || libraryShopId || "Shop").trim(),
+                subtitle: String(item.shopName || libraryShopId || "Shop").trim() + (libraryShopId ? (" · @" + libraryShopId) : ""),
+                ownerMode: true,
+                openShop: false,
+                cardClass: "shop-owner-library-card",
+                actionMarkup: '<button class="shop-card-add shop-owner-library-import" type="button" data-owner-library-import="' + escapeHtml(libraryId) + '">Import item</button>',
+                metaItems: [priceLabel, "Qty " + quantity, item.description || "Ready to import into this shop."]
+              });
+            }).join('') +
+          '</div>'
+        )
+        : '<div class="shop-list-empty">' + escapeHtml(query ? "No library items match this search." : "No reusable items found in the local DB yet.") + '</div>';
       bodyMarkup = '' +
         itemAddFormMarkup +
         '<section class="shop-owner-form">' +
@@ -4607,25 +4853,7 @@
             itemAddToggleMarkup +
           '</div>' +
           '<div class="shop-owner-item-list">' +
-            (visibleItems.length ? (
-              '<div class="shop-owner-item-picker">' +
-                visibleItems.map(function (item) {
-                  const itemId = String(item.id || "").trim();
-                  const isSelected = !!(selectedItem && itemId === String(selectedItem.id || "").trim());
-                  return '' +
-                    '<button class="shop-owner-item-select' + (isSelected ? ' is-selected' : '') + '" type="button" data-owner-item-select="' + escapeHtml(itemId) + '">' +
-                      '<span class="shop-owner-item-select-row">' +
-                        ownerItemPreviewMarkup(item, "is-mini") +
-                        '<span class="shop-owner-item-select-copy">' +
-                          '<strong>' + escapeHtml(item.title || "Item") + '</strong>' +
-                          '<span>' + escapeHtml((item.price ? formatPrice(item.price, detail && detail.pricing) + ' • ' : '') + 'Qty ' + Math.max(0, Number(item.quantity || 0))) + '</span>' +
-                        '</span>' +
-                        '<span class="shop-owner-item-select-action">' + escapeHtml(isSelected ? "Editing" : "Tap to edit") + '</span>' +
-                      '</span>' +
-                    '</button>';
-                }).join('') +
-              '</div>'
-            ) : '<div class="shop-list-empty">' + escapeHtml(query ? "No items match this search." : "No items yet.") + '</div>') +
+            inventoryListMarkup +
             ownerSelectedItemEditorMarkup(selectedItem) +
           '</div>' +
         '</section>' +
@@ -4634,34 +4862,7 @@
             '<strong>Local item library</strong>' +
             '<span>Reuse listings already saved in the local server DB.</span>' +
           '</div>' +
-          (state.itemLibraryLoading
-            ? '<div class="shop-list-empty">Loading saved items...</div>'
-            : state.itemLibraryError
-            ? '<div class="shop-pane-notice is-error">' + escapeHtml(state.itemLibraryError) + '</div>'
-            : libraryItems.length
-            ? (
-              '<div class="shop-owner-library-grid">' +
-                libraryItems.map(function (item) {
-                  return '' +
-                    '<article class="shop-owner-library-card">' +
-                      '<div class="shop-owner-library-head">' +
-                        ownerItemPreviewMarkup(item, "is-library") +
-                        '<div class="shop-owner-library-copy">' +
-                          '<strong>' + escapeHtml(item.title || "Item") + '</strong>' +
-                          '<span>' + escapeHtml((item.shopName || item.shopId || "Shop") + ' • @' + (item.shopId || "")) + '</span>' +
-                        '</div>' +
-                      '</div>' +
-                      '<p>' + escapeHtml(item.description || "Ready to import into this shop.") + '</p>' +
-                      '<div class="shop-owner-library-meta">' +
-                        '<span>' + escapeHtml(formatPrice(item.price, detail && detail.pricing) || "Not set") + '</span>' +
-                        '<span>' + escapeHtml("Qty " + Math.max(0, Number(item.quantity || 0))) + '</span>' +
-                      '</div>' +
-                      '<button class="shop-owner-save" type="button" data-owner-library-import="' + escapeHtml(item.libraryId || "") + '">Import item</button>' +
-                    '</article>';
-                }).join('') +
-              '</div>'
-            )
-            : '<div class="shop-list-empty">' + escapeHtml(query ? "No library items match this search." : "No reusable items found in the local DB yet.") + '</div>') +
+          libraryListMarkup +
         '</section>';
     }
 
@@ -8793,33 +8994,26 @@
       }) || {};
       const title = String(item && item.title || "Item").trim();
       const shopName = String(item && item.shopName || ownerShop.shopName || shopId || "Shop").trim();
-      const imageFiles = Array.isArray(item && item.imageFiles) ? item.imageFiles : [];
-      const imageMarkup = imageFiles.length
-        ? '<img src="' + escapeHtml(assetFileUrl(imageFiles[0])) + '" alt="' + escapeHtml(title) + '">'
-        : '<span>' + escapeHtml((title.charAt(0) || "#").toUpperCase()) + '</span>';
       const quantity = Math.max(0, Number(item && item.quantity || 0));
-      return '' +
-        '<article class="shop-card shop-discovery-card shop-item-discovery-card" data-account-open-shop="' + escapeHtml(shopId) + '" style="--shop-color:' + escapeHtml(item && item.shopMapColor || HASHOP_DEFAULT_SHOP_COLOR) + ';">' +
-          '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
-          '<div class="shop-card-main">' +
-            '<div class="shop-card-topline">' +
-              '<div class="shop-card-title-block">' +
-                '<strong>' + escapeHtml(title) + '</strong>' +
-                '<span class="shop-card-subtitle">' + escapeHtml(shopName) + '</span>' +
-              '</div>' +
-              '<span class="shop-card-open">' + escapeHtml(quantity > 0 ? (quantity + " left") : "Qty") + '</span>' +
-            '</div>' +
-            '<div class="shop-card-items">' +
-              '<span class="shop-card-item">Edit</span>' +
-              (item && item.price ? '<span class="shop-card-item">' + escapeHtml(String(item.price)) + '</span>' : '') +
-            '</div>' +
-          '</div>' +
-        '</article>';
+      return shopItemCardMarkup(state, state.shopDetails[shopId] || null, item, state.shopById[shopId] || {}, {
+        shopId: shopId,
+        itemId: String(item && (item.id || item.libraryId) || "").trim(),
+        shopName: shopName,
+        subtitle: shopName,
+        ownerMode: true,
+        openShop: false,
+        color: item && item.shopMapColor || HASHOP_DEFAULT_SHOP_COLOR,
+        cardClass: "shop-owner-stock-card",
+        cardAttrs: 'data-account-open-shop="' + escapeHtml(shopId) + '" role="button" tabindex="0" aria-label="' + escapeHtml("Manage " + title) + '"',
+        actionMarkup: '<span class="shop-card-open">' + escapeHtml(quantity > 0 ? (quantity + " left") : "Qty") + '</span>',
+        metaItems: ["Edit", formatPrice(item && item.price, state.shopDetails[shopId] && state.shopDetails[shopId].pricing) || String(item && item.price || ""), item && item.description || ""]
+      });
     }).join("");
   }
 
   function renderShopList(state) {
     if (!state.listNode) return;
+    try {
     syncListingViewAttribute(state);
     syncScreenMode(state);
     syncBuyerOrdersPolling(state);
@@ -8920,8 +9114,11 @@
                 : '<span class="shop-card-item">Items listed soon</span>') +
             '</div>' +
           '</div>' +
-        '</article>';
+      '</article>';
     }).join("");
+    } finally {
+      syncHashopLanguageSurface(state);
+    }
   }
 
   function syncHomeUtilityUi(state) {
@@ -12741,6 +12938,29 @@
           String(paneAddKeyboardItem.getAttribute("data-pane-add-item") || "").trim(),
           1
         );
+        return;
+      }
+      const ownerItemKeyboardSelect = target.closest("[data-owner-item-select]");
+      if (ownerItemKeyboardSelect) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        state.ownerPanel.itemId = String(ownerItemKeyboardSelect.getAttribute("data-owner-item-select") || "").trim();
+        state.ownerPanel.tab = "history";
+        state.ownerPanel.section = "items";
+        renderShopList(state);
+        resetPaneScroll(state);
+        return;
+      }
+      const accountOpenShopKeyboardButton = target.closest("[data-account-open-shop]");
+      if (accountOpenShopKeyboardButton) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        const accountShopId = String(accountOpenShopKeyboardButton.getAttribute("data-account-open-shop") || "").trim();
+        if (!accountShopId) return;
+        setAccountActiveRole(state, "owner");
+        state.accountPaneMode = "";
+        setPreferredOwnerShop(state, accountShopId);
+        openSavedOwnerShop(state, { shopId: accountShopId });
         return;
       }
       if (target.closest("[data-concept-shop-field]")) {
