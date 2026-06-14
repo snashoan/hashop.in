@@ -31852,3 +31852,89 @@ html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-c
   color: var(--hashop-theme-accent) !important;
   -webkit-text-fill-color: var(--hashop-theme-accent) !important;
 }
+
+/* Iteration 143: order confirmation follows the same dark/light theme tokens. */
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-cart-screen,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-confirm-screen,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-cart-screen,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-confirm-screen {
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-confirm-card,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-confirm-card {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-surface) !important;
+  background-color: var(--hashop-theme-surface) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-confirm-card .shop-cart-row,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-confirm-card .shop-cart-row {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-surface) !important;
+  background-color: var(--hashop-theme-surface) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-cart-kicker,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-cart-title,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-cart-kicker,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-cart-title {
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-cart-title p,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-distance,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-confirm-copy,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-cart-title p,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-distance,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-confirm-copy {
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-chip,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-chip {
+  border-color: var(--hashop-theme-line-strong) !important;
+  background: var(--hashop-theme-action-soft) !important;
+  background-color: var(--hashop-theme-action-soft) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-confirm-payment-qr,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-confirm-payment-qr {
+  border-color: var(--hashop-theme-line) !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="confirmation"] .shop-pane-confirm-actions > .shop-cart-pay,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="confirmation"] .shop-pane-confirm-actions > .shop-cart-pay {
+  border-color: var(--hashop-theme-line-strong) !important;
+  background: var(--hashop-theme-action-bg) !important;
+  background-color: var(--hashop-theme-action-bg) !important;
+  background-image: none !important;
+  color: var(--hashop-theme-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
+  box-shadow: none !important;
+}
