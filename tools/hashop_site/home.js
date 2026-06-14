@@ -5544,6 +5544,7 @@
     const metaParts = [display.price, quantityLabel, showLineTotal ? totalLabel : "", display.stock].filter(Boolean);
     const shopId = String(settings.shopId || state && state.activeShopId || "").trim();
     const shop = settings.shop || state && state.shopById && state.shopById[shopId] || {};
+    const useDefaultListing = !!settings.defaultListing;
     const cartCardItem = {
       id: display.id,
       title: display.title,
@@ -5558,8 +5559,8 @@
       shopName: String(settings.shopName || detail && detail.name || shop && (shop.display_name || shop.shop_id) || shopId || "Shop").trim(),
       openShop: false,
       disableTouchAdd: true,
-      cardClass: "shop-cart-list-card",
-      thumbClass: "shop-cart-thumb",
+      cardClass: useDefaultListing ? "shop-cart-item-card" : "shop-cart-list-card",
+      thumbClass: useDefaultListing ? "" : "shop-cart-thumb",
       cardAttrs: ' data-cart-item-id="' + escapeHtml(display.id) + '"',
       selectedQty: display.quantity,
       priceLabel: display.price,
@@ -5935,7 +5936,8 @@
             shopId: state.activeShopId,
             shopName: shopName,
             shop: shop,
-            color: shopColor(shop)
+            color: shopColor(shop),
+            defaultListing: true
           });
         }).join('') +
       '</div>' +
@@ -7842,6 +7844,8 @@
       }, 0);
       return {
         shopId: safeShopId,
+        shop: shop,
+        detail: detail,
         shopName: String((detail && detail.name) || (shop && (shop.display_name || shop.shop_id)) || safeShopId).trim(),
         itemCount: itemCount,
         totalLabel: detail ? formatTotalAmount(totalAmount, detail.pricing) : "",
@@ -7876,15 +7880,40 @@
           '<strong>Open carts</strong>' +
           '<span>' + escapeHtml(filteredCartEntries.length === 1 ? "1 shop" : (filteredCartEntries.length + " shops")) + '</span>' +
         '</div>' +
-        '<div class="shop-account-shop-list">' +
+        '<div class="shop-pane-items shop-pane-shop-feed shop-root-cart-feed" data-list-view="list">' +
           filteredCartEntries.map(function (entry) {
+            const shop = entry.shop || {};
+            const detail = entry.detail || {};
+            const shopId = String(entry.shopId || "").trim();
+            const shopName = String(entry.shopName || shopId || "Shop").trim();
+            const locationLabel = clampText(
+              (detail && detail.location)
+                || shop.location_label
+                || statusLabel(shop, state.userPoint)
+                || "Open cart",
+              34
+            );
+            const imageMarkup = detail && detail.logoFile
+              ? '<img src="' + escapeHtml(shopLogoUrl(shopId)) + '" alt="' + escapeHtml(shopName + " shop") + '">'
+              : '<span>' + escapeHtml((shopName.charAt(0) || "#").toUpperCase()) + '</span>';
+            const itemLine = entry.itemCount + " item" + (entry.itemCount === 1 ? "" : "s") + (entry.totalLabel ? (" · " + entry.totalLabel) : "");
             return '' +
-              '<button class="shop-account-shop" type="button" data-open-cart-shop="' + escapeHtml(entry.shopId) + '">' +
-                '<strong>' + escapeHtml(entry.shopName) + '</strong>' +
-                '<span>@' + escapeHtml(entry.shopId) + '</span>' +
-                '<span>' + escapeHtml(entry.itemCount + " item" + (entry.itemCount === 1 ? "" : "s") + (entry.totalLabel ? (" • " + entry.totalLabel) : "")) + '</span>' +
-                (entry.itemSummary ? '<span>' + escapeHtml(entry.itemSummary) + '</span>' : '') +
-              '</button>';
+              '<article class="shop-card shop-discovery-card shop-cart-shop-card" data-open-cart-shop="' + escapeHtml(shopId) + '" role="button" tabindex="0" aria-label="' + escapeHtml("Open cart for " + shopName) + '" style="--shop-color:' + escapeHtml(shopColor(shop)) + ';">' +
+                '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
+                '<div class="shop-card-main">' +
+                  '<div class="shop-card-topline">' +
+                    '<div class="shop-card-title-block">' +
+                      '<strong>' + escapeHtml(shopName) + '</strong>' +
+                      '<span class="shop-card-subtitle">' + escapeHtml(locationLabel) + '</span>' +
+                    '</div>' +
+                    '<span class="shop-card-open">Cart</span>' +
+                  '</div>' +
+                  '<div class="shop-card-items">' +
+                    '<span class="shop-card-item is-primary">' + escapeHtml(itemLine) + '</span>' +
+                    (entry.itemSummary ? '<span class="shop-card-item">' + escapeHtml(entry.itemSummary) + '</span>' : '<span class="shop-card-item">Items ready</span>') +
+                  '</div>' +
+                '</div>' +
+              '</article>';
           }).join('') +
         '</div>' +
       '</section>'
@@ -9929,6 +9958,7 @@
     if (!state || !state.backButton) return;
     const hideChromeBack = state.debugPaneView === "account";
     if (hideChromeBack) {
+      state.backButton.hidden = true;
       state.backButton.classList.remove("is-visible");
       state.backButton.setAttribute("aria-hidden", "true");
       state.backButton.tabIndex = -1;
@@ -9939,6 +9969,16 @@
     }
     const backMode = !!state.activeShopId || !!state.debugPaneView;
     const action = accountSessionAction(state);
+    if (!backMode && action && action.kind === "account") {
+      state.backButton.hidden = true;
+      state.backButton.classList.remove("is-visible", "is-login");
+      state.backButton.setAttribute("aria-hidden", "true");
+      state.backButton.tabIndex = -1;
+      state.backButton.textContent = "";
+      state.backButton.setAttribute("aria-label", "Account");
+      return;
+    }
+    state.backButton.hidden = false;
     state.backButton.classList.add("is-visible");
     state.backButton.setAttribute("aria-hidden", "false");
     state.backButton.tabIndex = 0;
@@ -12949,6 +12989,16 @@
         state.ownerPanel.section = "items";
         renderShopList(state);
         resetPaneScroll(state);
+        return;
+      }
+      const cartShopKeyboardButton = target.closest("[data-open-cart-shop]");
+      if (cartShopKeyboardButton) {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        const cartShopId = String(cartShopKeyboardButton.getAttribute("data-open-cart-shop") || "").trim();
+        if (!cartShopId) return;
+        openShopInPane(state, cartShopId);
+        focusCart(state);
         return;
       }
       const accountOpenShopKeyboardButton = target.closest("[data-account-open-shop]");

@@ -31805,3 +31805,50 @@ html body .shell.shell-home.shell-home.shell-home .shop-account-stack > .shop-ac
 html body .shell.shell-home.shell-home.shell-home .shop-account-menu-section > .shop-account-menu-card > .shop-account-record-row:last-child {
   border-bottom: 0 !important;
 }
+
+/* Iteration 142: cart listings use the same list/feed card method as shops and items. */
+html body .shell.shell-home.shell-home.shell-home .shop-history-cart-section {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-history-cart-section > .shop-account-section-head {
+  margin: 0 0 0.46rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-root-cart-feed,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-root-cart-feed > .shop-cart-shop-card,
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-item-card {
+  cursor: pointer !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home .shop-pane-cart-feed > .shop-cart-item-card .shop-card-thumb {
+  color: var(--hashop-theme-accent) !important;
+  -webkit-text-fill-color: var(--hashop-theme-accent) !important;
+}
