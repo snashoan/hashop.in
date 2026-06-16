@@ -1211,6 +1211,62 @@ class ShopStore:
                 ).fetchone()
         return self._buyer_account_row_to_dict(row) if row is not None else None
 
+    async def open_buyer_account_by_contact(
+        self,
+        contact: str,
+        buyer_key: str = "",
+    ) -> Optional[Dict[str, str]]:
+        return await asyncio.to_thread(self._open_buyer_account_by_contact_threadsafe, contact, buyer_key)
+
+    def _open_buyer_account_by_contact_threadsafe(
+        self,
+        contact: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        with self._lock:
+            return self._open_buyer_account_by_contact_sync(contact, buyer_key)
+
+    def _open_buyer_account_by_contact_sync(
+        self,
+        contact: str,
+        buyer_key: str,
+    ) -> Optional[Dict[str, str]]:
+        contact_key = self._normalize_account_contact_key(contact)
+        if not contact_key:
+            return None
+        timestamp = self._utcnow()
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                FROM buyer_accounts
+                WHERE contact_key = ?
+                """,
+                (contact_key,),
+            ).fetchone()
+            if row is None:
+                return None
+            next_buyer_key = str(buyer_key or "").strip()[:160] or str(row["buyer_key"] or "").strip()
+            if next_buyer_key and next_buyer_key != str(row["buyer_key"] or "").strip():
+                connection.execute(
+                    """
+                    UPDATE buyer_accounts
+                    SET buyer_key = ?, updated_at = ?
+                    WHERE account_id = ?
+                    """,
+                    (next_buyer_key, timestamp, str(row["account_id"])),
+                )
+                connection.commit()
+                row = connection.execute(
+                    """
+                    SELECT account_id, display_name, contact, buyer_key, account_token, created_at, updated_at
+                    FROM buyer_accounts
+                    WHERE account_id = ?
+                    """,
+                    (str(row["account_id"]),),
+                ).fetchone()
+        return self._buyer_account_row_to_dict(row) if row is not None else None
+
     async def create_buyer_password_reset(self, contact: str, ttl_seconds: int = 600) -> Dict[str, Any]:
         safe_ttl = max(60, min(3600, int(ttl_seconds or 600)))
         return await asyncio.to_thread(self._create_buyer_password_reset_threadsafe, contact, safe_ttl)
@@ -4326,6 +4382,49 @@ class HashopHub:
             headers={"Cache-Control": "no-cache"},
         )
 
+    async def handle_buyer_login_otp(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError:
+            return web.json_response({"error": "invalid_json"}, status=400)
+        if not isinstance(payload, dict):
+            return web.json_response({"error": "invalid_payload"}, status=400)
+        contact = str(payload.get("contact") or "").strip()[:255]
+        buyer_key = str(payload.get("buyer_key") or "").strip()[:160]
+        verification_code = str(
+            payload.get("verification_code")
+            or payload.get("code")
+            or payload.get("reset_code")
+            or ""
+        ).strip()
+        if not contact:
+            return web.json_response({"error": "contact_required"}, status=400)
+        if not self.store._normalize_account_contact_key(contact):
+            return web.json_response({"error": "invalid_contact"}, status=400)
+        if not verification_code:
+            return web.json_response({"error": "verification_code_required"}, status=400)
+        auth_guard = await self._auth_guard_response(
+            request,
+            scope="buyer_otp_login",
+            contact=contact,
+            contact_limit=8,
+            client_limit=40,
+            window_seconds=900,
+        )
+        if auth_guard is not None:
+            return auth_guard
+        verification = await self.store.verify_buyer_contact_code(contact, verification_code)
+        if verification is None:
+            return web.json_response({"error": "invalid_verification_code"}, status=401)
+        verified_contact = str(verification.get("contact") or contact).strip()[:255]
+        account = await self.store.open_buyer_account_by_contact(verified_contact or contact, buyer_key)
+        if account is None:
+            return web.json_response({"error": "account_not_found"}, status=404, headers={"Cache-Control": "no-store"})
+        return web.json_response(
+            await self._buyer_account_response_payload(account, verified_contact or contact),
+            headers={"Cache-Control": "no-store"},
+        )
+
     async def handle_buyer_session(self, request: web.Request) -> web.Response:
         try:
             payload = await request.json()
@@ -4368,6 +4467,8 @@ class HashopHub:
             return web.json_response({"error": "invalid_contact"}, status=400)
         if purpose == "buyer_signup" and await self.store.buyer_account_exists(contact):
             return web.json_response({"error": "account_exists"}, status=409, headers={"Cache-Control": "no-store"})
+        if purpose == "buyer_login" and not await self.store.buyer_account_exists(contact):
+            return web.json_response({"error": "account_not_found"}, status=404, headers={"Cache-Control": "no-store"})
         auth_guard = await self._auth_guard_response(
             request,
             scope="buyer_contact_verification",
@@ -5431,6 +5532,7 @@ def build_app(
     app.router.add_post("/api/auth/reset-password", hub.handle_reset_shop_password)
     app.router.add_post("/api/buyer/signup", hub.handle_buyer_signup)
     app.router.add_post("/api/buyer/login", hub.handle_buyer_login)
+    app.router.add_post("/api/buyer/login-otp", hub.handle_buyer_login_otp)
     app.router.add_post("/api/buyer/session", hub.handle_buyer_session)
     app.router.add_post("/api/buyer/request-contact-verification", hub.handle_buyer_request_contact_verification)
     app.router.add_post("/api/buyer/verify-contact", hub.handle_buyer_verify_contact)

@@ -32256,3 +32256,248 @@ html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mod
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+/* Iteration 146: center and flatten sign-in, with OTP as a first-class account path. */
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-list-grid,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-list-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-content: center !important;
+  justify-items: center !important;
+  min-height: min(38rem, calc(100dvh - 10.5rem)) !important;
+  padding-inline: clamp(0.78rem, 4vw, 1.25rem) !important;
+  padding-block: clamp(0.72rem, 3vh, 1.35rem) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-pane-detail,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-pane-detail,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-pane-detail,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-pane-detail,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-pane,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-pane {
+  width: min(100%, 28rem) !important;
+  max-width: 28rem !important;
+  margin-inline: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-stack,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-stack {
+  display: grid !important;
+  justify-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: auto !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-form.shop-buyer-auth-form,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-form.shop-buyer-auth-form,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-form,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-form {
+  width: min(100%, 25.25rem) !important;
+  max-width: 25.25rem !important;
+  margin-inline: auto !important;
+  display: grid !important;
+  gap: 0.64rem !important;
+  padding: clamp(0.78rem, 3.5vw, 1rem) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-hero,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-hero {
+  width: min(100%, 25.25rem) !important;
+  max-width: 25.25rem !important;
+  margin-inline: auto !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 0.34rem !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-hero .shop-pane-overline,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-hero .shop-pane-overline,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-hero h2,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-hero h2 {
+  width: 100% !important;
+  justify-content: center !important;
+  text-align: center !important;
+  margin-inline: auto !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-field,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-field,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-field,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-field {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 0.34rem !important;
+  padding: 0.72rem 0.82rem !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: var(--hashop-theme-surface) !important;
+  background-color: var(--hashop-theme-surface) !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-field > span,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-field > span,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-field > span,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-field > span {
+  font-size: 0.68rem !important;
+  line-height: 1.05 !important;
+  font-weight: 840 !important;
+  letter-spacing: 0 !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-input,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-input,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-input,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 1.92rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  font-size: 1rem !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-actions,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-actions,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-actions,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-submit,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-submit,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-submit,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-submit {
+  width: 100% !important;
+  min-height: 2.66rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.68rem 0.88rem !important;
+  border: 1px solid var(--hashop-theme-line-strong) !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: var(--hashop-theme-action-bg) !important;
+  background-color: var(--hashop-theme-action-bg) !important;
+  color: var(--hashop-theme-action-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
+  font-size: 0.96rem !important;
+  font-weight: 860 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-public-links,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-public-links,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-public-links,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-links,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-public-links {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.48rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-public-links a,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-public-links a,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-public-links a,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-links button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-public-links a {
+  min-width: 0 !important;
+  min-height: 2.38rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.58rem 0.6rem !important;
+  border: 1px solid var(--hashop-theme-line) !important;
+  border-radius: var(--hashop-touch-radius, 8px) !important;
+  background: var(--hashop-theme-bg) !important;
+  background-color: var(--hashop-theme-bg) !important;
+  color: var(--hashop-theme-text) !important;
+  -webkit-text-fill-color: var(--hashop-theme-text) !important;
+  font-size: clamp(0.76rem, 2.45vw, 0.86rem) !important;
+  font-weight: 780 !important;
+  line-height: 1.12 !important;
+  text-align: center !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  box-shadow: none !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-status,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-status,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-status,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-status {
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--hashop-theme-muted) !important;
+  -webkit-text-fill-color: var(--hashop-theme-muted) !important;
+  font-size: 0.82rem !important;
+  font-weight: 740 !important;
+  line-height: 1.24 !important;
+  text-align: center !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-login-status:empty,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-login-status:empty,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-login-status:empty,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-login-status:empty {
+  display: none !important;
+}
+
+@media (max-width: 360px) {
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-links,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="account"][data-hashop-account-state="signed-out"] .shop-account-auth-public-links,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-links,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="account"][data-account-state="signed-out"] .shop-account-auth-public-links,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-links,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="login"] .shop-account-auth-public-links,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-links,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="login"] .shop-account-auth-public-links {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

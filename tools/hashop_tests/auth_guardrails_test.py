@@ -108,6 +108,29 @@ class AuthGuardrailTests(unittest.TestCase):
         self.assertIsNone(duplicate)
         self.assertTrue(asyncio.run(self.store.buyer_account_exists("buyer@example.com")))
 
+    def test_buyer_account_can_open_after_verified_contact_code(self) -> None:
+        account = asyncio.run(
+            self.store.create_buyer_account(
+                display_name="Buyer",
+                contact="buyer@example.com",
+                password="secret1",
+                buyer_key="buyer-original",
+            )
+        )
+        self.assertIsNotNone(account)
+        verification = asyncio.run(self.store.create_buyer_contact_verification("BUYER@example.com"))
+        self.assertTrue(verification["ok"])
+        code = str(verification["reset_code"])
+
+        self.assertIsNone(asyncio.run(self.store.open_buyer_account_by_contact("nobody@example.com", "unused")))
+        verified = asyncio.run(self.store.verify_buyer_contact_code("buyer@example.com", code))
+        self.assertIsNotNone(verified)
+        opened = asyncio.run(self.store.open_buyer_account_by_contact("buyer@example.com", "buyer-otp"))
+
+        self.assertIsNotNone(opened)
+        self.assertEqual(opened["account_id"], account["account_id"])
+        self.assertEqual(opened["buyer_key"], "buyer-otp")
+
     def test_buyer_account_payload_restores_verified_owner_shops(self) -> None:
         asyncio.run(
             self.store.upsert_shop(
