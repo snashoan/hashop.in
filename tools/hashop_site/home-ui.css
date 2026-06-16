@@ -31938,3 +31938,118 @@ html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mod
   -webkit-text-fill-color: var(--hashop-theme-action-text) !important;
   box-shadow: none !important;
 }
+
+/* Iteration 144: owner settings stay inside the same tokenized layout. */
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-stack,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-stack {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-form,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-form {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-form-head,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-form-head {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.24rem !important;
+  min-width: 0 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-form-head > *,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-form-head > *,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-field,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-field,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-field-wide,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-field-wide {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-form-head strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-form-head strong,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-form-head span,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-form-head span,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-logo-copy strong,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-logo-copy strong,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-logo-copy span,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-logo-copy span {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: clip !important;
+  line-height: 1.18 !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-logo-row,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-payment-qr-row,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-logo-row,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-payment-qr-row {
+  display: grid !important;
+  grid-template-columns: minmax(3.8rem, var(--hashop-owner-thumb, 4.5rem)) minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.62rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-logo-row .shop-owner-upload-button,
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-payment-qr-row .shop-owner-upload-button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-logo-row .shop-owner-upload-button,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-payment-qr-row .shop-owner-upload-button {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] :is(.shop-owner-logo-preview, .shop-payment-qr-image),
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] :is(.shop-owner-logo-preview, .shop-payment-qr-image) {
+  align-self: start !important;
+  width: var(--hashop-owner-thumb, 4.5rem) !important;
+  height: var(--hashop-owner-thumb, 4.5rem) !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-pickup-bar,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-pickup-bar {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-pickup-text,
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-pickup-text {
+  grid-column: 1 / -1 !important;
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  padding: 0.16rem 0.04rem 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] :is(.shop-owner-input, .shop-owner-textarea, .shop-owner-select, .shop-owner-save, .shop-owner-chip-button, .shop-owner-upload-button),
+html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] :is(.shop-owner-input, .shop-owner-textarea, .shop-owner-select, .shop-owner-save, .shop-owner-chip-button, .shop-owner-upload-button) {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 360px) {
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-logo-row,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-payment-qr-row,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-logo-row,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-payment-qr-row,
+  html body .shell.shell-home.shell-home.shell-home[data-hashop-screen="owner-manage"] .shop-owner-pickup-bar,
+  html body .shell.shell-home.shell-home.shell-home .shop-list-panel[data-pane-mode="owner-manage"] .shop-owner-pickup-bar {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

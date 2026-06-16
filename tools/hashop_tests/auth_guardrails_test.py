@@ -274,6 +274,82 @@ class AuthGuardrailTests(unittest.TestCase):
         self.assertIn("https://hashop.test/api/assets/coke.png", text_body)
         self.assertIn('<img src="https://hashop.test/api/assets/coke.png"', html_body)
 
+    def test_order_email_events_cover_buyer_and_seller_flow(self) -> None:
+        hub = HashopHub(
+            public_base_url="https://hashop.test",
+            request_timeout=30,
+            site_dir=Path(self.temp_dir.name),
+            store=self.store,
+            uploads_dir=Path(self.temp_dir.name) / "uploads",
+        )
+        order = {
+            "id": "ord-demo",
+            "title": "Coca-Cola 750 ml",
+            "total": "90",
+            "buyerName": "Buyer90",
+            "buyerContact": "buyer@example.test",
+            "fulfillmentMode": "delivery",
+            "deliveryAddress": "Main Road",
+            "items": [{"title": "Coca-Cola 750 ml", "quantity": 2, "price": "45"}],
+        }
+
+        self.assertEqual(hub._order_email_subject(order, "buyer", "on_order"), "Hashop order placed")
+        self.assertEqual(hub._order_email_subject(order, "seller", "on_order_receive"), "Hashop new order received")
+        self.assertIn("Your Hashop order at Demo Shop is saved.", hub._order_email_body(order, "buyer", "Demo Shop", "on_order"))
+        self.assertIn("New order received for Demo Shop.", hub._order_email_body(order, "seller", "Demo Shop", "on_order_receive"))
+        self.assertIn("Order sent", hub._order_email_html(order, "buyer", "Demo Shop", "on_sent"))
+        self.assertIn("Order marked received for Demo Shop.", hub._order_email_body(order, "seller", "Demo Shop", "on_received"))
+
+    def test_order_mail_events_detect_sent_and_received_transitions(self) -> None:
+        hub = HashopHub(
+            public_base_url="https://hashop.test",
+            request_timeout=30,
+            site_dir=Path(self.temp_dir.name),
+            store=self.store,
+            uploads_dir=Path(self.temp_dir.name) / "uploads",
+        )
+        previous_console = {
+            "orders": [
+                {
+                    "id": "ord-demo",
+                    "title": "Coca-Cola 750 ml",
+                    "status": "accepted",
+                    "paymentMode": "on_receive",
+                    "buyerContact": "buyer@example.test",
+                }
+            ]
+        }
+        ready_console = {
+            "orders": [
+                {
+                    "id": "ord-demo",
+                    "title": "Coca-Cola 750 ml",
+                    "status": "ready",
+                    "paymentMode": "on_receive",
+                    "buyerContact": "buyer@example.test",
+                }
+            ]
+        }
+        completed_console = {
+            "orders": [
+                {
+                    "id": "ord-demo",
+                    "title": "Coca-Cola 750 ml",
+                    "status": "completed",
+                    "paymentMode": "on_receive",
+                    "buyerContact": "buyer@example.test",
+                }
+            ]
+        }
+
+        ready_events = hub._order_mail_events_for_console_update(previous_console, ready_console)
+        completed_events = hub._order_mail_events_for_console_update(ready_console, completed_console)
+
+        self.assertEqual([event["event"] for event in ready_events], ["on_sent"])
+        self.assertEqual([event["target"] for event in ready_events], ["buyer"])
+        self.assertEqual([event["event"] for event in completed_events], ["on_received"])
+        self.assertEqual([event["target"] for event in completed_events], ["seller"])
+
     def test_discovery_shop_page_serves_owner_sales_history_route(self) -> None:
         class FakeRequest:
             match_info = {

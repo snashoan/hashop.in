@@ -2891,7 +2891,29 @@ class HashopHub:
         return re.sub(r"\s+", "", text)[:255]
 
     @staticmethod
-    def _order_email_subject(order: Dict[str, Any], target: str) -> str:
+    def _order_email_event(event: str) -> str:
+        value = str(event or "").strip().lower().replace("-", "_")
+        aliases = {
+            "on_order_receive": "on_order_receive",
+            "on_order_received": "on_order_receive",
+            "on_receive": "on_order_receive",
+            "on_received": "on_received",
+            "on_sent": "on_sent",
+            "on_order": "on_order",
+        }
+        return aliases.get(value, "")
+
+    @classmethod
+    def _order_email_subject(cls, order: Dict[str, Any], target: str, event: str = "") -> str:
+        email_event = cls._order_email_event(event)
+        if email_event == "on_order":
+            return "Hashop order placed"
+        if email_event == "on_order_receive":
+            return "Hashop new order received"
+        if email_event == "on_sent":
+            return "Hashop order sent"
+        if email_event == "on_received":
+            return "Hashop order received"
         mode = str(order.get("fulfillmentMode") or "").strip().lower()
         if target == "seller":
             return "Hashop delivery order"
@@ -2935,12 +2957,43 @@ class HashopHub:
         price = str(order.get("price") or order.get("total") or "").strip()
         return [{"title": title, "quantity": quantity, "price": price, "description": "", "imageUrl": ""}]
 
-    def _order_email_body(self, order: Dict[str, Any], target: str, shop_name: str) -> str:
+    def _order_email_intro(self, order: Dict[str, Any], target: str, shop_name: str, event: str = "") -> str:
+        email_event = self._order_email_event(event)
+        mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        shop_label = shop_name or "Hashop"
+        if email_event == "on_order_receive":
+            return f"New order received for {shop_label}."
+        if email_event == "on_sent":
+            if mode == "pickup":
+                return f"Your order at {shop_label} is ready for pickup."
+            return f"Your order from {shop_label} is ready."
+        if email_event == "on_received":
+            return f"Order marked received for {shop_label}."
+        if email_event == "on_order":
+            if mode == "pickup":
+                return f"Your pickup order at {shop_label} is saved."
+            return f"Your Hashop order at {shop_label} is saved."
+        if target == "seller":
+            return f"New delivery order for {shop_label}."
+        if mode == "pickup":
+            return f"Your pickup order at {shop_label} is saved."
+        return f"Your Hashop order at {shop_label} is saved."
+
+    def _order_email_location_line(self, order: Dict[str, Any], target: str) -> Tuple[str, str]:
+        mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        if mode == "pickup":
+            return "Pickup", str(order.get("pickupAddress") or order.get("address") or "Shop pickup point").strip()
+        if target == "seller":
+            return "Deliver to", str(order.get("deliveryAddress") or order.get("address") or "Delivery address not set").strip()
+        return "Delivery", str(order.get("deliveryAddress") or order.get("address") or "Delivery address not set").strip()
+
+    def _order_email_body(self, order: Dict[str, Any], target: str, shop_name: str, event: str = "") -> str:
         mode = str(order.get("fulfillmentMode") or "").strip().lower()
         title = str(order.get("title") or "Order").strip()
         total = str(order.get("total") or order.get("price") or "").strip()
         buyer = str(order.get("buyerName") or order.get("buyerContact") or "Buyer").strip()
         email_items = self._order_email_items(order)
+        location_label, location = self._order_email_location_line(order, target)
         item_lines = [
             "- "
             + str(item["title"])
@@ -2956,51 +3009,45 @@ class HashopHub:
         media_block = ["", "Items:"] + item_lines
         if image_lines:
             media_block += ["", "Product pictures:"] + image_lines
-        if target == "seller":
-            destination = str(order.get("deliveryAddress") or order.get("address") or "").strip()
-            return "\n".join([
-                f"New delivery order for {shop_name or 'your Hashop shop'}.",
-                f"Order: {title}",
-                f"Buyer: {buyer}",
-                f"Total: {total or '-'}",
-                f"Deliver to: {destination or 'Delivery address not set'}",
-                *media_block,
-                "",
-                "Use the Hashop map frame for the delivery cue when available.",
-                "Hashop",
-            ])
-        if mode == "pickup":
-            pickup = str(order.get("pickupAddress") or order.get("address") or "").strip()
-            return "\n".join([
-                f"Your pickup order at {shop_name or 'Hashop'} is saved.",
-                f"Order: {title}",
-                f"Total: {total or '-'}",
-                f"Pickup: {pickup or 'Shop pickup point'}",
-                *media_block,
-                "",
-                "Use the Hashop map frame for the pickup cue when available.",
-                "Hashop",
-            ])
-        return "\n".join([
-            f"Your Hashop order at {shop_name or 'the shop'} is saved.",
+        lines = [
+            self._order_email_intro(order, target, shop_name, event),
             f"Order: {title}",
+        ]
+        if target == "seller":
+            lines.append(f"Buyer: {buyer}")
+        lines += [
             f"Total: {total or '-'}",
+            f"{location_label}: {location or '-'}",
             *media_block,
             "",
-            "Hashop",
-        ])
+        ]
+        if mode == "pickup":
+            lines.append("Use the Hashop map frame for the pickup cue when available.")
+        elif target == "seller":
+            lines.append("Use the Hashop map frame for the delivery cue when available.")
+        lines.append("Hashop")
+        return "\n".join(lines)
 
-    def _order_email_html(self, order: Dict[str, Any], target: str, shop_name: str) -> str:
+    def _order_email_heading(self, order: Dict[str, Any], target: str, event: str = "") -> str:
+        email_event = self._order_email_event(event)
         mode = str(order.get("fulfillmentMode") or "").strip().lower()
+        if email_event == "on_order":
+            return "Pickup order saved" if mode == "pickup" else "Order saved"
+        if email_event == "on_order_receive":
+            return "New order received"
+        if email_event == "on_sent":
+            return "Order ready" if mode == "pickup" else "Order sent"
+        if email_event == "on_received":
+            return "Order received"
+        return "New delivery order" if target == "seller" else ("Pickup order saved" if mode == "pickup" else "Order saved")
+
+    def _order_email_html(self, order: Dict[str, Any], target: str, shop_name: str, event: str = "") -> str:
         title = html.escape(str(order.get("title") or "Order").strip())
         total = html.escape(str(order.get("total") or order.get("price") or "-").strip() or "-")
         buyer = html.escape(str(order.get("buyerName") or order.get("buyerContact") or "Buyer").strip())
-        heading = "New delivery order" if target == "seller" else ("Pickup order saved" if mode == "pickup" else "Order saved")
-        location_label = "Deliver to"
-        location = str(order.get("deliveryAddress") or order.get("address") or "").strip()
-        if mode == "pickup":
-            location_label = "Pickup"
-            location = str(order.get("pickupAddress") or order.get("address") or "").strip()
+        heading = self._order_email_heading(order, target, event)
+        intro = html.escape(self._order_email_intro(order, target, shop_name, event))
+        location_label, location = self._order_email_location_line(order, target)
         item_cards: List[str] = []
         for item in self._order_email_items(order):
             item_title = html.escape(str(item.get("title") or "Item"))
@@ -3031,6 +3078,7 @@ class HashopHub:
         return (
             '<div style="font-family:Arial,sans-serif;line-height:1.45;color:#111;">'
             f'<h2 style="margin:0 0 12px;">{html.escape(heading)}</h2>'
+            f'<p style="margin:0 0 10px;color:#555;">{intro}</p>'
             f'<p style="margin:0 0 6px;">Shop: <strong>{html.escape(shop_name or "Hashop")}</strong></p>'
             f'<p style="margin:0 0 6px;">Order: <strong>{title}</strong></p>'
             f'<p style="margin:0 0 6px;">Buyer: <strong>{buyer}</strong></p>'
@@ -3048,13 +3096,14 @@ class HashopHub:
         order: Dict[str, Any],
         target: str,
         shop_name: str,
+        event: str = "",
     ) -> bool:
         if not self.smtp_config.configured:
             return False
         safe_to = self._email_address_from_contact(to_address)
         if not safe_to:
             return False
-        await asyncio.to_thread(self._send_order_email_sync, safe_to, order, target, shop_name)
+        await asyncio.to_thread(self._send_order_email_sync, safe_to, order, target, shop_name, event)
         return True
 
     def _send_order_email_sync(
@@ -3063,16 +3112,17 @@ class HashopHub:
         order: Dict[str, Any],
         target: str,
         shop_name: str,
+        event: str = "",
     ) -> None:
         config = self.smtp_config
         if not config.configured:
             raise RuntimeError("smtp_not_configured")
         message = EmailMessage()
-        message["Subject"] = self._order_email_subject(order, target)
+        message["Subject"] = self._order_email_subject(order, target, event)
         message["From"] = formataddr((config.sender_name, config.sender))
         message["To"] = to_address
-        message.set_content(self._order_email_body(order, target, shop_name))
-        message.add_alternative(self._order_email_html(order, target, shop_name), subtype="html")
+        message.set_content(self._order_email_body(order, target, shop_name, event))
+        message.add_alternative(self._order_email_html(order, target, shop_name, event), subtype="html")
         security = str(config.security or "starttls").strip().lower()
         context = ssl.create_default_context()
         if security in {"ssl", "tls", "smtps"}:
@@ -3085,6 +3135,133 @@ class HashopHub:
                 smtp.starttls(context=context)
             smtp.login(config.username, config.password)
             smtp.send_message(message)
+
+    def _order_status_for_mail(self, order: Any) -> str:
+        source = order if isinstance(order, dict) else {}
+        return self.store._normalize_order_status(source.get("status"), source.get("paymentMode"), source)
+
+    def _order_mail_events_for_console_update(
+        self,
+        previous_console: Any,
+        next_console: Any,
+    ) -> List[Dict[str, Any]]:
+        previous_data = previous_console if isinstance(previous_console, dict) else {}
+        next_data = next_console if isinstance(next_console, dict) else {}
+        previous_orders_raw = previous_data.get("orders")
+        next_orders_raw = next_data.get("orders")
+        if not isinstance(next_orders_raw, list):
+            return []
+        previous_by_id: Dict[str, Dict[str, Any]] = {}
+        if isinstance(previous_orders_raw, list):
+            for previous_order in previous_orders_raw:
+                if not isinstance(previous_order, dict):
+                    continue
+                order_id = str(previous_order.get("id") or "").strip()
+                if order_id:
+                    previous_by_id[order_id] = previous_order
+
+        events: List[Dict[str, Any]] = []
+        for order in next_orders_raw:
+            if not isinstance(order, dict):
+                continue
+            order_id = str(order.get("id") or "").strip()
+            if not order_id:
+                continue
+            current_status = self._order_status_for_mail(order)
+            if current_status == "cancelled":
+                continue
+            previous_order = previous_by_id.get(order_id)
+            if previous_order is None:
+                events.append({"event": "on_order", "target": "buyer", "order": order})
+                events.append({"event": "on_order_receive", "target": "seller", "order": order})
+                continue
+            previous_status = self._order_status_for_mail(previous_order)
+            previous_flags = self.store._order_status_flags(previous_order, previous_status)
+            current_flags = self.store._order_status_flags(order, current_status)
+            if not previous_flags.get("orderSent") and current_flags.get("orderSent"):
+                events.append({"event": "on_sent", "target": "buyer", "order": order})
+            if not previous_flags.get("orderReceived") and current_flags.get("orderReceived"):
+                events.append({"event": "on_received", "target": "seller", "order": order})
+        return events
+
+    def _order_mail_delivery_summary(self, deliveries: List[Dict[str, Any]]) -> Dict[str, Any]:
+        targets = []
+        for delivery in deliveries:
+            target = str(delivery.get("target") or "").strip()
+            if target and target not in targets:
+                targets.append(target)
+        return {
+            "sent": any(bool(delivery.get("sent")) for delivery in deliveries),
+            "target": ",".join(targets),
+            "configured": bool(self.smtp_config.configured),
+            "events": deliveries,
+        }
+
+    async def _send_order_event_email(
+        self,
+        *,
+        order: Dict[str, Any],
+        event: str,
+        target: str,
+        to_address: str,
+        shop_name: str,
+    ) -> Dict[str, Any]:
+        delivery: Dict[str, Any] = {
+            "event": self._order_email_event(event),
+            "target": target,
+            "sent": False,
+            "configured": bool(self.smtp_config.configured),
+        }
+        if not self.smtp_config.configured:
+            delivery["error"] = "smtp_not_configured"
+            return delivery
+        try:
+            delivery["sent"] = await self._send_order_email(
+                to_address=to_address,
+                order=order,
+                target=target,
+                shop_name=shop_name,
+                event=event,
+            )
+            if not delivery["sent"]:
+                delivery["error"] = "email_delivery_skipped"
+        except Exception:
+            delivery["error"] = "email_delivery_failed"
+        return delivery
+
+    async def _send_order_event_emails(
+        self,
+        *,
+        events: List[Dict[str, Any]],
+        profile: Dict[str, Any],
+        shop_name: str,
+    ) -> Dict[str, Any]:
+        deliveries: List[Dict[str, Any]] = []
+        seller_contact = str(profile.get("contact") or "").strip() if isinstance(profile, dict) else ""
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            order = event.get("order")
+            if not isinstance(order, dict):
+                continue
+            target = str(event.get("target") or "").strip()
+            event_name = self._order_email_event(str(event.get("event") or ""))
+            if not target or not event_name:
+                continue
+            contact = str(order.get("buyerContact") or "").strip() if target == "buyer" else seller_contact
+            to_address = self._email_address_from_contact(contact)
+            if not to_address:
+                continue
+            deliveries.append(
+                await self._send_order_event_email(
+                    order=order,
+                    event=event_name,
+                    target=target,
+                    to_address=to_address,
+                    shop_name=shop_name,
+                )
+            )
+        return self._order_mail_delivery_summary(deliveries)
 
     async def _password_reset_response(
         self,
@@ -4397,10 +4574,30 @@ class HashopHub:
         console_payload = payload.get("console", payload)
         if not isinstance(console_payload, dict):
             return web.json_response({"error": "invalid_console"}, status=400)
+        previous_record = await self.store.get_shop_console(shop_id)
+        if previous_record is None:
+            raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
+        previous_console = previous_record.get("console", {})
+        if not isinstance(previous_console, dict):
+            previous_console = {}
         record = await self.store.save_shop_console(shop_id, console_payload)
         if record is None:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
-        return web.json_response(self._normalized_shop_record(record))
+        normalized_record = self._normalized_shop_record(record)
+        next_console = record.get("console", {}) if isinstance(record, dict) else {}
+        if not isinstance(next_console, dict):
+            next_console = {}
+        profile = next_console.get("profile") if isinstance(next_console.get("profile"), dict) else {}
+        shop_name = str(profile.get("name") or shop_id).strip()[:160]
+        mail_events = self._order_mail_events_for_console_update(previous_console, next_console)
+        if mail_events and isinstance(normalized_record, dict):
+            normalized_record = dict(normalized_record)
+            normalized_record["mailDelivery"] = await self._send_order_event_emails(
+                events=mail_events,
+                profile=profile,
+                shop_name=shop_name,
+            )
+        return web.json_response(normalized_record)
 
     async def handle_list_buyer_orders(self, request: web.Request) -> web.Response:
         buyer_key = str(request.query.get("buyer_key") or "").strip()[:160]
@@ -4564,23 +4761,14 @@ class HashopHub:
             raise web.HTTPNotFound(text=json.dumps({"error": "shop_not_found"}), content_type="application/json")
         profile = console_payload.get("profile") if isinstance(console_payload.get("profile"), dict) else {}
         shop_name = str(profile.get("name") or shop_id).strip()[:160]
-        mail_delivery: Dict[str, Any] = {"sent": False, "target": "", "configured": bool(self.smtp_config.configured)}
-        if fulfillment_mode == "pickup":
-            to_address = self._email_address_from_contact(buyer_contact)
-            mail_delivery["target"] = "buyer" if to_address else ""
-        else:
-            to_address = self._email_address_from_contact(str(profile.get("contact") or ""))
-            mail_delivery["target"] = "seller" if to_address else ""
-        if to_address and self.smtp_config.configured:
-            try:
-                mail_delivery["sent"] = await self._send_order_email(
-                    to_address=to_address,
-                    order=created_order,
-                    target=str(mail_delivery["target"] or ""),
-                    shop_name=shop_name,
-                )
-            except Exception:
-                mail_delivery["error"] = "email_delivery_failed"
+        mail_delivery = await self._send_order_event_emails(
+            events=[
+                {"event": "on_order", "target": "buyer", "order": created_order},
+                {"event": "on_order_receive", "target": "seller", "order": created_order},
+            ],
+            profile=profile,
+            shop_name=shop_name,
+        )
         return web.json_response(
             {"ok": True, "order": created_order, "buyer_key": buyer_key, "mailDelivery": mail_delivery},
             headers={"Cache-Control": "no-cache"},
