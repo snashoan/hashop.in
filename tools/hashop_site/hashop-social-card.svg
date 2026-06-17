@@ -1,22 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
   <title id="title">Hashop</title>
-  <desc id="desc">Hashop brand logo for web previews</desc>
-  <rect width="1200" height="630" fill="#050505"/>
-  <rect x="50" y="50" width="1100" height="530" rx="58" fill="#111111"/>
-  <rect x="70" y="70" width="1060" height="490" rx="44" fill="none" stroke="#d6ac54" stroke-width="6" stroke-opacity="0.38"/>
-  <g transform="translate(137 143)">
-    <rect width="344" height="344" rx="76" fill="#ffffff"/>
-    <rect x="29" y="29" width="286" height="286" rx="63" fill="#111111"/>
-    <rect x="38" y="38" width="268" height="268" rx="55" fill="none" stroke="#d6ac54" stroke-width="8" stroke-opacity="0.72"/>
-    <g fill="#f8f8f3">
-      <rect x="100" y="60" width="38" height="224" rx="16"/>
-      <rect x="206" y="60" width="38" height="224" rx="16"/>
-      <rect x="60" y="113" width="224" height="38" rx="16"/>
-      <rect x="60" y="193" width="224" height="38" rx="16"/>
-    </g>
+  <desc id="desc">Hashop production logo for web previews</desc>
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="84" y="103" width="424" height="424" rx="92" fill="#111111"/>
+  <rect x="111" y="130" width="370" height="370" rx="77" fill="none" stroke="#d6ac54" stroke-width="14"/>
+  <g fill="#f8f8f3">
+    <rect x="206" y="177" width="50" height="276" rx="22"/>
+    <rect x="336" y="177" width="50" height="276" rx="22"/>
+    <rect x="157" y="242" width="276" height="50" rx="22"/>
+    <rect x="157" y="338" width="276" height="50" rx="22"/>
   </g>
-  <g fill="#f8f8f3" font-family="Sora, Manrope, Arial, sans-serif">
-    <text x="548" y="296" font-size="118" font-weight="800" letter-spacing="0">Hashop</text>
-    <text x="554" y="366" font-size="34" font-weight="650" fill-opacity="0.68" letter-spacing="0">Fast local commerce.</text>
+  <g fill="#111111" font-family="Inter, Sora, Manrope, Arial, sans-serif">
+    <text x="560" y="344" font-size="132" font-weight="900" letter-spacing="0">Hashop</text>
   </g>
+  <rect x="560" y="379" width="444" height="10" rx="5" fill="#d6ac54"/>
 </svg>

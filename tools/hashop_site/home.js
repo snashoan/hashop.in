@@ -3263,6 +3263,15 @@
     return "/api/shops/" + encodeURIComponent(safeShopId) + "/logo";
   }
 
+  function defaultShopLogoMarkup(label, className) {
+    const safeLabel = String(label || "Shop").trim() || "Shop";
+    const safeClassName = String(className || "").trim();
+    return '' +
+      '<span class="shop-default-logo-mark' + (safeClassName ? (' ' + escapeHtml(safeClassName)) : '') + '" role="img" aria-label="' + escapeHtml(safeLabel + " default logo") + '">' +
+        '<span class="shop-default-logo-symbol" aria-hidden="true">#</span>' +
+      '</span>';
+  }
+
   function assetFileUrl(fileName) {
     const safeName = String(fileName || "").trim();
     if (!safeName) return "";
@@ -4394,7 +4403,7 @@
     if (!hours && contact) metaParts.push(contact);
     const logoMarkup = logoFile && shopId
       ? '<span class="shop-owner-summary-mark is-logo"><img src="' + escapeHtml(shopLogoUrl(shopId)) + '" alt="' + escapeHtml(shopName + " logo") + '"></span>'
-      : '<span class="shop-owner-summary-mark" aria-hidden="true">' + escapeHtml((shopName.charAt(0) || "#").toUpperCase()) + '</span>';
+      : defaultShopLogoMarkup(shopName, "shop-owner-summary-mark");
     return '' +
       '<section class="shop-owner-summary-card" aria-label="Current shop">' +
         '<div class="shop-owner-summary-main">' +
@@ -4494,7 +4503,7 @@
       '<span class="shop-owner-logo-preview is-logo">' +
         '<img class="shop-owner-logo-image" src="' + escapeHtml(shopLogoUrl(state.activeShopId)) + '" alt="' + escapeHtml((detail && detail.name) || "Shop logo") + '">' +
       '</span>'
-    ) : '<span class="shop-owner-logo-preview" aria-hidden="true"></span>';
+    ) : defaultShopLogoMarkup((detail && detail.name) || "Shop", "shop-owner-logo-preview");
     const settingsTabsMarkup = '' +
       '<div class="shop-owner-tab-row">' +
         '<button class="shop-owner-tab' + (section === "profile" ? ' is-active' : '') + '" type="button" data-owner-settings-section="profile">Shop</button>' +
@@ -5982,7 +5991,7 @@
           '<img class="shop-pane-logo-image" src="' + escapeHtml(shopLogoUrl(state.activeShopId)) + '" alt="' + escapeHtml((detail.name || shop.display_name || shop.shop_id || "Shop") + " logo") + '">' +
         '</span>'
       )
-      : '<span class="shop-pane-copy-mark" aria-hidden="true"></span>';
+      : defaultShopLogoMarkup(detail.name || shop.display_name || shop.shop_id || "Shop", "shop-pane-copy-mark");
 
     const shopHeroMarkup = (
       '<div class="shop-pane-hero">' +
@@ -7949,7 +7958,7 @@
             );
             const imageMarkup = detail && detail.logoFile
               ? '<img src="' + escapeHtml(shopLogoUrl(shopId)) + '" alt="' + escapeHtml(shopName + " shop") + '">'
-              : '<span>' + escapeHtml((shopName.charAt(0) || "#").toUpperCase()) + '</span>';
+              : defaultShopLogoMarkup(shopName, "is-card");
             const itemLine = entry.itemCount + " item" + (entry.itemCount === 1 ? "" : "s") + (entry.totalLabel ? (" · " + entry.totalLabel) : "");
             return '' +
               '<article class="shop-card shop-discovery-card shop-cart-shop-card" data-open-cart-shop="' + escapeHtml(shopId) + '" role="button" tabindex="0" aria-label="' + escapeHtml("Open cart for " + shopName) + '" style="--shop-color:' + escapeHtml(shopColor(shop)) + ';">' +
@@ -9012,7 +9021,7 @@
       }
       const imageMarkup = previewDetail && previewDetail.logoFile
         ? '<img src="' + escapeHtml(shopLogoUrl(shopId)) + '" alt="' + escapeHtml(shopName + " shop") + '">'
-        : '<span>' + escapeHtml((shopName.charAt(0) || "#").toUpperCase()) + '</span>';
+        : defaultShopLogoMarkup(shopName, "is-card");
       return '' +
         '<article class="shop-card shop-discovery-card" data-account-open-shop="' + escapeHtml(shopId) + '" style="--shop-color:' + escapeHtml(shopColor(previewShop)) + ';">' +
           '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
@@ -9177,7 +9186,7 @@
       );
       const imageMarkup = previewDetail && previewDetail.logoFile
         ? '<img src="' + escapeHtml(shopLogoUrl(shopId)) + '" alt="' + escapeHtml(shopName + " shop") + '">'
-        : '<span>' + escapeHtml((shopName.charAt(0) || "#").toUpperCase()) + '</span>';
+        : defaultShopLogoMarkup(shopName, "is-card");
       return '' +
         '<article class="shop-card shop-discovery-card" data-open-shop-card="' + escapeHtml(shopId) + '" style="--shop-color:' + escapeHtml(shopColor(shop)) + ';">' +
           '<div class="shop-card-thumb">' + imageMarkup + '</div>' +
